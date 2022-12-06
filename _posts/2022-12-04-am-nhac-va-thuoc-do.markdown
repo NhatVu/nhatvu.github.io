@@ -27,5 +27,4 @@ Một vài ví dụ:
 - Một mối quan hệ bạn bè, thước đó là số năm biết nhau hay là những kỷ niệm gắn bó với nhau? 
 
 
-
 Nhân tiện, bây giờ đang rất thích bài Chạm khẽ tim anh một chút thôi do Noo Phước Thịnh hát. ^^

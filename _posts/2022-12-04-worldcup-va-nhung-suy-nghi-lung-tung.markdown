@@ -16,5 +16,10 @@ Lấy 1 vài ví dụ.
  
 Chốt lại, có nhiều trường hợp, win-win ko thể xảy ra. Vì thế, hãy cứ chơi theo luật. Nếu thành công, hãy hưởng thành quả đó. Còn nếu thất bại, cũng đừng oán trách cuộc đời. Giống như 1 câu hát trong bài "The winner takes it all" của nhóm ABBA: Rules must be obeyed.
 
+Để xác định khi nào nên dùng win-win, khi nào không. Có thể tham khảo hình sau. 
+
+![Phương pháp thảo luận](/assets/images/2022-12-04-pp-thao-luan.png "Phương pháp thảo luận. Win-win chỉ áp dụng cho mục Cộng tác. [1]")
+
+
 References:
-1. https://ngahodac.com/win-win-khong-han-la-tot
+1. [Win-win không hẳn là tốt](https://ngahodac.com/win-win-khong-han-la-tot)

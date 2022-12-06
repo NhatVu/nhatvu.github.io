@@ -31,4 +31,4 @@ Bạn cũng có thể làm thử bài kiểm tra như sau:
 
 Tham khảo:
 
-Quy tắc nồi căn chua và con cá lóc. Nguồn Web5ngay: https://www.youtube.com/watch?v=oRscHdc-owQ
+1. Web5ngay: [Quy tắc nồi căn chua và con cá lóc](https://www.youtube.com/watch?v=oRscHdc-owQ)
