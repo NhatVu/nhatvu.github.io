@@ -3,7 +3,9 @@ layout: page
 title: Về tôi
 permalink: /about/
 ---
-Tôi là Nhật. Nghề chính là kỹ sư phần mềm nhưng tôi khá thích viết lách. Phải nói thêm rằng tôi thường xuyên liệt văn thời còn đi học nhé anh em. 
+Tôi là Nhật. Nhìn domain là các ông có thể đoán được. Nhưng tôi vẫn phải xác nhận lại. Nhỡ gọi thành "Nhạt" thì bỏ mẹ tôi. 
+
+Nghề chính là kỹ sư phần mềm, làm việc với các dòng lệnh, con số. Có chăng vì thế, tôi khá thích viết lách. Âu cũng là 1 cách để cân bằng lại. Phải nói thêm rằng tôi thường xuyên liệt văn thời còn đi học nhé anh em. 
 
 Tôi thích từ những việc thông thường diễn ra hằng ngày, mô hình hóa nó thành những luật có thể áp dụng vào các lĩnh vực khác. Hoặc từ những thứ đã học ở trường, áp dụng ngược lại vào cuộc sống. Tôi tin rằng, những lĩnh vực khác nhau, vẫn có thể liên kết với nhau bằng một cách nào đó. 
 
