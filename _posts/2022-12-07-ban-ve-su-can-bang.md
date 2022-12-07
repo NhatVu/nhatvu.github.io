@@ -57,6 +57,8 @@ Bài này mang tính chất tổng quát, khái quát hóa ý tưởng. Thiết 
 - Bàn về việc chú trọng học rộng hay học sâu
 - Bàn về việc chú trọng kỹ năng cứng và kỹ năng mềm
 - Bàn về việc nên đứng nhất lớp hay top 10% là đủ 
+- Bàn về đời sống vật chất và tinh thần 
+- Bàn về cái ta kiểm soát được và cái ta không kiểm soát được
 
 
 ### Tham khảo
