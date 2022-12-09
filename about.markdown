@@ -4,6 +4,8 @@ title: Về tôi
 permalink: /about/
 ---
 ### Only a fool learns from his own mistakes. The wise man learns from the mistakes of others. - Otto von Bismarck (1815 - 1898)
+Tạm dịch: Chỉ những kẻ ngốc mới học từ sai lầm của chính mình. Người khôn ngoan học từ sai lầm của người khác. - Otto von Bismarck, thủ tướng đầu tiên của nước Đức.
+
 
 Tôi là Nhật. Nhìn domain là các ông có thể đoán được. Nhưng tôi vẫn phải xác nhận lại. Nhỡ gọi thành "Nhạt" thì bỏ mẹ tôi. 
 
