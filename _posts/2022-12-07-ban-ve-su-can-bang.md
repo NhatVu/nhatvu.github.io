@@ -1,7 +1,7 @@
 ---
 layout: post
-title:  "[Bản nháp] Khái quát về tư tưởng: Vật cực tất phản" 
-date:   2022-12-07 05:01:00 +0000
+title:  "Khái quát về tư tưởng: Vật cực tất phản" 
+date:   2022-12-08 05:01:00 +0000
 categories: jekyll update
 permalink: /:categories/:year/:title
 ---
@@ -49,6 +49,16 @@ Phải nhớ rằng, khi đến điểm cùng cực, bạn phải có khả năn
 
 Mặc dù không có phương pháp cụ thể để nhận biết điểm cùng cực, nhưng quy luật "Vật cực tất phản" này giúp chúng ta cảnh giác hơn. Khi thấy mọi việc đang rất thuận lợi thì nên cẩn thận. Hoặc khi mọi chuyện đang be bét, cũng đừng quá nản, rồi sẽ tốt hơn. 
 
+## Có thể áp dụng tư duy này vào những việc ... không tốt không? 
+
+Tất nhiên là được. Hẳn mọi người đều đã nghe tới những câu đại loại như "tức nước vỡ bờ", "chó cùng dứt dậu", v.v. Chúng đều ngụ ý rằng khi tới 1 điểm nhất định, những người được xem là yếu đuối có thể quay lại phản kháng, khi sự ức chế đã không thể kìm nén được nữa. 
+
+Vậy phải làm thế nào nếu ta vẫn muốn chèn ép đối phương? Câu trả lời là hãy mở 1 đường hy vọng cho họ. Cho họ nhìn thấy hy vọng sẽ thoát khỏi được cảnh này. Lúc này đây, tâm lý phản kháng, chơi khô máu sẽ giảm rất nhiều. Hãy nới lỏng chiếc vòng kim cô. Tuy nhiên, đến một giai đoạn nhất định, hãy mạnh tay mà siết lại. Điểm cốt lõi là hãy để cái tâm lý phản kháng trôi qua. 
+
+Tôi tự nhận là một người hướng thiện. Tôi viết điều này không phải để chỉ các ông cách khống chế người khác. Nhưng trái lại, để những người đang lâm vào tình cảnh này, nhận ra được cái mô típ (pattern) đang áp dụng lên họ. Từ đó tìm cách thoát khỏi, có được 1 cuộc sống tự do đúng nghĩa. 
+
+Một con dao, nếu xài đúng cách sẽ giúp ích cho đời sống. Nhưng cũng chính con dao đó, cũng có thể mang đi bem nhau. Thế nên, tôi không bài xích việc biết các mưu hèn, kế bẩn. Biết để tránh. Hãy đảm bảo rằng bạn phải có 1 trình độ tu dưỡng đạo đức nhất định trước khi tiếp xúc với những thứ này, vì bọn chúng mang lại kết quả nhanh hơn là con đường chính đạo. Kèm với đấy là hậu quả về sau. Chơi dao có ngày đứt tay các bạn ạ. Hãy cẩn thận !!!
+
 ## Kết luận
 
 Theo tôi, tư tưởng này giúp ta tránh được sự cùng cực (hay cực đoan) không cần thiết, tránh cho ta tự rủ rê các việc xấu tới với mình.
@@ -59,6 +69,7 @@ Bài này mang tính chất tổng quát, khái quát hóa ý tưởng. Thiết 
 - Bàn về việc nên đứng nhất lớp hay top 10% là đủ 
 - Bàn về đời sống vật chất và tinh thần 
 - Bàn về cái ta kiểm soát được và cái ta không kiểm soát được
+- Bàn về việc học thứ mình thích hay học thứ thị trường cần
 
 
 ### Tham khảo
