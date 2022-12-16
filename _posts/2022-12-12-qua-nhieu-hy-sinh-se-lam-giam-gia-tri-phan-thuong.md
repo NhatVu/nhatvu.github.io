@@ -45,7 +45,7 @@ Muốn nói lại thôi, \
 Muốn nói lại thôi \
 Chỉ rằng: “Trời mát, mùa thu đẹp”
 
-Đấy, có những thứ, trải qua rồi mới biết được mùi vị của nó. Mới biệt được, giữa suy nghĩ và thực thế nhiều khi rất khác nhau. 
+Đấy, có những thứ, trải qua rồi mới biết được mùi vị của nó. Mới biết được, giữa suy nghĩ và thực thế nhiều khi rất khác nhau. 
 
 Tham khảo:
 1. [Thái tang tử - Thư Bác Sơn đạo trung bích](https://www.thivien.net/T%C3%A2n-Kh%C3%AD-T%E1%BA%ADt/Th%C3%A1i-tang-t%E1%BB%AD-Th%C6%B0-B%C3%A1c-S%C6%A1n-%C4%91%E1%BA%A1o-trung-b%C3%ADch/poem-7k3dwdcuJKTWbJGjPLm2kg)
