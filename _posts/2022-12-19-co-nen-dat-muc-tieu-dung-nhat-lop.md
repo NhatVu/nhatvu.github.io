@@ -1,9 +1,8 @@
 ---
 layout: post
-title:  "Bài 2: Có nên đặt mục tiêu đứng nhất lớp?" 
+title:  "10. Bài 2: Có nên đặt mục tiêu đứng nhất lớp?" 
 date:   2022-12-19 05:01:00 +0000
 categories: jekyll update
-permalink: /:categories/:year/:title
 ---
 
 Như tiêu đề, bài này tôi sẽ nói về 1 vấn đề xuyên suốt quá trình học tập của tôi, từ trung học cho đến thạc sĩ. Có nên cố gắng để đứng nhất lớp ? 

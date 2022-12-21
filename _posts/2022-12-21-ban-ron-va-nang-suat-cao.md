@@ -1,9 +1,8 @@
 ---
 layout: post
-title:  "Người bận rộn và người năng suất"
+title:  "11. Người bận rộn và người năng suất"
 date:   2022-12-21 05:01:00 +0000
 categories: jekyll update
-permalink: /:categories/:year/:title
 ---
 Tối qua, tôi tình cờ nghe 1 podcast đề cập đến high-performance (hiệu suất cao), workaholic (người nghiện việc). Tình cờ lần 2, đây là dạo cuối năm nên những bạn đang đi làm sẽ phải làm một cái đánh giá công việc trong năm qua, làm cơ sở để xét thưởng KPI. Đây là nguồn cơn để tôi viết bài này, so sánh giữa người bận rộn và người năng suất (busy vs performance. Để kèm tiếng anh ở đây vì không biết dịch có chuẩn không)
 

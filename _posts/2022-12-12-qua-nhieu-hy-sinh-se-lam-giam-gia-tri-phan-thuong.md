@@ -1,9 +1,8 @@
 ---
 layout: post
-title:  "Quá nhiều hy sinh sẽ làm giảm giá trị phần thưởng" 
+title:  "8. Quá nhiều hy sinh sẽ làm giảm giá trị phần thưởng" 
 date:   2022-12-12 05:01:00 +0000
 categories: jekyll update
-permalink: /:categories/:year/:title
 ---
 
 "Quá nhiều hy sinh sẽ làm giảm giá trị phần thưởng" - Đây là một câu thoại trong bộ phim <em>Tiếng chim hót trong bụi mận gai</em>. Bộ này có nhiều câu rất thú vị, và câu này là một trong số đấy. 

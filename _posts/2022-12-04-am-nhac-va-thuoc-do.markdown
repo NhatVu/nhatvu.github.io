@@ -1,9 +1,8 @@
 ---
 layout: post
-title:  "Âm nhạc và thước đo"
+title:  "3. Âm nhạc và thước đo"
 date:   2022-12-04 05:01:00 +0000
 categories: jekyll update
-permalink: /:categories/:year/:title
 ---
 
 Nói đến âm nhạc, tôi thường được biết đến như một người yêu thích dòng nhạc xưa, cái thể loại dành cho những người lớn tuổi. Và thú thật, tôi thật sự yêu thích nó. Chẳng có gì phải bàn cãi ở đây. 

@@ -1,9 +1,8 @@
 ---
 layout: post
-title:  "World Cup và những suy nghĩ lung tung"
+title:  "4. World Cup và những suy nghĩ lung tung"
 date:   2022-12-04 05:01:00 +0000
 categories: jekyll update
-permalink: /:categories/:year/:title
 ---
 
 Tôi nghe nhiều người nói về việc win-win situation (đôi bên cùng có lợi). Nghe hay và nếu thực hiện được, rất tuyệt vời. Tuy nhiên, trong thực tế, ko phải lúc nào hoàn cảnh cũng cho phép ta thực hiện tư tưởng win-win. Trong nhiều trường hợp, việc 1 bên chiến thắng , đồng nghĩa với việc tước đi cơ hội của bên còn lại.

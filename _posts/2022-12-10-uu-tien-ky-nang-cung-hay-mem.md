@@ -1,9 +1,8 @@
 ---
 layout: post
-title:  "Bài 1: Ưu tiên kỹ năng cứng hay mềm?" 
+title:  "6. Bài 1: Ưu tiên kỹ năng cứng hay mềm?" 
 date:   2022-12-10 05:01:00 +0000
 categories: jekyll update
-permalink: /:categories/:year/:title
 ---
 ## Giới thiệu
 Trước khi vào chủ đề chính, tôi mạn phép được dùng đoạn hội thoại giữa Lưu Bị và Tư Mã Huy (Thủy Kính tiên sinh) trong Tam quốc diễn nghĩa để nói. 
