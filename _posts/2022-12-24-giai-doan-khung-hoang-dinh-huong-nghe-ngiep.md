@@ -38,7 +38,7 @@ Tôi tập cho mình việc quản lý cảm xúc. Ai cũng biết, thay vì đ�
 
 - Thứ năm, mọi thứ đều cần thời gian. 
 
-"Dục tốt bất đạt" các bạn ạ. Mọi thứ đều cần thời gian. Đặc biệt là khi bạn muốn làm một thứ gì đó to lớn hay uốn nắn con người mình để trở nên tốt hơn. Nó sẽ không dễ chịu đâu, nhưng đáng để làm phải không nhỉ?
+"Dục tốc bất đạt" các bạn ạ. Mọi thứ đều cần thời gian. Đặc biệt là khi bạn muốn làm một thứ gì đó to lớn hay uốn nắn con người mình để trở nên tốt hơn. Nó sẽ không dễ chịu đâu, nhưng đáng để làm phải không nhỉ?
 
 - Và cuối cùng, luật nhân-quả không luôn luôn đúng. 
 
