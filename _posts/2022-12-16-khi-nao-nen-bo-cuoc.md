@@ -2,7 +2,7 @@
 layout: post
 title:  "9. Khi nào nên bỏ cuộc?" 
 date:   2022-12-16 05:01:00 +0000
-categories: jekyll update
+category: opinion
 ---
 
 Ở bài này, tôi sẽ bàn tới một vấn đề tưởng chừng như tiêu cực, nhưng khi vận dụng đúng, nó đem lại lợi ích to lớn. Đấy là sự bỏ cuộc. 

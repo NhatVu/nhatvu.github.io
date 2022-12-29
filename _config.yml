@@ -18,7 +18,7 @@
 # You can create any custom variable you would like, and they will be accessible
 # in the templates via {{ site.myvariable }}.
 
-title: Nơi để viết những thứ linh tinh
+title: Minh Nhật's blog
 # email: your-email@example.com
 # description: >- # this means to ignore newlines until "baseurl:"
 #   Write an awesome description for your new site here. You can edit this
@@ -33,14 +33,18 @@ url: "" # the base hostname & protocol for your site, e.g. http://example.com
 # theme: minima
 plugins:
   - jekyll-feed
-  - jekyll-paginate
+  - jekyll-seo-tag
 
 permalink: /:categories/:title
 
-paginate: 10
-paginate_path: "/page:num/"
+# paginate: 10
+# paginate_path: "/page:num/"
 
-incremental: true
+
+  
+
+email: nhatvm95@gmail.com
+author: Minh Nhật
 
 
 

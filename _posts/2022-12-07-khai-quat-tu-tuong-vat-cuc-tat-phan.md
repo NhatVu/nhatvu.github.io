@@ -2,7 +2,7 @@
 layout: post
 title:  "5. Bài 0: Khái quát về tư tưởng: Vật cực tất phản" 
 date:   2022-12-08 05:01:00 +0000
-categories: jekyll update
+category: philosophy
 ---
 ## Khái quát
 "Vật cùng tất biến, vật cực tất phản" 

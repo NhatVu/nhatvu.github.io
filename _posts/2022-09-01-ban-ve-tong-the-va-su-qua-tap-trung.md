@@ -2,7 +2,7 @@
 layout: post
 title:  "1. Bàn về tổng thể và sự quá tập trung vào một thành phần trong tổng thể"
 date:   2022-09-01 05:01:00 +0000
-categories: jekyll update
+category: opinion
 ---
 Bài này nhằm tóm tắt ý chính của 1 bài chia sẻ hay của Web5Ngay. Bài này hay ở ý nghĩa cũng như phép so sánh nồi canh cá lóc và cuộc đời của chúng ta. 
 

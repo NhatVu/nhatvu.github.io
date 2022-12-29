@@ -2,7 +2,7 @@
 layout: post
 title:  "12. Giai đoạn khủng hoảng định hướng nghề nghiệp."
 date:   2022-12-24 01:01:00 +0000
-categories: jekyll update
+category: opinion
 ---
 Tôi không nhớ rõ lúc ấy là khi nào, có chăng là vào khoảng 2019, khi đã ra trường làm việc được hơn 1 năm. Ừ, có lẽ là vào khoảng đấy. Không phải tự kiêu, tôi nghĩ mình cũng là một người có năng lực làm việc, đầu óc cũng không đến nỗi tệ. Thế nên, hoài bão mà tôi hướng đến cũng có độ khó nhất định. 
 

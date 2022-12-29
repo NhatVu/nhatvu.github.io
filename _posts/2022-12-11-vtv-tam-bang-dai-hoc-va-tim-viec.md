@@ -2,7 +2,7 @@
 layout: post
 title:  "7. Nhân dịp coi 1 đoạn thời sự của VTV: Tấm bằng điểm cao có còn là giấy thông hành để có được công việc tốt?" 
 date:   2022-12-11 05:01:00 +0000
-categories: jekyll update
+category: opinion
 ---
 
 Câu đầu tiên khi coi xong: Thời thế bắt đầu thay đổi rồi.
