@@ -2,7 +2,7 @@
 layout: post
 title:  "14. [Dịch thuật] Khi cuộc sống đau khổ, hãy ngừng bám víu vào nó"
 date:   2022-12-30 00:01:00 +0000
-category: translation
+category: philosophy
 ---
 
 ## Giới thiệu 
