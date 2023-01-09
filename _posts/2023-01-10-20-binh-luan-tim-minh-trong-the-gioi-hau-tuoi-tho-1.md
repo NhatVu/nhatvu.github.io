@@ -25,4 +25,4 @@ Phải lưu ý thêm rằng, tình trạng thiếu tình thương này vẫn có
 
 Tôi cũng nhận thấy rằng, ngoài việc giáo học về học thức, việc chuẩn bị cho con một nền tảng tinh thần vững chắc là hết sức cần thiết, để nó có thể tồn tại trong một thế giới phức tạp và dễ gây tổn thương. Nền tảng đó là gì? Tôi vẫn đang tìm kiếm nó. Lý tưởng là nó có 1 thể chất tốt, kèm với một tinh thần khỏe mạnh. Nếu các bạn để ý, việc giáo dục đời sống tinh thần thường sẽ bị bỏ qua trong chương trình học. 
 
-Đây là lần đầu tôi tiếp xúc với các quyển sách đương đại, thấy khá là thú vị, để lại cho mình nhiều suy nghĩ. Cám ơn một người bạn đã giới thiệu. Thanksss
+Đây là lần đầu tôi tiếp xúc với các quyển sách đương đại, thấy khá là thú vị, để lại cho mình nhiều suy nghĩ. Trước đây, tôi thường chỉ đọc những quyển xuất bản đã lâu, tác giả thường đã chết. -_- . Nay đọc một cuốn mới viết gần đây, khá hay. Cám ơn một người bạn đã giới thiệu. Thanksss
