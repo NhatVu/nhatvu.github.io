@@ -20,3 +20,16 @@ Trang này liệt kê những truyện ngắn mà tôi thấy hay, ý nghĩa. N�
 1. [Truyện ngắn] Một người Hà Nội - [https://www.youtube.com/watch?v=DdHMsxl-oGM](https://www.youtube.com/watch?v=DdHMsxl-oGM)
 2. [Truyện ngắn] Nắng chiều - [https://www.youtube.com/watch?v=kW1sL8ec_7M](https://www.youtube.com/watch?v=kW1sL8ec_7M)
 3. [Truyện ngắn] Một trường hợp ly dị - [https://www.youtube.com/watch?v=5sXAXmQS1HM](https://www.youtube.com/watch?v=5sXAXmQS1HM)
+
+## Nhiều tác giả
+**1. Vài suy nghĩ về giáo dục - John Locke.** 
+
+Đây có thể coi là tiền thân của triết lý giáo dục phương Tây. Một cuộc sách hay về việc giáo dục con cái. 
+
+**2. Nghệ thuật sống - Epictetus**
+
+Cuốn sách đầu tiên dẫn tôi vào triết học Khắc kỷ, một trường phái hướng về đạo đức của con người và cách ta nhìn nhận thế giới. Nó hướng tới giải quyết các vấn đề hằng ngày trong cuộc sống. Không giống như triết siêu hình học, trả lời các vấn đề liên quan đến bản chất của thế giới. Nó quan tâm đến các câu hỏi như: Bản chất của sự thật là gì? Đâu là vị trí đầu tiên của con người trong vũ trụ? Tôi thì ko hứng thú với nhánh này lắm, vì quá nhức đầu.
+
+**3. Tôi tự học - Nguyễn Duy Cần**
+
+Cuốn sách dành cho những người đang đi trên con đường tự mày mò, học hỏi.
