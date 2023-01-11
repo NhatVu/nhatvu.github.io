@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "21. Bàn về việc chọn sách"
+title:  "21. Bàn về việc chọn sách (Phần 1)"
 date:   2023-01-11 00:01:00 +0000
 category: opinion
 ---
