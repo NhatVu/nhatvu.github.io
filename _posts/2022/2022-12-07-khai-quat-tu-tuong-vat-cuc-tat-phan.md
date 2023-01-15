@@ -63,8 +63,8 @@ Một con dao, nếu xài đúng cách sẽ giúp ích cho đời sống. Nhưng
 Theo tôi, tư tưởng này giúp ta tránh được sự cùng cực (hay cực đoan) không cần thiết, tránh cho ta tự rủ rê các việc xấu tới với mình.
 
 Bài này mang tính chất tổng quát, khái quát hóa ý tưởng. Khi tư tưởng chủ đạo đã thông, ta có thể áp dụng nó vào nhiều hoàn cảnh, nhiều trường hợp khác nhau, mà không cần phải học thuộc từng trường hợp. Thiết nghĩ, tôi sẽ mở rộng, viết nhiều hơn về vấn đề này ở các bài khác. Một số ý tưởng: 
-1. [Bàn về việc chú trọng kỹ năng cứng và kỹ năng mềm]({% post_url 2022-12-10-uu-tien-ky-nang-cung-hay-mem %})
-2. [Bàn về việc nên đứng nhất lớp hay top 10% là đủ]({% post_url 2022-12-19-co-nen-dat-muc-tieu-dung-nhat-lop %})
+1. [Bàn về việc chú trọng kỹ năng cứng và kỹ năng mềm]({% post_url 2022/2022-12-10-uu-tien-ky-nang-cung-hay-mem %})
+2. [Bàn về việc nên đứng nhất lớp hay top 10% là đủ]({% post_url 2022/2022-12-19-co-nen-dat-muc-tieu-dung-nhat-lop %})
 3. Bàn về đời sống vật chất và tinh thần 
 4. Bàn về cái ta kiểm soát được và cái ta không kiểm soát được
 5. Bàn về việc học thứ mình thích hay học thứ thị trường cần

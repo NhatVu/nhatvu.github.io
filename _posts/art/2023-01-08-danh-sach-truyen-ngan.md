@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  " Danh sách truyện ngắn, văn học. [Lasted update: 2023-01-10]"
+title:  " Danh sách truyện ngắn, văn học. [Lasted update: 2023-01-15]"
 date:   2023-01-08 00:01:00 +0000
 category: art
 ---
@@ -20,6 +20,9 @@ Trang này liệt kê những truyện ngắn mà tôi thấy hay, ý nghĩa. N�
 1. [Truyện ngắn] Một người Hà Nội - [https://www.youtube.com/watch?v=DdHMsxl-oGM](https://www.youtube.com/watch?v=DdHMsxl-oGM)
 2. [Truyện ngắn] Nắng chiều - [https://www.youtube.com/watch?v=kW1sL8ec_7M](https://www.youtube.com/watch?v=kW1sL8ec_7M)
 3. [Truyện ngắn] Một trường hợp ly dị - [https://www.youtube.com/watch?v=5sXAXmQS1HM](https://www.youtube.com/watch?v=5sXAXmQS1HM)
+
+## 2. Nhà văn Thạch Lam
+1. [Tối ba mươi - Thạch Lam]({% post_url 2023-01-15-23-toi-ba-muoi-thach-lam %})
 
 ## Nhiều tác giả
 **1. Vài suy nghĩ về giáo dục - John Locke.** 
