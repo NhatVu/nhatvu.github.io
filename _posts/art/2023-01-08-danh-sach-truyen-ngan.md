@@ -8,7 +8,9 @@ Trang này liệt kê những truyện ngắn mà tôi thấy hay, ý nghĩa. N�
 
 ## Tác phẩm đang theo dõi
 1. Tìm Mình Trong Thế Giới Hậu Tuổi Thơ - Đặng Hoàng Giang. [https://www.youtube.com/watch?v=fD3f5-B1jLE](https://www.youtube.com/watch?v=fD3f5-B1jLE)
-    * [Bình luận chương 1 - 5]({% post_url 2023-01-10-20-binh-luan-tim-minh-trong-the-gioi-hau-tuoi-tho-1 %})
+ * [Bình luận chương 1 - 5]({% post_url 2023/2023-01-10-20-binh-luan-tim-minh-trong-the-gioi-hau-tuoi-tho-1 %})
+ * [Bình luận chương 8]({% post_url 2023/2023-01-17-24-tim-minh-trong-the-gioi-hau-tuoi-tho-chuong-8 %})
+   
 
 ## Tác phẩm dự kiến tiếp theo
 1. Truyền kỳ mạn lục - Nguyễn Dữ
@@ -22,7 +24,7 @@ Trang này liệt kê những truyện ngắn mà tôi thấy hay, ý nghĩa. N�
 3. [Truyện ngắn] Một trường hợp ly dị - [https://www.youtube.com/watch?v=5sXAXmQS1HM](https://www.youtube.com/watch?v=5sXAXmQS1HM)
 
 ## 2. Nhà văn Thạch Lam
-1. [Tối ba mươi - Thạch Lam]({% post_url 2023-01-15-23-toi-ba-muoi-thach-lam %})
+1. [Tối ba mươi - Thạch Lam]({% post_url 2023/2023-01-15-23-toi-ba-muoi-thach-lam %})
 
 ## Nhiều tác giả
 **1. Vài suy nghĩ về giáo dục - John Locke.** 

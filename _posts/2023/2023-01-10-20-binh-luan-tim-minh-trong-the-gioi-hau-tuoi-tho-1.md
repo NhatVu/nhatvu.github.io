@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "20. [Bình luận] Tìm mình trong thế giới hậu tuổi thơ, chương 1 - 5"
+title:  "20. [Cảm nghĩ] Tìm mình trong thế giới hậu tuổi thơ, chương 1 - 5"
 date:   2023-01-10 00:01:00 +0000
 category: opinion
 ---
