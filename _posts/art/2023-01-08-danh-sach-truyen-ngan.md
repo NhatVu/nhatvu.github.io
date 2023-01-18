@@ -17,6 +17,7 @@ Trang này liệt kê những truyện ngắn mà tôi thấy hay, ý nghĩa. N�
 2. Lĩnh Nam chích quái - Trần Thế Pháp 
 3. Liêu trai chí chị - Bồ Tùng Linh
 4. The art of thinking clearly - Rolf Dobelli
+5. Joy of Pain: Schadenfreude and the Dark Side of Human Nature - Richard H Smith 
 
 ## 1. Nhà văn Nguyễn Khải
 1. [Truyện ngắn] Một người Hà Nội - [https://www.youtube.com/watch?v=DdHMsxl-oGM](https://www.youtube.com/watch?v=DdHMsxl-oGM)
