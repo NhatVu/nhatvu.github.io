@@ -13,6 +13,8 @@ Rất rõ ràng, "Trust, but verify" cho rằng dù tin tưởng một điều g
 
 Với người lạ, có thể ta sẽ phải xác nhận nhiều hơn để gầy dựng lòng tin. Khi đã có lòng tin, tần suất "xác nhận" có thể ít đi, nhưng không thể bỏ quá trình này, nếu không, mình bị lừa lúc nào cũng không rõ. Cũng không nên liên tục "xác nhận", kể cả những chuyện nhỏ nhặt, vì sẽ tốn nhiều thời gian, công sức. Cảm thấy nếu không tin được người nào, thì tránh xa họ ra là xong chuyện. Đỡ mệt đầu.
 
+Thái độ này cũng được áp dụng rộng rãi trong việc phát triển phần mềm. Với kiến trúc client-server, client thường gửi 1 lượng thông tin để server xử lý. Có 1 khái niệm gọi là "Zero trust", bất kỳ dữ liệu gì từ client gửi lên đều phải xác nhận lại, xem có hợp lệ, đúng format, không chứa mã độc hay không, ... Đây là 1 lớp bảo vệ cho server.
+
 Tựu chung lại, thái độ này cũng không nằm ngoài tư tưởng "Vật cực tất phản". Tin tưởng 100% ai đó mà không xác nhận lại, coi chừng có ngày bị lừa.
 
 References: 
