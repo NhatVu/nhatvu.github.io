@@ -19,3 +19,4 @@ Trang này nhằm ghi lại những bài nhạc Hoa hay, vì biết đâu đấy
 11. Cố mộng (giấc mộng cũ) - Chanh Dực [https://www.youtube.com/watch?v=RhB3aDpvpSY](https://www.youtube.com/watch?v=RhB3aDpvpSY)
 12. Quảng Hàn Cung - Hoàn Tử U [https://www.youtube.com/watch?v=-opQxuAKDgE](https://www.youtube.com/watch?v=-opQxuAKDgE)
 13. Yến Vô Hiết - Tương Tuyết Nhi - [https://www.youtube.com/watch?v=lNCViM7R8N8](https://www.youtube.com/watch?v=lNCViM7R8N8)
+14. Tình tư (Phim Nhất niệm vĩnh hằng) - Thang Hoan Nguyệt - [https://www.youtube.com/watch?v=MInQ3m_9obc](https://www.youtube.com/watch?v=MInQ3m_9obc)
