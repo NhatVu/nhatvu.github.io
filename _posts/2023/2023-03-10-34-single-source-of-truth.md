@@ -15,7 +15,7 @@ A.save(entity)
 B.save(entity)
 ```
 
-Mỗi khi cần cập nhật dữ liệu, đều phải gọi riêng rẽ 2 hàm như trên. Điều này dễ dẫn đến lỗi sai nếu mộ người mới vào team, không hiểu logic này, và gọi thiếu hàm. Không chỉ người mới, người cũ cũng có thể quên mất logic này.
+Mỗi khi cần cập nhật dữ liệu, đều phải gọi riêng rẽ 2 hàm như trên. Điều này dễ dẫn đến lỗi sai nếu một người mới vào team, không hiểu logic này, và gọi thiếu hàm. Không chỉ người mới, người cũ cũng có thể quên mất logic này.
 
 Để tránh tình trạng trên, ta có thể tạo 1 class C, chứa tất cả logic liên quan đến class A và B. Client chỉ làm việc với C, mà không làm việc với A và B. class C cũng có hàm save(), và trong này gọi A.save() và B.save()
 
