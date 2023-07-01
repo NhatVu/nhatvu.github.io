@@ -5,9 +5,9 @@ date:   2023-07-01 00:01:00 +0000
 category: philosophy
 ---
 
-Nietzsche và Schopenhauer là 2 nhà triết học nổi tiếng người Đức ở thế kỷ 20. Tư tưởng 2 ông hầu hết đều đối chọi nhau, ngoại trừ 1 việc: cả 2 đều phản đối việc đọc quá nhiều sách. Lưu ý, ở đây là đọc quá nhiều sách.
+Nietzsche và Schopenhauer là 2 nhà triết học nổi tiếng người Đức ở thế kỷ 19. Tư tưởng 2 ông hầu hết đều đối chọi nhau, ngoại trừ 1 việc: cả 2 đều phản đối việc đọc quá nhiều sách. Lưu ý, ở đây là đọc quá nhiều sách.
 
-Ở thế kỷ 20, sách là phương tiện truyền tải kiến thức chủ yếu. Đến thế kỷ 21, ta có thêm nhiều phương tiện khác như social media, TV, podcast, ... là phương tiện để hấp thụ kiến thức. Lợi ích của việc đọc sách thì ai cũng biết nhưng liệu đọc quá nhiều sách có tốt? Hãy xem thử quan điểm của Nietzsche và Schopenhauer về vấn đề này.
+Ở thế kỷ 19, sách là phương tiện truyền tải kiến thức chủ yếu. Đến thế kỷ 21, ta có thêm nhiều phương tiện khác như social media, TV, podcast, ... là phương tiện để hấp thụ kiến thức. Lợi ích của việc đọc sách thì ai cũng biết nhưng liệu đọc quá nhiều sách có tốt? Hãy xem thử quan điểm của Nietzsche và Schopenhauer về vấn đề này.
 
 ### **Schopenhauer: 6 quy tắc trong việc đọc sách** 
 #### **Quy tắc 1: Đừng đọc quá nhiều** 
@@ -46,7 +46,7 @@ Những cuốn sách tệ là thuốc độ của suy nghĩ, chúng phá hiểu 
 
 Làm sao để biết sách tệ hay không? Bằng cách xem xem chúng vượt qua sự thử thách của thời gian như thế nào. 
 
-Schopenhauer phàn nàn về thị hiếu đọc sách của công chúng thời ông, thế kỷ 20. Chỉ thích thú với những sách được xuất bản trong năm. Cách mà họ đọc, chỉ để có điều gì đó để tán gẫu, chứ không phải giáo dục suy nghĩ của họ (eduate their mind). Đây là lý do khiến 2 nhà triết học lỗi lạc thời đó đăng đàn, cảnh báo về tác hại của việc đọc quá nhiều.
+Schopenhauer phàn nàn về thị hiếu đọc sách của công chúng thời ông, thế kỷ 19. Chỉ thích thú với những sách được xuất bản trong năm. Cách mà họ đọc, chỉ để có điều gì đó để tán gẫu, chứ không phải giáo dục suy nghĩ của họ (eduate their mind). Đây là lý do khiến 2 nhà triết học lỗi lạc thời đó đăng đàn, cảnh báo về tác hại của việc đọc quá nhiều.
 
 Tôi đang thắc mắc nếu ông sống ở thời đại thông tin như hiện nay, không biết ông sẽ nghĩ ra sao ?
 
