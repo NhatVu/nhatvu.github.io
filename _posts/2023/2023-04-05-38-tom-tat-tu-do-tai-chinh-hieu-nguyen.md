@@ -2,7 +2,7 @@
 layout: post
 title:  "38. [Tóm tắt] Tự do tài chính - Hieu Nguyen"
 date:   2023-04-05 00:01:00 +0000
-category: opinion
+category: finance
 ---
 Bài này sẽ tóm tắt lại nội dung tôi thấy hay, quan trọng trong series Hành trình tự do tài chính của anh Hieu Nguyen. Mục đích dùng cho note cá nhân. Coi nguyên series tại link sau: [https://www.youtube.com/watch?v=GlUvl-MWn6E&list=PL1bLXQ3Ow2laRk3IFEqbDLM_l6YHNPp8W&index=2](https://www.youtube.com/watch?v=GlUvl-MWn6E&list=PL1bLXQ3Ow2laRk3IFEqbDLM_l6YHNPp8W&index=2)
 
