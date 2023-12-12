@@ -1,7 +1,7 @@
 ---
 layout: post
 title:  "61. [System Design] 01. Reliability and scalability của hệ thống phân tán"
-date:   2023-12-21 00:01:00 +0000
+date:   2023-12-11 00:01:00 +0000
 category: technical
 ---
 
@@ -50,7 +50,7 @@ Lấy một ví dụ trong sách [1], hệ thống được thiết kế để x
 Một ví dụ khác là việc Amazon Prime đã chuyển từ kiến trúc microservice sang monolothic cho ứng dụng xử lý video của họ, và kết quả là giảm tới 90% chi phí [4]. Vấn đề chủ yếu ở đây chính là việc truyền tải dữ liệu trung gian (intermediate data) trong quá trình xử lý data giữa các microservice tốn nhiều băng thông và thời gian. Thay vào đó, xử lý trên video trên cùng 1 máy sẽ không tốn chi phí này.
 
 
-**Referene:** 
+**Referenes:** 
 1. [Book: Designing Data-Intensive Applications](https://www.amazon.com/Designing-Data-Intensive-Applications-Reliable-Maintainable/dp/1449373321)
 2. [Các tính chất chính của một hệ thống phân tán](https://topdev.vn/blog/cac-tinh-chat-chinh-cua-mot-he-thong-phan-tan)
 3. [What is the difference between latency and response time?](https://stackoverflow.com/questions/58082389/what-is-the-difference-between-latency-and-response-time)
