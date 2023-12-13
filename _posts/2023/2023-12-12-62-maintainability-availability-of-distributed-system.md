@@ -1,7 +1,7 @@
 ---
 layout: post
 title:  "62. [System Design] 02. Maintainability và Availability của hệ thống phân tán"
-date:   2023-12-13 00:01:00 +0000
+date:   2023-12-12 00:02:00 +0000
 category: technical
 ---
 
