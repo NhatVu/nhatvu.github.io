@@ -1,0 +1,752 @@
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.9.2">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" /><updated>2024-01-13T00:53:15+00:00</updated><id>/feed.xml</id><title type="html">Minh Nhật’s blog</title><entry><title type="html">70. [System Design] 10. Partitioning: Rebalancing Partitions and Request Routing</title><link href="/technical/70-partitioning-part-2" rel="alternate" type="text/html" title="70. [System Design] 10. Partitioning: Rebalancing Partitions and Request Routing" /><published>2024-01-13T00:02:00+00:00</published><updated>2024-01-13T00:02:00+00:00</updated><id>/technical/70-partitioning-part-2</id><content type="html" xml:base="/technical/70-partitioning-part-2"><![CDATA[<p>Bài này sẽ nói đến 2 chương còn lại của phần Partitioning: Rebalancing partitions và Request Routing</p>
+
+<h2 id="rebalancing-partitions">Rebalancing Partitions</h2>
+<p>Theo thời gian, có một số thứ thay đổi với database:</p>
+<ul>
+  <li>The query throughput increase, do đó cần phải scale database. Có thể bằng cách thêm RAM, CPU</li>
+  <li>Datasize increase, cần phải thêm RAM, Disk</li>
+  <li>Machine fail</li>
+</ul>
+
+<p>Những sự thay đổi này đòi hỏi data và request di chuyển từ node này sang node khác. Quá trình này gọi là <em>rebalancing</em>.</p>
+
+<p>Bất kể phương pháp parition nào được sử dụng, rebalancing thường đòi hỏi đáp ứng một số yêu cầu tối thiểu sau:</p>
+<ul>
+  <li>Sau khi rebalancing, the load (data storage, read and write request) phải được phân phối đều giữa các node</li>
+  <li>Trong khi rebalancing đang xảy ra, database phải tiếp tục hoạt động bình thường, tiếp tục chấp nhận read và write request</li>
+  <li>Lượng data cần di chuyển giữa các node là tối thiểu. Nó làm cho việc rebalancing nhanh hơn, giảm tải cho network và disk I/O</li>
+</ul>
+
+<p>Có nhiều cách để assign parition vào node. Ta sẽ tham khảo một số cách phổ biến</p>
+
+<h3 id="hash-mod-n-ko-nên-dùng">Hash mod n (ko nên dùng)</h3>
+<p>Khi thực hiện parition bởi hash key, sẽ tốt hơn khi chia hash key thành nhiều range khác nhau, và gán ranges tương ứng với parition. Ví dụ, partition 0 chứa 0 &lt;= hash(key) &lt; b0, parition 1 chứa b0 &lt;= hash(key) &lt; b1, …</p>
+
+<p>Có thể bạn sẽ hỏi tại sao không sử dụng mod (% operator trong Java)? Giả sử ta có 10 node, xác định key thuộc về node nào bằng cách: node = hash(key) % 10.</p>
+
+<p>Vấn đề chính với phương pháp này, là khi số lượng node thay đổi (có thể là thêm hoặc giảm), thì hầu hết dữ liệu sẽ phải di chuyển từ node này sang node khác. Ví dụ, nếu hash(key) = 123456. Nếu ban đầu ta có 10 nodes, ta có 123456 % 10 = 6 ==&gt; assign vào node 6. Nếu ta tăng node lên 11, ta có 123456 % 11 = 3 ==&gt; assign vào node 3. Nếu ta có 12 node, thì sẽ assign vào node 0 (123456 % 12 = 0).</p>
+
+<p>Do đó, phương pháp “hash % n” rất tốn kém.</p>
+
+<h3 id="fixed-number-of-partitions">Fixed number of partitions</h3>
+<p>Để xử lý vấn đề này, có 1 phương pháp đơn giản, ta sẽ gia tăng số lượng parition nhiều hơn so với số lượng node, khi đó, 1 node có thể có nhiều parition. Nếu ta có 10 nodes, thì có thể có 1000 parition.</p>
+
+<p>Khi số lượng node thay đổi, ta chỉ cần di chuyển một số parition sao cho dữ liệu được phần phối đều. Xem hình 6-6. Ở hình này, khi thêm node 4, p4 ở node 0, p9 ở node 1, p14 ở node 2, p19 ở node 3 sẽ di chuyển sang node 4.</p>
+
+<p><img src="/assets/images/2024/70-fixed-number-partition.png" alt="Alt text" /></p>
+
+<p>Với phương pháp này, số lượng parition không đổi. Key assign vào parition không đổi. Cái thay đổi chính là việc assign partition vào node. Việc thay đổi này không xảy ra ngay lập tức - bởi vì cần thời gian để transfer một lượng lớn data sang node khác. Trong quá trình chuyển đổi, read/write vẫn được diễn ra trên parition ở node cũ.</p>
+
+<p>Chọn số lượng partition là một việc khó. Với phương pháp này, số lượng partition được chọn từ lúc ban đầu và không thay đổi theo thời gian. Tuy nhiên, theo thời gian, data sẽ gia tăng và làm cho kích thước parition bị phình, ảnh hưởng tới performance. Nhưng nếu chọn số lượng parition quá nhiều, sẽ gây những overhead không cần thiết, cũng ảnh hưởng tới performance. Ngoài ra, một số hệ điều hành cũng giới hạn số lượng file tối đa có thể chứa trong 1 folder (https://stackoverflow.com/questions/466521/how-many-files-can-i-put-in-a-directory)</p>
+
+<h3 id="dynamic-partition">Dynamic Partition</h3>
+<p>Một số database như HBase sử dụng phương pháp key range-partitioned với dynamic partition. Khi kích thước của parition vượt quá một ngưỡng nào đó (với HBase là 10GB) thì parition này sẽ tự động chia tách thành 2 partition. Nếu có nhiều dữ liệu bị delete và size nhỏ hơn kích thước nào đó, nó sẽ merged partition với nhau.</p>
+
+<p>Điểm lợi của phương pháp này là số lượng parition sẽ thay đổi dựa theo kích thước của dữ liệu.</p>
+
+<p>Dynamic partition không những phù hợp với key range-partitioned data, mà cũng phù hợp với hash-partitioned data. MongoDB hỗ trợ cả key-range và hash paritioning.</p>
+
+<p>Phương pháp dynamic partitioning, số lượng partition tỉ lệ với kích thước của dataset. Việc split và merge partion giữ cho size của partition không quá lớn cũng không quá nhỏ.</p>
+
+<h3 id="partitioning-proportionally-to-nodes">Partitioning proportionally to nodes</h3>
+<p>(Partition tỉ lệ thuật với node)</p>
+
+<p>Cassandra sử dụng 1 phương pháp khác, làm cho số lượng partition tỉ lệ với số lượng node. Có một số đặc tính như sau:</p>
+<ul>
+  <li>Số lượng parition/node là cố định</li>
+  <li>Nếu số lượng node không thay đổi, size của parition sẽ tăng nếu dataset size tăng</li>
+  <li>Khi gia tăng số lượng node, partition size sẽ giảm xuống. Database sẽ chọn ngẫu nhiên 1 số lượng parition, chia tách thành những parition mới và di chuyển một nửa parition mới ngày sang node mới. Đôi khi, việc này cũng gây ra unfair split. Cassandra 3.0 đề xuất thuật toán để tránh việc unfair split này</li>
+</ul>
+
+<h3 id="operations-automatic-or-manual-rebalancing">Operations: Automatic or Manual Rebalancing</h3>
+
+<p>Fully Automatic thì thuận tiện những sẽ có những hành vi không đoán trước được. Hơn nữa, việc rebalancing yêu cầu data di chuyển nhiều giữa các node nên nếu không cẩn thận, sẽ gây vị quá tải network.</p>
+
+<p>Nguy hiểm hơn, nếu automatic rebalancing kết hợp với automatic fail detection. Giả sử nếu mạng bị nghẽn hoặc 1 node bị overhead dẫn đến node phản hồi chậm/rất chậm. Những node khác sẽ nghĩ overhead node đã dead và sẽ di chuyển load sang những node khác. Nó làm cho những node khác có thể bị overhead và gây ra phản ứng dây chuyền.</p>
+
+<p>Do đó, sẽ tốt hơn nếu con người/chúng ta kiểm soát việc rebalancing này, kết hợp giữa manual và automation</p>
+
+<h2 id="request-routing">Request Routing</h2>
+<p>Tới giờ, data được chia thành nhiều parition, nằm ở nhiều node khác nhau. Làm sao khi query, ta xác được được node và partition chứa key đó?</p>
+
+<p>Ở high level, ta có thể có một số cách sau:</p>
+<ul>
+  <li>Cho phép client connect tới bất kỳ node nào. Nếu node đó chứa data thì return ngay. Nếu không, node sẽ forward request tới node thích hợp, nhận phản hồi và trả phản hồi này về cho client</li>
+  <li>Gửi tất cả request tới routing layer. Routing layer này sẽ xác định route request tới node thích hợp, nó hoạt động như 1 load balancer.</li>
+  <li>Cách này yêu cầu client phải biết key thuộc về node nào và request trực tiếp tới node này.</li>
+</ul>
+
+<p><img src="/assets/images/2024/70-routing.png" alt="Alt text" /></p>
+
+<p>Một số distributed data system dựa vào coordinate service bên thứ 3 như ZooKeeper. ZooKeepr sẽ duy trì (maintain) mapping giữa node và partition. Routing layer sẽ sử dụng thông tin này. Khi có bất kỳ thay đổi nào về parition, node, mapping … ZooKeeper sẽ gửi thông báo với Routing Layer để nó có thông tin mapping mới nhất</p>
+
+<p><img src="/assets/images/2024/70-zookeeper.png" alt="Alt text" /></p>
+
+<p><strong>Referenes:</strong></p>
+<ol>
+  <li><a href="https://www.amazon.com/Designing-Data-Intensive-Applications-Reliable-Maintainable/dp/1449373321">Book: Designing Data-Intensive Applications</a></li>
+</ol>]]></content><author><name></name></author><category term="technical" /><summary type="html"><![CDATA[Bài này sẽ nói đến 2 chương còn lại của phần Partitioning: Rebalancing partitions và Request Routing]]></summary></entry><entry><title type="html">69. [System Design] 09. Partitioning: Partition of Primary Key and Secondary Key</title><link href="/technical/69-partitioning-part-1" rel="alternate" type="text/html" title="69. [System Design] 09. Partitioning: Partition of Primary Key and Secondary Key" /><published>2024-01-11T00:02:00+00:00</published><updated>2024-01-11T00:02:00+00:00</updated><id>/technical/69-partitioning-part-1</id><content type="html" xml:base="/technical/69-partitioning-part-1"><![CDATA[<p>Ở chương trước chúng ta nói đến replication - có nhiều bản copy cho cùng 1 data trên nhiều node khác nhau. Tuy nhiên, với dữ liệu lớn (big data - ko thể chứa toàn bộ trong 1 node) hoặc ứng dụng cần very high throughput, như thế là chưa đủ. Partitioning là phương pháp chia nhỏ data thành nhiều phần/parition khác nhau.</p>
+
+<p><strong>Note</strong>: Parition là thuật ngữ chung chung. Với mỗi ứng dụng, sẽ có những thuật ngữ riêng, mang cùng ý nghĩa. Với MongoDB, Elasticsearch là shard, BigTable là tablet, Cassandra là vnode, …</p>
+
+<p>Thông thường, parition định nghĩa rằng 1 phần của data (a piece of data như record, document) thuộc về 1 node cụ thể. Nói rõ hơn, nếu record A thuộc về parition 1, thì nó không thể thuộc về bất kỳ parition nào khác. Ta có thể xem mỗi partition là 1 database nhỏ, mặc dù database system có thể hỗ trợ những operation cần kết hợp nhiều partition (ví dụ như join)</p>
+
+<p>Lý do chính cần parition là scalability. Parition thường đi chung với replication. 1 parition được replicate trên nhiều node. Và 1 node có thể có nhiều parition. Replication chia lượng tải bằng cách tạo ra nhiều bản copy, do đó client sẽ query trên nhiều node. Parition chia lượng tải lần 2 bằng cách chia nhỏ data thành nhiều parition, lúc này ta có thể tăng số node cần dùng lên, dẫn đến lượng tải tiếp tục được chia ra</p>
+
+<h2 id="paritioning-of-key-value-data">Paritioning of Key-Value data</h2>
+<p>Khi ta có dữ liệu lớn và quyết định chia nó thành nhiều phần nhỏ, làm sao để xác định vị trí của từng record?</p>
+
+<p>Mục đích chính là chia đều lượng data/tải tới nhiều node khác nhau. Theo lý thuyết, nếu thêm 10 node, có thể chịu tải x10 nếu data được chia đều cho các node. Nếu chia không đều, một vài parition sẽ có data hoặc queries nhiều hơn các node khác. Hiện tượng này gọi là <em>skewed</em>. Và nó làm cho việc chia parition không hiệu quả. Trong trường hợp cực đoan, nếu hầu hết data hoặc query đều tập trung vào 1 node, và 9 node còn lại ở trạng thái idle, thì việc partition thất bại. Trường hợp này gọi là <em>hot spot</em></p>
+
+<p>Một cách đơn giản để tránh hot spot problem là gán record vào các node randomly. Data sẽ được phân phối đều tới các node nhưng nó có 1 điểm bất lợi rất lớn, khi cần query, ta không biết record đang ở node nào, vì thế cần phải query tới tất cả record để kiểm tra.</p>
+
+<p>Ta có thể làm tốt hơn randomly. Giả sử ta có 1 key-value model và có primary key</p>
+
+<h3 id="paritioning-by-key-range">Paritioning by key range</h3>
+<p>Ta có thể dùng key range để parition dữ liệu. Mỗi parition sẽ được assign 1 continuous range (from min to max). Nếu bạn biết key range của parition, thì có thể dễ dàng xác định key cần query thuộc parition nào. Range key không cần phải có size bằng nhau, bởi có thể dữ liệu tập trung vào 1 vài range hơn là những range khác. Ví dụ, tên sách có thể tập trung nhiều ở ký từ A - D, ta có thể coi nó là 1 range. Ký từ từ Q - Z cũng có thể coi là 1 range. Vậy nên, key range boundary phụ thuộc vào đặc điểm của data</p>
+
+<p>Trong mỗi parition, key có thể được sorted. Điều này có lợi khi cần read, cũng như khi cần scan dữ liệu trong 1 range nào đó. Ngoài ra, key không nhất biết phải là số, mà có thể là dạng concatenated key, kết hợp bởi nhiều field với nhau. Ví dụ 20241201_key, …</p>
+
+<p>Tuy nhiên, downside là phương pháp này có thể dẫn tới hot spot. Nếu parition được chia theo ngày tháng, nếu có sự kiện gì xảy ra, thì write/read request sẽ chỉ tập trung vào 1 partion, nhưng parition khác ở trạng thái idle</p>
+
+<p>Để tránh trường hợp này, ta có thể thêm prefix sensor/server name trước timestamp (vd: server1<em>20241201</em>…), lúc này key trong timestamp sẽ được tách trên nhiều censor/server</p>
+
+<h3 id="partitioning-by-hash-of-key">Partitioning by Hash of Key</h3>
+<p>Vì lý do skewed và hot spot, nhiều distributed storage sử dụng hash để parition key. Một hàm hash tốt sẽ làm cho skewed data được phân phối đồng đều. Hash function không cần bảo mật, chỉ cần data phân phối đồng đều là đủ. Consistent hashing là phương pháp thường được sử dụng ở các distributed system như CDN</p>
+
+<p>Tuy nhiên, khi sử dụng hash key, ta bị mất đi 1 đặc trưng của key-range: khả năng query theo range. Với hash key, 2 key gần nhau có thể nằm ở 2 partion khác nhau, vì giá trị hash khác nhau. Lúc này, ta phải query ở nhiều partition khác nhau.</p>
+
+<p>Cassandra tìm cách thoả hiệp (compromise) giữa 2 phương pháp này. Cassandra khai báo compound primary key, gồm nhiều column. Giả sử key gồm nhiều phần A_B_C,…. Chỉ phần đầu tiên (phần A) được hash để xác định partition, nhưng những phần khác (B_C,..) sẽ được dùng làm concatenated index for sorting data. Do đó, query không thể search range value cho first column, nhưng nếu ta cố định first column, ta có thể thực hiện efficient range scan trên những column còn lại.</p>
+
+<h3 id="skewed-workloads-and-relieving-hot-spot">Skewed Workloads and Relieving Hot spot</h3>
+<p>Như đã thảo luận, hash key có thể giảm hot spot. Tuy nhiên, ta không thể tránh nó hoàn toàn. Trong trường hợp extreme, all read and write cùng 1 key, do đó tất cả request sẽ trỏ vào 1 partition.</p>
+
+<p>Với những trường hợp hot key, 1 kỹ thuật đơn giản là add prefix hoặc suffix cho key. Nếu chỉ thêm 2 số thì ta sẽ có thêm 100 keys, cho phép nó được phân phối giữa các parition khác nhau. Tuy nhiên, phương pháp này yêu cầu manual work, do đó chỉ phù hợp với một lượng key nhỏ mà thôi.</p>
+
+<h2 id="partitioning-and-secondary-index">Partitioning and Secondary index</h2>
+<p>Thông thường, secondary index không sử dụng để xác định record (như primary index), mà thường dùng để search 1 giá trị nào đó. Ví dụ search by Name, car, … Vấn đề với secondary index là nó không “map closely” với partition.</p>
+
+<h3 id="partitioning-secondary-indexes-by-document">Partitioning Secondary Indexes by Document</h3>
+<p>Giả sử ta có 1 website bán xe, mỗi xe có 1 unique ID - gọi là DocumentId. Ta có thể partition bằng DocumentId. Document 0 - 499 ở partition 0, Document 500-999 ở parition 1, …</p>
+
+<p>Nếu ta muốn search xe bằng color và make, ta có thể tạo secondary index bằng color và make. Index trên color có dạng color:red, color:blue ,…</p>
+
+<p><img src="/assets/images/2024/69-secondary-index.png" alt="Alt text" /></p>
+
+<p>Với phương pháp index by document, mỗi partition sẽ duy trì secondary index riêng, chỉ bao gồm những document trong partition đó. Nó không quan tâm đến data lưu trữ ở những partition khác. Bất cứ khi nào cần write tới database (write, update, delete), ta chỉ làm việc với parition chứa documentId đó. Với nguyên nhân này, document-partitioned index còn được gọi là <em>local index</em>.</p>
+
+<p>Khi làm việc với document-partitioned index, cần lưu ý rằng, không có ràng buộc toàn bộ car có cùng color hoặc make phải nằm gọn trong 1 parition. Như hình 6-4, red car có thể xuất hiện ở partition 0 và partition 1. Do đó, nếu ta muốn query for red cars, ta cần gửi query tới tất cả partition, và sau đó combine kết quả và trả về. Điều này làm cho việc đọc secondary index is quite expsensive. Nó thường đc dùng rộng rãi ở Cassandra, Elasticsearch. Hầu hết các database vendor khuyến nghị thiết kế partition sao cho secondary index chứa trong 1 partition.</p>
+
+<h3 id="partitioning-secondary-indexes-by-term">Partitioning Secondary Indexes by Term</h3>
+<p><img src="/assets/images/2024/69-secondary-index-by-term.png" alt="Alt text" /></p>
+
+<p>Thay vì mỗi parition có secondary index riêng của nó (local index), ta có thể xây dựng <em>global index</em> bao phủ toàn bộ data trên tất cả partition. Ta cũng không thể lưu index trên 1 node, vì gây ra bottleneck. Global index cũng phải được partition, nhưng cách parition sẽ khác so với primary index</p>
+
+<p>Hình 6-5 mô tả cách tổ chức global index. color:red sẽ chứa index của car với color=red trên tất cả partition. Nhưng index color được partition theo dạng: color từ a-r được chứa ở parition 0, và color từ s - z được chứa trong partition 1. Chúng ta gọi phương pháp này là <em>term-partitioned</em></p>
+
+<p>So với document-partitioned index, term-partitioned index lợi hơn cho việc read: Client chỉ gần gọi đến partition chứa term cần query, mà không cần phải quét toàn bộ partition. Tuy nhiên, write thì phức tạp và expensive. Với 1 thao tác write, có thể ảnh hưởng tới nhiều index, ở nhiều parition khác nhau. Do đó, trong thực tế, việc update index thường được làm theo dạng async.</p>
+
+<p>Đại diện của phương pháp global index là DynamoDB.</p>
+
+<p><strong>Referenes:</strong></p>
+<ol>
+  <li><a href="https://www.amazon.com/Designing-Data-Intensive-Applications-Reliable-Maintainable/dp/1449373321">Book: Designing Data-Intensive Applications</a></li>
+</ol>]]></content><author><name></name></author><category term="technical" /><summary type="html"><![CDATA[Ở chương trước chúng ta nói đến replication - có nhiều bản copy cho cùng 1 data trên nhiều node khác nhau. Tuy nhiên, với dữ liệu lớn (big data - ko thể chứa toàn bộ trong 1 node) hoặc ứng dụng cần very high throughput, như thế là chưa đủ. Partitioning là phương pháp chia nhỏ data thành nhiều phần/parition khác nhau.]]></summary></entry><entry><title type="html">68. [System Design] 08. Replication: phương pháp Masterless</title><link href="/technical/68-replication-masterless" rel="alternate" type="text/html" title="68. [System Design] 08. Replication: phương pháp Masterless" /><published>2024-01-09T00:02:00+00:00</published><updated>2024-01-09T00:02:00+00:00</updated><id>/technical/68-replication-masterless</id><content type="html" xml:base="/technical/68-replication-masterless"><![CDATA[<p>Với 2 phương pháp trước đây, single leader và multi-leader, dựa trên ý tưởng rằng write request sẽ được gửi tới leader node và database sẽ làm nhiệm vụ copy/replicate data tới những node khác.</p>
+
+<p>Một vài database dùng phương pháp khác, loại bỏ khái niệm leader và cho phép write trực tiếp lên bất kỳ replica nào. Ý tưởng này gọi là leaderless hoặc còn được gọi là Dynamo style. Amazon Dynamo, Cassandra, Riak, Voldermort sử dụng ý tưởng này.</p>
+
+<h2 id="writing-to-the-database-when-a-node-is-down">Writing to the Database when a node is down</h2>
+<p>Khi 1 replica bị down, ta sẽ có khái niệm failover với single leader and multi leader approach. Tuy nhiên, với leaderless, ta không có khái niệm này.</p>
+
+<p>Giả sử ta có 3 replica và 1 trong số đó bị down. Giả sử với write request, chỉ cần nhận 2 ok response thì write được xem là thành công. Trong trường hợp này, ta sẽ làm ngơ việc 1 node bị down và chấp nhận write request là thành công nếu nhận được 2 ok response từ 2 node còn lại.</p>
+
+<p><img src="/assets/images/2024/68-leaderless-write-read.png" alt="Leaderless write, read" /></p>
+
+<p>Giả sử khi node bị down hoạt động trở lại, node sẽ bị thiếu những write request khi nó offline. Và nếu client đọc phải những node này, sẽ trả về dữ liệu bị cũ (hay gọi là stale/outdated data).</p>
+
+<p>Để giả quyết vấn đề này, khi đọc, client sẽ đồng thời gửi nhiều read requests tới nhiều node khác nhau. Chúng có thể lấy được dữ liệu up-to-date và stale data. Khi này, có thể dùng version number để xác định giá trị nào mới hơn.</p>
+
+<h3 id="read-repair-and-anti-entropy">Read repair and anti-entropy</h3>
+<p>The replication schema đảm bảo rằng, cuối cùng thì data sẽ được copy tới tất cả các replica. Sau khi 1 node từ trạng thái unavailable hoạt động trở lại, làm sao để nó catch-up (cập nhật) ?</p>
+
+<p>Với Dynamo-style datastores, có 2 cơ chế thường được sử dụng:</p>
+<ul>
+  <li>Read repair: khi client read đồng thời từ nhiều node, nó có thể phát hiện stale data. Như hình 5-10, user 2345 lấy data version 6 từ replica 3 và version 7 từ replica 1 và 2. Client thấy rằng replica 3 có stale data và sẽ write giá trị mới vào replica này. Phương pháp này hoạt động tốt cho những giá trị được read thường xuyên</li>
+  <li>Anti-entropy process: một vài datastores có 1 background process. Nó sẽ luôn tìm kiếm sự khác biệt giữa các replicas và copy những data bị thiếu từ replica này sang replica khác. Không giống với replication log trong trường hợp leader-based replicationr, anti-entropy process không copy writes theo bất kỳ thứ tự cụ thể nào (??? chưa hiểu), và sẽ có significant delay trước khi data được copy</li>
+</ul>
+
+<p>Một vài datastore không có anti-antropy process, nên với những dữ liệu hiếm khi được đọc, có thể có sự mất mát nếu lỗi xảy ra, bởi vì read repair chỉ được thực thi khi data được đọc bởi ứng dụng</p>
+
+<h3 id="quorums-for-reading-and-writing">Quorums for reading and writing</h3>
+<p>Nếu ta có n replicas, mỗi write request phải được confirm bởi w node để được xem là thành công, và với read query, ta sẽ query ít nhất r node (Trong ví dụ ở hình 5.10, n = 3, w = 2, r = 2)</p>
+
+<p>Nếu w + r &gt; n, ta có thể mong đợi đọc được up-to-date value khi reading, bởi vì ít nhất 1 trong r node mà chúng ta đọc sẽ có giá trị mới nhất.</p>
+
+<p>Read và write tuân theo quy tắc r và w được gọi là quorum reads and writes.</p>
+
+<p>Với Dynamo-style database, parameter n, w, r sẽ được config. n thường được lựa chọn làm số lẻ (ví dụ 3 hoặc 5), và w = r = (n+1)/2. Tuy nhiên, tuỳ thuộc vào ứng dụng mà ta config riêng. Ví dụ, nếu workload với ít write và nhiều read, có thể setting w = n và r = 1. Điều này làm cho read nhanh hơn, nhưng bất lợi là nếu 1 node fail gây ra tất cả write data đều fail.</p>
+
+<ul>
+  <li>Nếu w &lt; n, ta có thể tiếp tục write nếu 1 node fail/unavailable</li>
+  <li>Nếu r &lt; n, ta có thể tiếp tục read nếu 1 node fail/unavailable</li>
+  <li>Thông thường, read và write sẽ luôn luôn được gửi một cách sóng song tới tất cả n replica.</li>
+</ul>
+
+<h2 id="limitations-of-quorum-consistency">Limitations of Quorum Consistency</h2>
+<p>Nếu ta có n replicas, và chọn w, r sao cho w + r &gt; n, ta có thể mong đợi rằng data trả về sẽ là data mới nhất.</p>
+
+<p>Nếu w + r &lt;= n, có khả năng ta sẽ đọc phải stale data, bởi vì nhiều khả năng sẽ đọc phải node không chứa dữ liệu mới nhất. Tuy nhiên, config này cho phép low latency và higher availability.</p>
+
+<p>Tuy nhiên, kể cả khi w + r &gt; n, vẫn có những edge case (trường hợp đặc biệt), stale data được trả về.</p>
+<ul>
+  <li>Sloppy quorum được dùng, khi w writes được ghi vào những node khác với những node được đọc, do đó, không gì đảm bảo việc overlap giữa r nodes và w nodes. Sẽ nói rõ hơn ở phần sau</li>
+  <li>Nếu có 2 write xảy ra đồng thời, ta sẽ ko biết request nào xảy ra trước.</li>
+  <li>Nếu 1 write xảy ra đồng thời với 1 read, write request chỉ “reflected, xảy ra” ở một số replicas. Trong trường hợp đó, không thể xác định read sẽ trả về old hay new value</li>
+  <li>Nếu 1 write thành công ở 1 vài replicas nhưng thất bại ở những replicas khác, và về tổng thể, write request thành công nhỏ hơn w, ta không thể rolled back trên những replica mà nó thành công. Điều đó có nghĩa là nếu write request fail, những read sau đó có thể hoặc không thể trả về giá trị từ write. Theo tôi hiểu, nếu read đọc phải replicas mà ghi thành công, thì trả về giá trị. Nếu đọc phải node mà write fail, thì không trả về giá trị.</li>
+  <li>Giả sử 1 node chứa dữ liệu mới ghi bị fail (shutdown), nhưng chưa kịp backup dữ liệu mới này, thì khi phục hồi dữ liệu, sẽ phục hồi dữ liệu cũ (bị thiếu những dữ liệu chưa kịp backup). Và khi đó, số lượng replicas cho new value sẽ nhỏ hơn w, phá vỡ quorum condition</li>
+  <li>Ngay cả khi mọi thứ đều hoạt động tốt, có vài edge cases có thể gặp phải do timing gây ra. Xem ở phần “Linearizability and quorums”, trang 334</li>
+</ul>
+
+<p>Mặc dù quorum xem như sự đảm bảo rằng read sẽ trả về dữ liệu mới nhất, nhưng trong thực thế, không có đơn giản như vậy.</p>
+
+<h2 id="sloppy-quorums-and-hinted-handoff">Sloppy Quorums and Hinted Handoff</h2>
+
+<p>Sloppy quorum: write and read vẫn yêu cầu w và r phản hồi thành công, nhưng chúng có thể bao gồm những node không phải là n “home” nodes. Cụ thể, nếu 1 node trong n node bị fail, ta có thể write tới 1 node khác ngoài n node để đảm bảo số luọng w. Tuy nhiên, khi đọc, ta chỉ đọc từ n “home” node, nên sẽ có khả năng trả về stale data. Sloppy quorum hữu ích trong việc tăng write availability nhưng nó không phải là quorum theo nghĩa truyền thống. Nó chỉ đảm bảo durability</p>
+
+<p>Khi network interruption/fail node được sửa, tất cả write request tới temporarily node (đại diện của node có vấn đề) sẽ được gửi về “home” node. Điều này gọi là hinted handoff</p>
+
+<p>Sloppy quorums là tuỳ chọn. Cassandra disable tính năng này với config mặc định</p>
+
+<h2 id="detecting-concurrent-writes">Detecting Concurrent writes</h2>
+<p>Dynamo-style database cho phép nhiều client write đồng thời trên cùng 1 key, nghĩa là conflict có thể xảy ra. Conflict có thể xử lý ở read repair hoặc hinted handoff</p>
+
+<p>Vấn đề là những event đến các node với các thứ tự khác nhau. Ví dụ hình 5-12 mô tả 2 clients, A và B, ghi đồng thời key X vào 3 node</p>
+<ul>
+  <li>Node 1: nhận write từ A, và ko bao giờ nhận write từ B vì network problem</li>
+  <li>Node 2: Đầu tiên, nhận phản hồi write từ A, sau đó write tiếp vào B (chưa biết có nhận được phản hồi hay không)</li>
+  <li>Node 3: Đầu tiên, nhận phản hồi write từ B, sau đó write vào A (chưa biết có nhận được phản hồi hay không)</li>
+</ul>
+
+<p><img src="/assets/images/2024/68-concurrent-write.png" alt="Alt text" /></p>
+
+<p>Nếu mỗi node chỉ đơn giản overwrite (ghi đè) giá trị cho key bất cứ khi nào nhận được yêu cầu từ write request, thì sẽ tạo ra inconsistent vĩnh viễn. Ví dụ 5-12, node 2 nghĩ rằng final value của X là B, trong khi các node khác nghĩa là A.</p>
+
+<p>Để đạt được eventually consistent, các replica phải “hội tụ” về cùng giá trị. Chúng làm bằng cách nào? Ta có thể hy vọng database làm nó 1 cách tự động, nhưng ko may thay, hầu hết các implementation đều không tốt.</p>
+
+<h3 id="last-write-wins-discarding-concurrent-writes">Last write wins (discarding concurrent writes)</h3>
+<p>Phương pháp này cho phép mỗi replica chỉ lưu the most “recent” value, và cho phép “older” value bị overwrite. Tuy nhiên, “recent” trong ngữ cảnh này thì mập mờ và dễ nhầm lẫn. Trong ví dụ 5-12, ta không thể xác định thứ tự write của request, không rõ request nào sẽ đến trước. Khi nói “concurrent request”, nghĩa là thứ tự ko được xác định</p>
+
+<p>Ngay ra khi write không có natural order, ta có áp đặt 1 thứ tự bất kỳ cho nó. Ví dụ, thêm timestamp, timestamp nào lớn nhất là “recent” request và loại bỏ toàn bộ dữ liệu cũ.</p>
+
+<h3 id="the-happens-before-relationship-and-concurrency">The “happens-before” relationship and concurrency</h3>
+<p>Cần duy quyền mối quan hệ giữa các request. Giả sử request A xảy ra trước request B. Ta có thể nói A happens before B hoặc B is causally dependent vào A.</p>
+
+<p>Khi có 2 operation A và B, có 3 trường hợp xảy ra: A xảy ra trước B, B xảy ra trước A hoặc A và B xảy ra đồng thời</p>
+
+<p>Ngoài ra còn có một số phần mà tôi vẫn chưa hiểu, không đề cập ở phần này. Các sub-section gồm:</p>
+<ul>
+  <li>Capture the happens happen-before relationship</li>
+  <li>Merging concurrently written values</li>
+  <li>Version vectors</li>
+</ul>
+
+<p><strong>Referenes:</strong></p>
+<ol>
+  <li><a href="https://www.amazon.com/Designing-Data-Intensive-Applications-Reliable-Maintainable/dp/1449373321">Book: Designing Data-Intensive Applications</a></li>
+</ol>]]></content><author><name></name></author><category term="technical" /><summary type="html"><![CDATA[Với 2 phương pháp trước đây, single leader và multi-leader, dựa trên ý tưởng rằng write request sẽ được gửi tới leader node và database sẽ làm nhiệm vụ copy/replicate data tới những node khác.]]></summary></entry><entry><title type="html">67. [System Design] 07. Replication: phương pháp Master-master</title><link href="/technical/67-replication-master-master" rel="alternate" type="text/html" title="67. [System Design] 07. Replication: phương pháp Master-master" /><published>2023-12-29T00:02:00+00:00</published><updated>2023-12-29T00:02:00+00:00</updated><id>/technical/67-replication-master-master</id><content type="html" xml:base="/technical/67-replication-master-master"><![CDATA[<p>Multileader hay master-master 1 phương pháp thiết lập replication. Tương tự với master-slave, nhưng multimaster cho phép ghi dữ liệu trên nhiều node khác nhau. Sau đó, sẽ thực hiện xử lý conflict khi có concurrent write.</p>
+
+<p><strong>Note</strong>: phương pháp này thường không được sử dụng rộng rãi và nên tránh khi có thể.</p>
+
+<h2 id="use-case-for-multi-leader-replication">Use case for Multi-leader replication</h2>
+<p>Thông thường, multi-leader không được dùng nếu chỉ giới hạn trong 1 datacenter, vì lợi ích đạt được nhỏ hơn rất nhiều so với mức độ phức tạp được thêm vào. Tuy nhiên, có 1 vài trường hợp, ta có thể xem xét dùng multi-leader replication</p>
+
+<h3 id="multi-datacenter-operation">Multi-datacenter operation</h3>
+<p>Giả sử bạn có nhiều datacenter và muốn replicate data tới nhiều datacenter khác nhau (có lẽ có thể chịu đựng việc toàn bộ 1 datacenter bị fail). Với single master-slave replication, master sẽ chỉ ở trong 1 datacenter.</p>
+
+<p><img src="/assets/images/2023/67-multi-leader-replication.png" alt="Multileader replication" /></p>
+
+<p>So sánh giữa single-leader và multi-leader config:</p>
+<ul>
+  <li>Performance: Với single leader config, mỗi write request đều phải đi đến datacenter chứa leader, và điều này làm gia tăng đáng kể latency. Với multi-leader config, write request có thể xử lý ở local datacenter và sau đó được replicate asynchornously tới những data center khác. Việc xử lý giữa các datacenter thì bị “ẩn” với người dùng, nên hiệu suất tốt hơn</li>
+  <li>Tolerence of datacenter outages:</li>
+  <li>Tolerance of network problems:</li>
+</ul>
+
+<p>Tuy nhiên, multi-leader cũng có 1 hạn chế rất lớn: nếu dữ liệu được thay đổi cùng lúc ở 2 datacenter khác nhau, conflict sẽ xảy ra và ta phải xử lý conflict này.</p>
+
+<p>Ngoài ra, những thứ như auto-increament key, triggers, stored proceudure cũng có thể xảy ra vấn đề. <strong>Vì vậy, multi-leader replication thường không được sử dụng và nên tránh khi có thể.</strong></p>
+
+<h3 id="clients-with-offline-operation">Clients with offline operation</h3>
+<p>Đây là 1 dạng ứng dụng có thể tiếp tục hoạt động offline trong khi không kết nối với internet. Ví dụ calendar app, google docs, … Nếu có những thay đổi nào diễn ra offline, chúng cần được sync với server và những thiết bị khác khi chúng online</p>
+
+<p>Trong trường hợp này, mỗi một thiết bị là 1 local database và hoạt động như một leader (chúng nhận write requests) và sẽ có quá trình sync dữ liệu giữa các device. Quá trình sync này (hay còn gọi là multi-leader replication process) có thể là async. The replication lag có thể là hàng giờ hoặc vài ngày, phụ thuộc vào việc khi nào thiết bị online</p>
+
+<p>Từ góc nhìn của kiến trúc hệ thống, thiết lập như này giống với multi-leader replication giữa các datacenter, mà mỗi device là 1 datacenter. Với lịch sử phong phú của việc thất bại trong lúc sync calendar, nó chứng mình rằng multi-leader replication rất khó để hiện thực cách đúng đắn.</p>
+
+<h3 id="collaborative-editing">Collaborative editing</h3>
+<p>Real-time collaborative editing application cho phép nhiều người edit 1 document đồng thời. Ví dụ Google Docs.</p>
+
+<p>Tác giả không nghĩ rằng collaborative editing là database replication problem, nhưng có nhiều điểm chung với trường hợp offline editing. Khi 1 user edit 1 document, sự thay đổi ngay lập tức được áp dụng tới local replica (trạng thái của document được lưu tạm thời trên web browser hoặc client application) và async replicated tới server hoặc những user khác đang edit cùng document</p>
+
+<p>Nếu muốn đảm bảo không có editing confliect, ứng dụng cần duy trì lock với document trước khi 1 user có thể edit. Nếu 1 user khác muốn edit, trước tiên, họ cần phải đợi user đang giữ lock, commit những thay đổi và release lock. Mô hình này giống với single-leader replication with transaction trên leader</p>
+
+<p>Tuy nhiên, để faster collaboration, bạn cần những thay đổi phải nhỏ (ví dụ: a single keystroke) và tránh locking. Phương pháp này cho phép nhiều user edit đồng thời, nhưng cũng mang đến những vấn đề của multi-leader replication, bao gồm việc xử lý conflict.</p>
+
+<h3 id="handling-write-conflicts">Handling Write Conflicts</h3>
+<p>Giả sử, User 1 thay đổi title từ A sang B. User thay đổi title từ A sang C cùng thời điểm. Mỗi thay đổi đều thành công trên local leader. Tuy nhiên, khi sự thay đổi async replicated, conflict xảy ra. Xem hình dưới</p>
+
+<p><img src="/assets/images/2023/67-write-conflict.png" alt="write conflict" /></p>
+
+<h3 id="synchronous-vs-asynchronous-confliect-detection">Synchronous vs Asynchronous confliect detection</h3>
+
+<p>Với single leader database, với write request thứ 2, hoặc là sẽ block và đợt write request thứ 1 xong, hoặc là sẽ abort (bỏ) write request 2 và force user gọi lại request 2. Với multi leader, vì write đã thành công trên leader, nên conflict chỉ được phát hiện sau đó, khi async replicated xảy ra. Và có lẽ đã qúa trễ để user xử lý conflict</p>
+
+<p>Theo lý thuyết, với multi-leader, ta có thể đợi dữ liệu replicated tới toàn bộ node trước khi xác nhận write request thành công. Tuy nhiên, điều này làm mất đi lợi thế của multi-leader replication.</p>
+
+<h3 id="converging-toward-a-consistent-state">Converging toward a consistent state</h3>
+<p>Với single-leader database, write request có sequential order. Nếu có nhiều update tới cùng 1 field, update cuối dùng sẽ xác định giá trị của field đó. Tôi nghĩ, thật ra vấn sẽ có concurrent write request tới leader, nhưng leader database sẽ tự xử lý việc này, nên chúng ta không cần quan tâm tới vấn đề này.</p>
+
+<p>Với multi-leader mode, không có bất kỳ thứ tự gì cho việc write, do đó, ta không biết chính xác final value là gì. Trở lại ví dụ về write conflict, ta không biết sau cùng giá trị của title sẽ là B hay C ? Ta cần phải đảm bảo giá trị của từng replica là giống nhau, hay hội tụ là 1 giá trị (convergent). Có nhiều cách để thực hiện như:</p>
+<ul>
+  <li>Với mỗi write request, assign 1 unique ID (ex: a timestamp, long random number hoặc UUID,…), chọn write request mà ID là lớn nhất và đó là winner. Nếu timestamp được sử dụng, kỹ thuật này gọi là last write wins (LWW). Mặc dù kỹ thuật này phổ biến, nhưng cũng nguy hiểm vì dễ bị mất dữ liệu.</li>
+  <li>Với mỗi replica, assign 1 unique ID (ở trên là assign ID cho write request, còn ở đây là assing ID cho mỗi replica), và luôn chọn replica có ID lớn hơn. Phương pháp này cũng gây ra data loss</li>
+  <li>Merge value với nhau. Ví dụ sort theo alphabet và concat value. Với ví dụ ở trên, giá trị sau khi merge B và C là B/C</li>
+  <li>Ghi nhận conflict và giữ lại toàn bộ data. Sau đó để application xử lý conflict ở 1 thời điểm nào đó.</li>
+</ul>
+
+<p>Những cách này quá chung chung, có thể xem như keyword để tìm hiểu thêm.</p>
+
+<h3 id="custom-conflict-resolution-logic">Custom conflict resolution logic</h3>
+<p>Conflict resolution có thể được xử lý ở applicaiton logic. Code có thể thực thi ở write hoặc read.</p>
+<ul>
+  <li>On write: Ngay khi database phát hiện conflict ở log of replicated changes, nó gọi là conflict handler.</li>
+  <li>On read: Khi một conflict được phát hiện, tất cả các conflict đều được ghi vào database. Lần tới, khi data được đọc, sẽ có nhiều version của data được trả về. Ứng dụng có thể tự động xử lý hoặc cho phép user xử lý conflict, và sau đó ghi ngược lại vào database. CouchDB sử dụng phương pháp này</li>
+</ul>
+
+<p>Conflict resolution thường áp dụng ở mức individual row hoặc document, không phải toàn bộ transaction. Nếu 1 transaction có nhiều lệnh write, mỗi lệnh write sẽ được xem xử lý conflict riêng biệt.</p>
+
+<p>Lưu ý rằng việc xử lý conflict sẽ nhanh chóng trở nên phức tạp và dễ dàng xảy ra lỗi.</p>
+
+<p><strong>Referenes:</strong></p>
+<ol>
+  <li><a href="https://www.amazon.com/Designing-Data-Intensive-Applications-Reliable-Maintainable/dp/1449373321">Book: Designing Data-Intensive Applications</a></li>
+</ol>]]></content><author><name></name></author><category term="technical" /><summary type="html"><![CDATA[Multileader hay master-master 1 phương pháp thiết lập replication. Tương tự với master-slave, nhưng multimaster cho phép ghi dữ liệu trên nhiều node khác nhau. Sau đó, sẽ thực hiện xử lý conflict khi có concurrent write.]]></summary></entry><entry><title type="html">66. [System Design] 06. Replication: phương pháp Master - Slave. Phần 2</title><link href="/technical/66-replication-master-slave-part-2" rel="alternate" type="text/html" title="66. [System Design] 06. Replication: phương pháp Master - Slave. Phần 2" /><published>2023-12-27T00:02:00+00:00</published><updated>2023-12-27T00:02:00+00:00</updated><id>/technical/66-replication-master-slave-part-2</id><content type="html" xml:base="/technical/66-replication-master-slave-part-2"><![CDATA[<h2 id="implementation-of-replication-logs">Implementation of Replication logs</h2>
+<p>Có nhiều cách để thực hiện replicaiton log. Ta sẽ xem xét một số cách thông dụng nhất:</p>
+<h3 id="statement-based-replication">Statement-based replication</h3>
+<p>Trường hợp đơn giản nhất, leader/master sẽ log tất cả write request statement và gửi nó tới follower/slave. Với relational database, statement cính là INSERT, UPDATE, DELETE query.</p>
+
+<p>Mặc dù nghe hợp lý nhưng cách này gặp những khó khăn sau khiến việc replication không thực hiện được</p>
+<ul>
+  <li>Statement chứa nondeterministic function (function trả về kết quả khác nhau sau mỗi lần gọi) như now(), rand(), … Do đó, giá trị trong mỗi replica sẽ khác nhau</li>
+  <li>Statement use dụng auto-increasing column hoặc nó dựa vào 1 dữ liệu khác trong database (ví dụ UPDATE .. WHERE &lt;condition&gt;), chúng phải được thực thi đúng thứ tự. Điều này giới hạn khả năng concurently executing transaction</li>
+  <li>Side effects (ví dụ triggers, stored procedure, user-defined function,…)</li>
+</ul>
+
+<p>Những hạn chế trên đều có thể khắc phục, tuy nhiên, vì có quá nhiều edge cases, những phương pháp replication khác được ưa chuộng hơn.</p>
+
+<h3 id="write-ahead-log-wal-shipping">Write-ahead log (WAL) shipping</h3>
+<p>Log chỉ có 1 mode là append-log (thêm vào cuối file). Content là sequence of bytes chứa thông tin cần ghi vào database. Leader/Master sẽ gửi log này tới slave.</p>
+
+<p>Điểm bất lợi nhất của phương pháp này là log lưu ở dạng low-level data (byte, disk block, ..) và nó bị closely coupled (gắn chặt với) với storage engine. Nếu database thay đổi storage format (vd như khi nâng cấp version), thường sẽ không thể xử lý log 1 cách đúng đắn.</p>
+
+<p>Điều này quan trọng trong việc vận hành. Nếu replication protocol cho phép follower dùng phiên bản phần mềm mới hơn leader, ta có thể thực hiện upgrade với zero-downtime bằng cách upgrade follower trước và thực hiện falilover cho leader node. Nếu replication protocol không cho phép version missmatch, upgrade đòi hỏi downtime.</p>
+
+<p>Hơn nữa, logical log có thể parse dễ dàng bởi các ứng dụng bên thứ 3. Có thể dùng cho data warehouse, custom index, …</p>
+
+<h3 id="logical-row-based-log-replication">Logical (row-based) log replication</h3>
+<p>Logical log là 1 cách để tránh bị “closely coupled” vào storage engine, dễ dàng hơn trong việc giữ đặc tính backward compatible, giúp cho phép leader và follower chạy với nhiều phiên bản database khác nhau</p>
+
+<p>Logical log trong relational database thường sẽ gồm 1 chuỗi records, mô tả các thao tác write của database, gồm:</p>
+<ul>
+  <li>Với insert row, log gồm tất cả giá trị mới của column</li>
+  <li>Với delete row, log gồm thông tin đủ để thực hiện delete. Nếu có primary key, thì dùng primary key. Nếu không có, thì log toàn bộ giá trị của row</li>
+  <li>Với update row, log chứa thông tin đủ để uniquely identify (định dạng duy nhất) row, và những giá trị mới của các column cần update. Theo tôi hiểu, nếu câu lệnh UPDATE yêu cầu update 100 rows, thì row-based log sẽ log giá trị của 100 row. Nhưng statement log sẽ chỉ log mỗi câu query mà thôi.</li>
+</ul>
+
+<h2 id="problems-with-replicaiton-lag">Problems with Replicaiton Lag</h2>
+<p>Replicaiton lag: sự chậm trễ (delay) giữa data ghi trên leader và sự xuất hiện của data đó trên follower.</p>
+
+<p>Thường thì replication lag diễn ra trong nhỏ hơn 1s, hoặc 1 phút nếu có vấn đề về mạng. Tuy nhiên, khi giá trị này quá lớn, sẽ gây ra những vấn đề cho ứng dụng. Ở đây ta sẽ liệt kê 3 ví dụ cho vấn đề này, cũng như một số phương án xử lý.</p>
+
+<h3 id="reading-your-own-writes">Reading your own writes</h3>
+<p>Rất nhiều application cho phép user submit data và view data sau khi submit. Data có thể là comment, customer detail, … Khi new đata được submitted, nó buộc phải gửi tới leader, nhưng khi user read/view data, nó có thể đọc ở follower. Với asynchronous replication, new data chưa kịp replication tới toàn bộ follower node, nhưng user lại đọc ở node chưa được replicate –&gt; user nghĩ rằng dữ liệu họ submit đã bị mất hoặc submit không thành công —&gt; user không vui</p>
+
+<p>Với trường hợp này, chúng ta cần read-after-write consistency, còn được gọi là read-your-own-writes consistency. Nó bảo đảm rằng khi reload page, user sẽ thấy những gì họ đã submit. Tuy nhiên, với những user khác, không đảm bảo sẽ đọc được data mới nhất.</p>
+
+<p>Vậy làm sao thể implement read-after-write consistency với mô hình leader-follower replication? Có một số kỹ thuật như sau:</p>
+<ul>
+  <li>Nếu dữ liệu mà user có thể thay đổi, đọc ở leader. Những dữ liệu khác, đọc ở follower. Điều này yêu cầu phải có cách để biết dữ liệu nào thay đổi, dữ liệu nào không. Ví dụ với user profile, luôn luôn đọc leader nếu user A request user profile của user A. Nếu user A request user profile của những user khác, đọc follower. Sẽ cần biết chính xác phần data nào đọc ở leader, phần data nào đọc ở follower. Theo tôi cách này khá phức tạp.</li>
+  <li>Nếu hầu hết data đều có thể edit được thì phương pháp trên không hiệu quả, bởi mọi request sẽ read ở leader. Trong trường hợp này, những tiêu chuẩn khác được sử dụng để kiểm tra xem nên đọc ở đâu. Ví dụ, bạn có thể theo dõi last time update, đọc ở leader nếu vừa được update trong 1 phút. Cần chú ý tới trường hợp user sử dụng nhiều devices. Nếu user nhập data trong 1 device và xem ở nhiều device khác, user cũng nên thấy được thông tin mới nhất.</li>
+  <li>Ngoài ra còn có cách liên quan tới logical time, tôi vẫn chưa hiểu.</li>
+</ul>
+
+<h3 id="monotoic-reads">Monotoic Reads</h3>
+<p>Monotoic read là 1 dạng consistency, không nghiêm ngặt bằng strong consistency nhưng nghiêm ngặt hơn eventual consistency (eventual consistency &lt; monotoic read &lt; storng consistency). Nó đảm nếu 1 user gọi nhiều read operation, sẽ không thấy giá trị cũ sau khi đã thấy được giá trị mới.</p>
+
+<p>Ở đây, sách dùng thuật ngữ “time doesn’t go backward”. Nếu vẽ trục thời gian sẽ dễ hình dung hơn. Giả dụ giá trị cũ ở time t1, giá trị mới ở time t2, và t1 &lt; t2. Thì sau khi thấy giá trị ở t2 một lần, ta không thể thấy giá trị ở t1 nữa. Monotoic read sẽ đảm bảo điều này.</p>
+
+<p>Một cách để đạt được điều này là đảm bảo rằng 1 user luôn đọc cùng 1 replica. Có thể chọn replica bằng cách hash userId. Nếu replica failed, tự động reroute tới replica khác.</p>
+
+<p>Nếu một vài userId là hot key, được truy suất nhiều và lại nằm trên cùng 1 replica, sẽ gây quá tải cho server. Nên giải quyết ntn? Cần tìm hiểu sâu hơn về Monotoic read này.</p>
+
+<h3 id="consistent-prefix-reads">Consistent Prefix Reads</h3>
+<p>Consistent prefix reads đảm bảo rằng nếu 1 chuỗi write request xảy ra theo 1 trình tự cho trước, bất kỳ ai đọc những những thông tin này cũng sẽ thấy chúng xuất hiện theo đúng trình tự.</p>
+
+<p>Ví dụ: <br />
+request 1. User A: write A. Ví dụ longer lag, maybe 10s <br />
+request 2. User B: write B. Write ngay lập tức.</p>
+
+<p>Giả sử có 1 bên thứ 3 sẽ nhận thông báo nếu write thành công. Vì replicaiton lag, bên thứ 3 sẽ nhận message từ request 2 trước, và sau đó là request 1.</p>
+
+<p>Đây là vấn đề thường xuyên xuất hiện trong sharded database, sẽ nói chi tiêt hơn ở chapter 6.</p>
+
+<h2 id="solution-for-replicaiton-lag">Solution for Replicaiton lag</h2>
+<p>Khi làm việc với hệ thống có đặc tính eventually consistent system, cần phải nghĩ cẩn thận vệ cách hành xử của ứng dụng nếu replication lag tăng tới vài phút hoặc vài giờ. Nếu câu trả lời là “no problem”, ta không cần quan tâm vấn đề này nữa. Nhưng nếu câu trả lời là gây ra trải nghiệm người dùng tệ, ta cần phải design 1 system với stronger consistency, ví dụ như read-after-write. Đặc biệt, giả dụ rằng replication là sync, trong khi thực tế là async, chính là nguyên nhân gây nên nhiều lỗi</p>
+
+<p>Như đã thảo luận ở trên, ta có thể cung cấp gỉai pháp đảm bảo stronger consistency, nhưng lại thực hiện ở application level hơn là ở database level - giả dụ như read leader thay vì follow trong vài trường hợp. Điều này thì phức tạp và có thể dễ dẫn đến lỗi sai.</p>
+
+<p><strong>Remain question</strong></p>
+<ol>
+  <li>Với row-based replication, xử lý concurrent write request như thế nào? Tìm hiểu sâu hơn với Postgres</li>
+  <li>Đọc sâu hơn về read-after-write consistency</li>
+  <li>Đọc sâu hơn về monotoic read.</li>
+</ol>
+
+<p><strong>Referenes:</strong></p>
+<ol>
+  <li><a href="https://www.amazon.com/Designing-Data-Intensive-Applications-Reliable-Maintainable/dp/1449373321">Book: Designing Data-Intensive Applications</a></li>
+</ol>]]></content><author><name></name></author><category term="technical" /><summary type="html"><![CDATA[Implementation of Replication logs Có nhiều cách để thực hiện replicaiton log. Ta sẽ xem xét một số cách thông dụng nhất: Statement-based replication Trường hợp đơn giản nhất, leader/master sẽ log tất cả write request statement và gửi nó tới follower/slave. Với relational database, statement cính là INSERT, UPDATE, DELETE query.]]></summary></entry><entry><title type="html">65. [System Design] 05. Replication: phương pháp Master - Slave. Phần 1</title><link href="/technical/65-replication-master-slave-part-1" rel="alternate" type="text/html" title="65. [System Design] 05. Replication: phương pháp Master - Slave. Phần 1" /><published>2023-12-23T00:02:00+00:00</published><updated>2023-12-23T00:02:00+00:00</updated><id>/technical/65-replication-master-slave-part-1</id><content type="html" xml:base="/technical/65-replication-master-slave-part-1"><![CDATA[<h2 id="introduction">Introduction</h2>
+<p>Replication (nhân bản, nhân rộng) là một kỹ thuật giữ 2 hoặc nhiều bản sao của dữ liệu trên nhiều máy khác nhau. Mỗi bản sao được gọi là replica.</p>
+
+<p>Vậy tại sao ta phải dùng kỹ thuật replication? Có một số nguyên nhân sau:</p>
+<ul>
+  <li>Reduce latency: Giữ data gần với user hơn về mặt địa lý. Ví dụ user ở VN sẽ gọi tới data center ở Singapore và user ở UK sẽ gọi tới data center ở UK.</li>
+  <li>Increase availability: Nếu 1 node trong system bị fail, hệ thống vẫn hoạt động bình thường</li>
+  <li>Increase read throughput (scaling): khi lượng read tăng lên đến ngưỡng 1 server không chịu nổi, cần điều hướng lượng request đó sang nhiều server khác nhau. Có thể xử lý nhiều read queries hơn</li>
+</ul>
+
+<p>Trong chương 5 này, chúng ta giả sử kích thước data đủ nhỏ để chứa trong 1 server duy nhất, không xét đến trường hợp data quá lớn, không thể chứa trong một máy.</p>
+
+<p>Chương này sẽ đề cập đến ba phương pháp replication thông dụng, gồm master-slave, multi-master và masterless. Bài này sẽ tập trung vào giải thuật đầu tiên, master-slave</p>
+
+<h2 id="phương-pháp-master---slave">Phương pháp Master - Slave</h2>
+<p>Khi có nhiều replica, một câu hỏi lớn: Làm sao đảm bảo rằng dữ liệu được sync giữa các replica và master node ?</p>
+
+<p>Master, còn được gọi là leader, primary, active node. Slave còn được gọi là follower, secondary và passive node. Master - slave model có nghĩ là chỉ có 1 master và nhiều slave.</p>
+
+<p>Với phương pháp master-slave, ta có thiết lập sau:</p>
+<ol>
+  <li>Có duy nhất 1 replica được chỉ định làm master. Khi client cần ghi dữ liệu vào database, chúng phải gửi write request vào master node, và master sẽ ghi dữ liệu vào local storage.</li>
+  <li>Những replica khác được gọi là slave, và có nhiều slaves. Khi user gửi write request và master node đã ghi xong vào local storage, master node sẽ gửi những thay đổi này tới slaves node dưới dạng replication log hoặc change stream. Mỗi slave node sẽ update local storage của nó theo đúng trình tự được sử lý trên master node.</li>
+  <li>Khi client cần read query, nó có thể đọc từ master hoặc slaves. Cần nhớ rằng, chỉ write vào master node và slave node là read-only.</li>
+</ol>
+
+<p>Bên dưới là mô tả về phương pháp master-slave từ trong sách [1].</p>
+
+<p><img src="/assets/images/2023/65_master_slave.png" alt="Alt text" /></p>
+
+<p>Phương pháp này là built-in feature của nhiều relational database như Postgres (từ version 9.0), Mysql, … Và một số non-relational database như MongoDB. Hơn thế nữa, Master-Slave approach không chỉ giới hạn trong database, mà còn có thể sử dụng ở distributed message broker như Apache Kafka và RabbitMQ</p>
+
+<h3 id="synchronous-versus-asynchronous-replication">Synchronous Versus Asynchronous Replication</h3>
+<p>Một vấn đề cần quan tâm là replication được thực hiện theo cơ chế synchronous hay asynchronous</p>
+
+<p>Synchronous replicaiton: đảm bảo rằng tất cả replica nhận được và thực hiện thành công write request, rồi mới gửi thông báo thực hiện thành công về cho client. Sync đảm bảo rằng tất cả các node đều có dữ liệu mới nhất (up-to-date data). Điểm bất lợi là nó yêu cầu tất cả các slaves node phải phản hồi và làm tăng response time. Nếu có 1 node không phản hồi, thì write request không thể thực hiện được, dẫn tới system bị đưa vào trạng thái tạm dừng. Trong thực tế, ngoài master node, sẽ dùng sync trên 1 slave node bất kỳ, những slave node còn lại sẽ là async. Phải bảo đảo ít nhất dữ liệu lưu ở 2 nơi trước khi phản hồi với người dùng rằng write request đã thành công. Trường hợp nếu slave node được chọn không hoạt động hoặc phản hồi chậm, một slave node khác được chọn. Configuration này được gọi là semi-synchronous.</p>
+
+<p>Asynchronous: Master node sẽ gửi message/lệnh tới slaves node nhưng không đợi phản hồi từ slaves. Thường thường, master-slave replication sẽ được config completely asynchronous. Trong trường hợp này, nếu master node fail và không thể recover, những write request chưa được replicated sẽ bị mất. Nghĩ là completely async không đảm bảo durable (D trong ACID). Tuy nhiên, nếu slave node fail hoặc network xảy ra vấn đề, ta vẫn có thể write bình thường, nhưng lại ko đảm bảo consistency. Có 1 liên kết mạnh mẽ giữa replication consistency và consensus (the number of node that agreed on a value), sẽ tìm hiểu ở chapter 9.</p>
+
+<p>Quá trình replication thường diễn ra nhanh (nhỏ hơn 1s). Tuy nhiên, không có gì chắc chắn về thời gian cần thực hiện replication. Trong vài trường hợp, có thể tốn 1 phút tới vài giờ. Các nguyên nhân có thể có là do server restart, network problems, …</p>
+
+<h3 id="setting-up-new-followers-slaves">Setting Up New Followers (Slaves)</h3>
+<p>Khi thêm mới 1 slave, không chỉ đơn giản là copy data từ node này sang node khác, <em>vì client luôn luôn ghi dữ liệu vào database</em>, dữ liệu luôn thay đổi, không có trạng thái cố định.</p>
+
+<p>Để đơn giản, bạn có thể block toàn bộ write data trong quá trình copy hoặc shutdown system, nhưng điều này chống lại mục tiêu high availability.</p>
+
+<p>Để quá trình thêm 1 node mới không xảy ra downtime, có thể tham khảo các bước sau:</p>
+<ol>
+  <li>Take a snapshot của master database tại 1 thời điểm nào đó, tốt nhất là không cần lock toàn bộ database trong quá trình này. Hầu hết database đều có tính năng này</li>
+  <li>Copy snapshot tới node mới</li>
+  <li>Node mới kết nối với leader và yêu cầu toàn bộ data change đã xảy ra từ lúc tạo snapshot. Điều này yêu cầu snapshot biết vị trí của snapshot trong master’s replication log. Với Postgres, nó được gọi là log sequene number, với Mysql là binlog coordinates</li>
+  <li>Khi slave node xử lý xong toàn bộ backlog khi data change từ lúc snapshot, ta gọi quá trình này là catch-up. Lúc này, slave node có thể hoạt động bình thường. Quá trình thêm 1 node mới kết thúc.</li>
+</ol>
+
+<h3 id="handling-node-outages">Handling Node Outages</h3>
+<p>Mục tiêu: có thể handle nếu master hoặc slave node xảy ra downtime. Điều này rất có lợi cho việc vận hành, khi phải reboot để update phần mềm, node fail, network issue</p>
+
+<p>Slave failure (catch-up recovery): dựa vào log trên mỗi slave node, nó có thể biết transaction cuối cùng được thực thi trước khi fault xảy ra. Sau đó, liên hệ với master node để apply những thay đổi từ last transaction đó.</p>
+
+<p>Leader failure (Failover): Failover thì tricker hơn catch-up recover. Failover có thể xảy ra manual hoặc tự động. Automatic failover gồm những bước sau:</p>
+<ol>
+  <li>Xác định rằng master đã fail. Thường sử dụng heartbeat và timeout</li>
+  <li>Chọn một node làm master: có thể thông qua election process hoặc được chỉ định. (Chưa hiểu rõ vụ này, sẽ nói rõ hơn ở Chap 9). Ứng cử viên tốt nhất thường là replica có up-to-date data change, để tối thiếu hoá đata loss.</li>
+  <li>Reconfig để hệ thống dùng node master mới. Lúc này, client sẽ send request tới node master mới. Nếu old master trở lại, hệ thống phải đảm bảo old master thành slave.</li>
+</ol>
+
+<p>Quá trình failover có nhiều điểm có thể gây ra lỗi:</p>
+<ul>
+  <li>Nếu async replication được sử dụng, new master có thể không có up-to-date data từ old master. Nếu old master rejoin, write conflict có thể xảy ra. Phương pháp thông dụng nhất là loại bỏ toàn bộ unreplicated data củao old master</li>
+  <li>Tuy nhiên, việc loại bỏ data này là nguy hiểm nếu những storage system khác ngoài database dựa vào dữ liệu của database. Ví dụ tại Github, out-of-date MySQL slave được đề cử làm leader. Database này sử dụng auto-incrementing counter để gán primary key. Nhưng vì new master counter bị chậm (lag) so với old master, nên nó tái sử dụng một số primary key đã được assign bởi old master. Và những primary key này cũng được dùng cho Redis. Điều này gây ra một vài private data bị tiết lộ sai user. Ví dụ với old master, couter 55 được gán cho user A. Redis cũng dùng counter 55 cho user A. Và lúc này old master bị crash, và chưa kịp replicate thông tin này tới new master. Lần tới, new master tạo counter mới cho user B, và giá trị là 55. Tuy nhiên, khi lấy giá trị từ Redis, user B có thể đọc private info của của A.</li>
+  <li>Xử lý khi new và old master cùng tồn tại khi old master sống lại. Phải xử lý cẩn thận, tránh tình trạng cả 2 node này đều bị shutdown</li>
+  <li>Khi xác định node đã chết, timeout thích hợp là bao nhiêu? Longer timeout nghĩa là thời gian phụ hồi sẽ dài hơn. Nhưng nếu timeout quá ngắn, việc thực thi failover là không cần thiết.</li>
+</ul>
+
+<p>Giải pháp cho những vấn đề trên không dễ. Vì vậy, một số operation team ưu tiên thực hiện failover thủ công, kể cả nếu phần mềm có hỗ trợ failover tự động.</p>
+
+<p><strong>Referenes:</strong></p>
+<ol>
+  <li><a href="https://www.amazon.com/Designing-Data-Intensive-Applications-Reliable-Maintainable/dp/1449373321">Book: Designing Data-Intensive Applications</a></li>
+</ol>]]></content><author><name></name></author><category term="technical" /><summary type="html"><![CDATA[Introduction Replication (nhân bản, nhân rộng) là một kỹ thuật giữ 2 hoặc nhiều bản sao của dữ liệu trên nhiều máy khác nhau. Mỗi bản sao được gọi là replica.]]></summary></entry><entry><title type="html">64. [System Design] 04. Encoding data</title><link href="/technical/64-encoding-data" rel="alternate" type="text/html" title="64. [System Design] 04. Encoding data" /><published>2023-12-19T00:02:00+00:00</published><updated>2023-12-19T00:02:00+00:00</updated><id>/technical/64-encoding-data</id><content type="html" xml:base="/technical/64-encoding-data"><![CDATA[<p>Trong quá trình phát triển phần mềm, đôi khi schema của dữ liệu sẽ bị thay đổi theo thời gian. Các thao tác như thêm field, xoá field, thay đổi kiểu dữ liệu thường sẽ diễn ra và chúng đòi hỏi hệ thống phải thích ứng với những thay đổi này.</p>
+
+<p><strong>Backward compatibility</strong> (tương thích ngược) nghĩa là code mới (newer code) có thể đọc dữ liệu được tạo bởi code cũ (old code). <strong>Forward compatibility</strong> (tương thích tiến tới) nghĩa là code cũ có thể đọc được đata được tạo bởi code mới [1]</p>
+
+<p>Backward compatibility không khó để đạt được, vì developer sẽ biết schema của code cũ. Tuy nhiên, với forward compatibility, code cũ phải đảm bảo ignore những field được thêm vào từ code mới, cũng như thích ứng với những field bị xoá, thay đổi field type. Ta sẽ nói chi tiết hơn ở phần sau</p>
+
+<p>Với application/program, data thường được biểu diễn bởi ít nhất 2 dạng sau:</p>
+<ul>
+  <li>Khi nằm trên memory, data sẽ ở dạng object, list, array, … Những dạng cấu trúc dữ liệu giúp tối ưu việc truy suất và sử dụng bởi CPU (thông thường thông qua pointer)</li>
+  <li>Khi data cần truyền đi giữa các service trên network hoặc lưu trữ lại vào ổ cứng, dữ liệu cần được đưa về dạng về dạng self-contained sequence of byte, không cần dùng pointer.</li>
+</ul>
+
+<p>Chúng ta cần phải chuyển đổi qua lại giữa 2 cách biểu diễn này. Việc chuyển từ in-memory representation sang binary sequence được gọi là encoding (hoặc serialization hoặc marshalling). Ngược lại, chuyển từ binary sequence sang in-memory representation được gọi là decoding (hoặc arsing, deserialization, unmarshalling) [1]</p>
+
+<p>Có nhiều phương pháp cho việc encoding/decoding. Chúng ta sẽ tìm hiểu những dạng phổ biến nhất.</p>
+
+<h3 id="1-language-specific-formats">1. Language-Specific Formats</h3>
+<p>Hầu hết các ngôn ngữ lập trình đều hỗ trợ việc encode in-memory object thành byte sequence. Ví với Java là java.io.Serializable, Python là pickle, … Ngoài ra còn có 3rd thư viện như Kryo cho Java. Dùng các thư viện này thì thuận tiện, và cần ít công sức trong việc decode. Tuy nhiên, có những hạn chế như:</p>
+<ul>
+  <li>Bị “buộc chặt” với ngôn ngữ lập trình cụ thể. Ví dụ nếu encode bằng Java thì phải decode bằng Java. Tuy nhiên, một phần của hệ thống có thể dùng một ngôn ngữ lập trình khác. Ví dụ backend dùng Java, front end dùng Javascript</li>
+  <li>Gây ra vấn đề về bảo mật.</li>
+  <li>Hiệu suất thấp, dùng nhiều CPU, đặc biệt là với Java</li>
+</ul>
+
+<h3 id="2-json-xml-and-binary-variants">2. JSON, XML, and Binary Variants</h3>
+<p>JSON, XML và các dạng encode binary không phụ thuộc vào ngôn ngữ lập trình và được sử dụng rộng rãi trong việc truyền thông tin giữa các hệ thống. XML thường bị phê bình vì phức tạp và dư thừa</p>
+
+<p>XML, JSON, CSV:</p>
+<ul>
+  <li>Human readable</li>
+  <li>Ambiguity (sự mơ hồ/nhập nhằng) về kiểu dữ liệu số. XML và CSV không thể phân biệt kiểu String và Number. JSON có thể phân biệt giữa String và number, tuy nhiên, không thể phân biệt được integer, long hay float. Một kinh nghiệm xương máu là đối với JSON, nếu là kiểu Long thì nên dùng String, vì bộ parse số của Javascript sẽ bị lỗi nếu số Long lớn, dẫn đến Server trả về đúng, nhưng Javasript trên browser parse bị sai</li>
+  <li>XML và JSON hỗ trợ ký tự Unicode, nhưng không hỗ trợ kiểu binary string (ví dụ muốn lưu ảnh, SSH key, …). Để vượt qua hạn chế này, có thể encode binary string dưới dạng Base64.</li>
+</ul>
+
+<p>Binary Encode:</p>
+<ul>
+  <li>Binary encode sẽ tiết kiệm dung lượng hơn là JSON hoặc XML. Tuy nhiên, ta không thể đọc trực tiếp file này, mà cần phải dùng những công cụ chuyên biệt. Có nhiều cách để thực hiện binary encode như thrift, gRPC, …</li>
+</ul>
+
+<h3 id="3-thrift-and-protocol-buffers">3. Thrift and Protocol Buffers</h3>
+<p>Thrift và Protocal Buffers (sau này còn có gRPC) là thư viện hỗ trợ binary encoding, và cùng dựa trên những nguyên lý chung. Thirft và gRPC sẽ định nghĩa đối tượng cần truyền tải, các hàm hỗ trợ, … (Xem kỹ hơn trong sách và tutorial). 
+Ví dụ:</p>
+<pre><code class="language-thrift">struct Person {
+1: required string userName,
+2: optional i64 favoriteNumber, 
+3: optional list&lt;string&gt; interests
+}
+</code></pre>
+<p>Khi dùng Thrift hay gRPC, chúng hỗ trợ các schema và nhiều kiểu dữ liệu đa dạng hơn. Sẽ tránh bị nhập nhằng khi encode/decode.</p>
+
+<p>Những con số 1, 2 bên cạnh userName, favoriteNumber được gọi là <em>field tags</em>. Field tag này phải được giữ nguyên và không được thay đổi khi sử dụng, vì thư viện sẽ dựa vào số này để encode và decode giá trị. Nếu số 1 đang là userName, ta sửa nó thành số 2, thì khi decoding, nó sẽ lấy giá trị số 2 ở data cũ (chính là favoriteNumber) dùng cho số 1 (chính là userName) ==&gt; gây lỗi. Tuy nhiên ta có thể tự do đổi tên, vì thư viện sử dụng field tag</p>
+
+<p>Thirft và gRPC hỗ trợ tốt với việc backward và forward compatibility.</p>
+<ul>
+  <li>Backward compatibility (code mới đọc data cũ): phải đảm bảo rằng những field mới thêm, không được sử dụng required, vì data cũ không có những field này. Nếu dùng required, sẽ gây lỗi. Không được xoá những field có sử dụng required.</li>
+  <li>Forward compatibility (code cũ đọc data mới): Data mới sẽ có thể nhiều hoặc ít field hơn code cũ, những field nào không nhận ra sẽ tự động bị ignore. Nhất thiết vẫn phải đảm bảo có đủ những field được đánh dấu là required.</li>
+  <li>Về việc thay đổi databtype, có thể xảy ra nhưng phải cẩn thận. Ví dụ field từ 32bit lên 64bit. Sẽ có khả năng bị sai số khi code cũ (32 bit) đọc dữ liệu được tạo bởi code mới (64 bit).</li>
+</ul>
+
+<h3 id="4-avro">4. Avro</h3>
+<p>Avro là 1 dạng binary encoding khác với Thrift và gRPC, được Hadoop sử dụng. Avro không sử dụng field tag như Thrift hoặc gRPC. Avro hỗ trợ dynamic generated schema. Cần phải nói thêm, Thrift không thích hợp trong trường hợp của Hadoop.</p>
+
+<p>Một số context sử dụng Avro:</p>
+<ul>
+  <li>File lớn với rất nhiều record. Trong trường hợp của Hadoop, 1 file có thể gồm hàng triệu dòng với cùng Schema.</li>
+  <li>Gửi nhiều records bằng network connection: Vì Avro hỗ trợ việc nén file, nên dung lượng gửi sẽ giảm đi nhiều</li>
+</ul>
+
+<p>Ngoài ra, còn có kiểu dữ liệu né theo cột như parquet. Mình cũng chưa hiểu rõ lắm về 2 dạng này.</p>
+
+<h3 id="5-kết-luận">5. Kết luận</h3>
+<p>Mỗi một kiểu encoding/decoding sẽ được sử dụng tuỳ theo ngữ cảnh. Bài viết tổng hợp những kiểu thông dụng, cho những ngữ cảnh thông dụng.</p>
+<ul>
+  <li>Nếu muốn lưu 1 Java Object (list, map, custom object,…) thì sử dụng buil-in Java.io.Serializable hoặc Kryo</li>
+  <li>Nếu giao tiếp giữa backend và frontend, thì có thể sử dụng JSON</li>
+  <li>Nếu giao tiếp giữa các internal service (còn được gọi là middleware) thì có thể dùng Thrift hoặc gRPC</li>
+  <li>Nếu muốn lưu file, có thể sử dụng JSON, CSV nếu không yêu cầu khắt khe về kiểu dữ liệu, human-readable, và không lớn. Với những file lớn, có hàng triệu record, khắt khe về schema, kiểu dữ liệu và dung lượng, có thể cần nhắc lưu dưới dạng Avro hoặc Parquet</li>
+</ul>
+
+<p><strong>Referenes:</strong></p>
+<ol>
+  <li><a href="https://www.amazon.com/Designing-Data-Intensive-Applications-Reliable-Maintainable/dp/1449373321">Book: Designing Data-Intensive Applications</a></li>
+</ol>]]></content><author><name></name></author><category term="technical" /><summary type="html"><![CDATA[Trong quá trình phát triển phần mềm, đôi khi schema của dữ liệu sẽ bị thay đổi theo thời gian. Các thao tác như thêm field, xoá field, thay đổi kiểu dữ liệu thường sẽ diễn ra và chúng đòi hỏi hệ thống phải thích ứng với những thay đổi này.]]></summary></entry><entry><title type="html">62. [System Design] 02. Maintainability và Availability của hệ thống phân tán</title><link href="/technical/62-maintainability-availability-of-distributed-system" rel="alternate" type="text/html" title="62. [System Design] 02. Maintainability và Availability của hệ thống phân tán" /><published>2023-12-12T00:02:00+00:00</published><updated>2023-12-12T00:02:00+00:00</updated><id>/technical/62-maintainability-availability-of-distributed-system</id><content type="html" xml:base="/technical/62-maintainability-availability-of-distributed-system"><![CDATA[<p>Bài tiếp sẽ nói về 2 yếu tố còn lại là Maintainability (khả năng bảo trì) và Availability (Tính sẵn sàng). [1][2]</p>
+
+<h2 id="1-maintainability-khả-năng-bảo-trì">1. Maintainability (Khả năng bảo trì)</h2>
+<p>Trong vòng đời phát triển phần mềm, thông thường, thời gian phát triên hệ thống chỉ chiếm 20% nguồn lực, 80% còn lại dùng để bảo trì và vận hành. Bảo trì ở đây có thể là sửa lỗi (fix bugs), thêm một tính năng mới (add a new feature), tương thích với platform/framework/library (ví dụ 1 lib CVE - Common Vulnerabilities and Exposures), … Những hệ thống cũ còn được gọi là legacy system.</p>
+
+<p>Theo sách [1], để dễ dàng trong việc bảo trì và vận hành, khi thiết kế hệ thống, nên tuân thủ những nguyên tắc sau:</p>
+<ul>
+  <li>Operability (khả năng vận hành): đảm bảo operation team có thể dễ dàng vận hành hệ thống một cách trơn tru</li>
+  <li>Simplicity (Đơn giản): New engineer có thể dễ dàng hiểu được hệ thống.</li>
+  <li>Evolvability (khả năng tiến hoá): Có thể dễ dàng thay đổi/sửa feature theo những use case/requirements không đoán trước. Requirement luôn thay đổi, và hệ thống phải thích ứng tốt với việc này. Đặc tính này còn được gọi với những từ khác như extensibility, modifiability</li>
+</ul>
+
+<p>Chi tiết về từng nguyên tắc trên, có thể tham khảo ở chương 1 của sách [1]</p>
+
+<h2 id="2-availability-tính-sẵn-sàng">2. Availability (Tính sẵn sàng)</h2>
+<p>Tính sẵn sàng chỉ việc sẵn sàng xử lý request khi client yêu cầu. Nó được đo bằng tỉ lệ thời gian hệ thống hoạt động (up and running) trong một đơn vị thời gian (ngày, tháng hoặc năm)</p>
+
+<p>Hight availability được đo bằng tỉ lệ phần trăm. 100% nghĩa là system không có downtime (zero downtime). Điều này rất khó có thể xảy ra. Thông thường, service high availability sẽ nằm trong khoảng 99% - 100%. Trong industry, 99.99% (or four nines) được xem như là đáng tin cậy, là tiêu chuẩn của các cloud vendor như Amazon, Google.</p>
+
+<p>Một số giá trị [5]:</p>
+<ul>
+  <li>“Two nines” = 99% up = downtime 3.7 days/year</li>
+  <li>“Three nines” = 99.99% up = downtime 8.8 hours/year</li>
+  <li>“Four nines” = 99.99% up = downtime 53 mintues/year</li>
+  <li>“Five nines” = 99.999% up = downtime 5.3 mintues/year</li>
+</ul>
+
+<p>Để giảm thời gian downtime, có thể cân nhắc loại bỏ các Single point of failure. [3]</p>
+
+<p>Theo [3], một điểm cần lưu ý là cần phải tìm 1 điểm balance/trade-off giữa high availablity, lợi ích của high availablity và sự phức tạp của hệ thống. Đi từ 99% -&gt; 99.99% thì dễ dàng hơn là từ 99.99% tới 99.9999% và xa hơn. Đến 1 điểm nào đó, hệ thống sẽ cực kỳ phức tạp.</p>
+
+<p>Câu hỏi cần đặt ra là nếu hệ thống sập trong 5 phút, 10 phút, 1 giờ, 1 ngày hoặc nhiều ngày, khách hàng sẽ phản ứng như thế nào? Lợi nhuận, danh tiếng của công ty bị ảnh hưởng như thế nào? …. Điều này hoàn toàn tuỳ thuộc vào từng business của công ty.</p>
+
+<p>Một số khái niệm [5]:</p>
+<ul>
+  <li>Failure: toàn bộ system không hoạt động, không thể xử lý request.</li>
+  <li>Fault: 1 bộ phận của hệ thống không hoạt động, vẫn có thể xử lý request. Ví dụ như node crash hoặc network fault</li>
+  <li>Fault tolerence (khả nặng chịu lỗi): hệ thống vẫn hoạt động dù có lỗi xảy ra</li>
+  <li>Single point of failure: 1 node/network bị lỗi, hệ thống sẽ chuyển sang trạng thái Failure</li>
+</ul>
+
+<h2 id="3-reliability-vs-availablity">3. Reliability vs Availablity</h2>
+<p>A high reliable system là 1 hệ thống không crash thường xuyên. 
+A high availability system là 1 hệ thống có thể vận hành trong phần lớn thời gian</p>
+
+<p>Giả sử, 1 hệ thống là unreliable nếu nó crash thường xuyên, nhưng là high availability nếu nó nó khởi động/up lại nhanh. [4]</p>
+
+<p><strong>Referenes:</strong></p>
+<ol>
+  <li><a href="https://www.amazon.com/Designing-Data-Intensive-Applications-Reliable-Maintainable/dp/1449373321">Book: Designing Data-Intensive Applications</a></li>
+  <li><a href="https://topdev.vn/blog/cac-tinh-chat-chinh-cua-mot-he-thong-phan-tan">Các tính chất chính của một hệ thống phân tán</a></li>
+  <li><a href="https://www.atlassian.com/blog/statuspage/high-availability">Four nines and beyond: A guide to high availability infrastructure</a></li>
+  <li><a href="https://medium.com/@sakalli.duran/key-characteristics-of-distributed-systems-0cc6e3ee08d3">Key Characteristics of Distributed Systems</a></li>
+  <li><a href="https://www.youtube.com/watch?v=43TDfUNsM3E">Distributed Systems 2.4: Fault tolerance</a></li>
+</ol>]]></content><author><name></name></author><category term="technical" /><summary type="html"><![CDATA[Bài tiếp sẽ nói về 2 yếu tố còn lại là Maintainability (khả năng bảo trì) và Availability (Tính sẵn sàng). [1][2]]]></summary></entry><entry><title type="html">63. [System Design] 03. Data Model: Relational Model versus Document Model</title><link href="/technical/63-data-model-relational-document" rel="alternate" type="text/html" title="63. [System Design] 03. Data Model: Relational Model versus Document Model" /><published>2023-12-12T00:02:00+00:00</published><updated>2023-12-12T00:02:00+00:00</updated><id>/technical/63-data-model-relational-document</id><content type="html" xml:base="/technical/63-data-model-relational-document"><![CDATA[<p>Data model là 1 đặc tả về cách mà database tổ chức dữ liệu. Bài này sẽ tập chung nói về 2 kiểu data model: Relational Model (mô hình dữ liệu quan hệ) và Document model. Theo tôi hiểu, Relational model thường gắn liền với SQL. Còn NoSQL bao gồm nhiều kiểu khác nhau như key-value, document, graph, time series, column-oriented, …</p>
+
+<h2 id="1-sql-relational-model-là-gì">1. SQL: Relational Model là gì?</h2>
+<p>Relational model sẽ tổ chức dữ liệu thành từng bảng (Table in SQL), mỗi bảng gồm nhiều dòng không có thứ tự. Một dòng tương tới với 1 sample/record data. Mỗi dòng sẽ nhiều fields và số fields tương ứng với số cột trong bảng. Thích hợp cho những dữ liệu có cấu trúc (structured data).</p>
+
+<p>Relational model có lịch sử 1960-1970 và vẫn còn được dùng rộng rãi hiện nay. Chúng thường được dùng cho các transaction processing (banking, sales, airline reservation, stock,…) và batch process (payroll, invoices, reporting) [1]. Theo tôi, những ứng dụng nào cần tính chất ACID (Atomicity, Consistency, Isolation, Durability ) thì sử dụng SQL là hợp lý.</p>
+
+<p>Một số SQL server phổ biến, có thể kể đến như Oracle, MySQL, Postgres, MS SQL server.</p>
+
+<h2 id="2-những-hạn-chế-của-relational-model">2. Những hạn chế của Relational Model?</h2>
+<p>Tuy nhiên, Relational Model cũng đối mặt với nhiều giới hạn khi lượng người dùng internet tăng lên. Ngoài vấn đề về phí bản quyền, việc fixed data schema, SQL còn đối diện với những khó khăn quan trọng sau: [1][2]</p>
+<h3 id="agility-and-programmability-12">Agility and Programmability [1][2]:</h3>
+<p>Lập trình hướng đối tượng (OOP) rất phố biến hiện nay, tuy nhiên, nếu data lưu dưới dạng relational table, cần thiết phải có 1 layer giữa application code và database để mapping dữ liệu. Tình trạng này gọi là Object-Relational mapping hay impedance mismatch.</p>
+
+<p>Object-Relational mapping (ORM) framework như Hibernate có thể gỉam đi lượng boilerplate code (note: 1 dạng template code, dùng để map từ row sang object) cần phải viết, nhưg chúng không để nào xoá nhoà đi sự khác biệt về bản chất giưa Object và Relation</p>
+
+<h3 id="flexibility-tính-linh-hoạt-2">Flexibility (Tính linh hoạt) [2]</h3>
+<p>Theo lý thuyết, relational model cực kỳ linh hoạt và có thể mô hình bất kỳ dạng dữ liệu nào. Tuy nhiên, trong thực thế, vì quá quen thuộc với relational model, việc thiết kế sẽ tập trung vào dữ liệu dạng bảng, thay vì tập trung vào data storage schema (mô hình lưu trữ dữ liệu) thoả mãn yêu cầu nghiệp vụ (business requirements). Và không phải tất cả thông tin có thể dễ dàng chuyển đổi thành dạng dữ liệu dạng bảng</p>
+
+<p>Hơn nữa, việc chuẩn hoá dữ liệu (data normalization [3]) sẽ tạo ra nhiều narrow tables (???). Hệ quả là hầu hết queries đều yêu cầu lệnh join giữa các bảng. Điều này thường chậm và sử dụng nhiều tài nguyên.</p>
+
+<p>Trong sách [1] có ví dụ về Linkedin Profile. Ngoài những thông tin duy nhất cho 1 user như user_id, name, những thông tin khác có thể ở dạng số nhiều như education, contact info, job positions (làm nhiều việc 1 lúc). Để có thể lấy đầy đủ các thông tin này, ta cần phải join tất cả các bảng liên quan như userProfile, education, contact, jobPositions, …</p>
+
+<h3 id="performance-and-scalability-2">Performance and Scalability [2]</h3>
+<p>Khi lượng tải tăng, SQL server thường scale up bằng việc tăng thêm resources như RAM, CPU, disk. Tuy nhiên, tới 1 điểm nào đó, việc scale up không còn khả thi nữa, buộc ta phải scale out (tức horizontal scale) bằng việc chia data (partitioning data) thành nhiều database nhỏ hơn và mỗi database này được chạy ở 1 máy khác nhau. Data có thể partition theo row hoặc column. Khi có yêu cầu query dữ liệu, query sẽ được route tới partition thích hợp. Cách làm này được gọi là <strong>sharding</strong>. Một số nhà phát triên SQL server cung cấp giải pháp sharding nhưng kèm với licensing costs. Ta cũng có thể thực hiện manual sharding.</p>
+
+<p>Tuy nhiên, việc sharding này ảnh hưởng nghiêm trọng tới query performance. Trường hợp cần join data, và data nằm trên các parition khác nhau hoặc máy khác nhau, điều này có nghĩa cần thực hiện di chuyển dữ liệu qua mạng để có thể thực hiện phép join. Hoặc 1 transaction cần update dữ liệu nằm ở nhiều parition khác nhau, điều này ảnh hưởng tới response time của ứng dụng và throughput mạng.</p>
+
+<p>Vì đảm bảo tính ACID, SQL server có những cơ chế phức tạp. Và nó có thể ảnh hưởng tới performance.</p>
+
+<h2 id="3-sự-ra-đời-của-nosql">3. Sự ra đời của NoSQL</h2>
+<p>Khi việc scale SQL server không đáp ứng kịp với lượng load tăng, các tổ chức lớn quyết định tạo ra giải pháp cho riêng họ. Và từ đó, NoSQL ra đời. NoSQL (viết tắt của Not only SQL) chỉ tập các database không tuân theo chuẩn SQL. NoSQL bao gồm nhiều kiểu khác nhau như key-value, document, graph, time series, column-oriented, …</p>
+
+<p>Theo [1], một số động lực chính thúc đẩy sự ra đời của NoSQL gồm:</p>
+<ul>
+  <li>Việc dễ dàng scale và có khả năng scale mạnh hơn SQL</li>
+  <li>Khả năng xử lý lượng dữ liệu lớn và lượng ghi lớn</li>
+  <li>Open-source, để giảm chi phí licensing</li>
+  <li>Những operation đặc biệt mà không được hỗ trợ bởi SQL, cho những use case đặc biệt</li>
+  <li>Dynamic data model</li>
+</ul>
+
+<h3 id="4-document-model">4. Document model</h3>
+<p>Document là tập hợp của key và value. Mỗi value có thể là primative type hoặc là list hoặc là child document. Một document sẽ bao gồm toàn bộ data liên quan tới entity, không cần phải join như Relational model.</p>
+
+<p>Trở lại ví dụ về LinkedIn profile, ta có thể thiết kế 1 userProfile JSON, trong đó bao gồm list education object, list position object, … Như vậy, khi cần lấy thông tin profile, chỉ cần 1 câu query, không cần phải join dữ liệu. Đặc tính này gọi là <em>data locality</em>, tức là những thông tin liên quan đề nằm ở 1 chỗ, và 1 query là đủ [1]</p>
+
+<p>Document model hỗ trợ tốt cho one-to-many relationship. Ví dụ 1 user có nhiều job, nhiều bằng cấp, nhiều địa chỉ.</p>
+
+<h3 id="5-relational-vs-document-model">5. Relational vs Document model</h3>
+<p>Theo [1], những lập luận chính thiên hướng về Document model là vì schema flexibility, performance tốt hơn vì data locality, và với một số ứng dụng, data structure “gần gũi” với business requirements hơn.</p>
+
+<p>Tuy nhiên, với document model, ta không thể truy suất trực tiếp với nested document, mà phải đi theo từng cấp. Với những document mà nested level không cao, điều này hoàn toàn ổn.</p>
+
+<p>Document model có thể/hoặc không support join operation. Tuy nhiên điều này không là vấn đề lớn.</p>
+
+<p>Theo tôi, vì 1 document chứa tất thông tin cần thiết, không cần thực hiện join, nên nếu parition dữ liệu thành nhiều phần, khi thực hiện query, sẽ không gặp phải vấn đề di chuyển dữ liệu như bên SQL.</p>
+
+<p><strong>Referenes:</strong></p>
+<ol>
+  <li><a href="https://www.amazon.com/Designing-Data-Intensive-Applications-Reliable-Maintainable/dp/1449373321">Book: Designing Data-Intensive Applications</a></li>
+  <li><a href="https://learn.microsoft.com/en-us/previous-versions/msp-n-p/dn313285(v=pandp.10)">Chap 1: Data Storage for Modern High-Performance Business Applications</a></li>
+  <li><a href="https://learn.microsoft.com/en-us/office/troubleshoot/access/database-normalization-description">Description of the database normalization basics</a></li>
+</ol>]]></content><author><name></name></author><category term="technical" /><summary type="html"><![CDATA[Data model là 1 đặc tả về cách mà database tổ chức dữ liệu. Bài này sẽ tập chung nói về 2 kiểu data model: Relational Model (mô hình dữ liệu quan hệ) và Document model. Theo tôi hiểu, Relational model thường gắn liền với SQL. Còn NoSQL bao gồm nhiều kiểu khác nhau như key-value, document, graph, time series, column-oriented, …]]></summary></entry><entry><title type="html">61. [System Design] 01. Reliability and scalability của hệ thống phân tán</title><link href="/technical/61-reliability-scalability-of-distributed-system" rel="alternate" type="text/html" title="61. [System Design] 01. Reliability and scalability của hệ thống phân tán" /><published>2023-12-11T00:01:00+00:00</published><updated>2023-12-11T00:01:00+00:00</updated><id>/technical/61-reliability-scalability-of-distributed-system</id><content type="html" xml:base="/technical/61-reliability-scalability-of-distributed-system"><![CDATA[<p>Bài này sẽ bắt đầu chuỗi bài về System Design (thiết kế hệ thống), đặc biệt chú trọng vào Distributed system (hệ thống phân tán) cho những ứng dụng có lượng tải lớn.</p>
+
+<p>Khung sườn cho series này sẽ dựa vào cấu trúc của cuốn <strong>Designing Data-Intensive Applications: The Big Ideas Behind Reliable, Scalable, and Maintainable Systems</strong> của tác giả <strong>Martin Kleppmann</strong>. Ngoài ra cũng sẽ tìm kiếm thêm những nguồn tham khảo khác.</p>
+
+<p>Chuỗi bài viết này nhằm tạo động lực giúp tôi tìm hiểu sâu sắc và bài bản hơn về hệ thống phân tán cho ứng dụng lớn. Với kiến thức hạn hẹp của mình, chắc hẳn sẽ có những lầm lẫn, thiếu sót, rất mong nhận được sựu đóng góp của các bạn nếu có tình cờ đọc được. Mọi đóng góp xin để tạo Pull Request hoặc Issue tại địa chỉ: <a href="https://github.com/NhatVu/nhatvu.github.io">https://github.com/NhatVu/nhatvu.github.io</a>. Xin cám ơn mọi người.</p>
+
+<p>Bài viết đầu tiên sẽ tập trung nói về những yếu tố căn bản của một hệ thống phân tán, gồm Reliability (độ tin cậy) và scalability (khả năng mở rộng). Bài tiếp sẽ nói về 2 yếu tố còn lại là Availability (Tính sẵn sàng) và maintainability (khả năng bảo trì) [1][2]</p>
+
+<h2 id="1-reliability-độ-tin-cậy">1. Reliability (Độ tin cậy)</h2>
+<p>Reliability đảm bảo hệ thống vẫn hoạt động bình thường và chính xác ngay cả khi có lỗi (fault) xảy ra. Lỗi ở đây có thể đến từ phần cứng, phần mềm hoặc con người. Khi nhắc tới hệ thống, ta nói đến nhiều server cùng kết hợp lại để hình thành 1 hệ thống phân tán. Tức là mặc dù có lỗi, nhưng business logic vẩn đảm bảo đúng.</p>
+
+<p>Hệ thống có thể hoạt động bình thường và chính xác khi có lỗi xảy ra, còn được gọi là fault-tolerance system. Lưu ý, ở đây hệ thống chỉ chịu được một số lỗi nhất định, chứ nó không bao quát toàn bộ các loại lỗi.</p>
+
+<p>Với một số công ty, để kiểm tra khả năng chịu lỗi của hệ thống, thường sẽ có những bài test định kỳ, khi họ kill 1 hoặc nhiều process/applicaiton mà không báo trước. Nhũng lỗi quan trọng nhất là những lỗi không được handle. Với bài test này, mức độ tự tin về khả năng chịu lỗi của hệ thống sẽ được tăng lên. Lỗi xảy đến lúc ta không ngờ, và không có chuẩn bị nhất.</p>
+
+<p>Lỗi luôn luôn có thể xảy ra và xuất phát từ:</p>
+<ul>
+  <li>Hardware (phần cứng): hard disk đến tuổi đời, …</li>
+  <li>Software: lỗi hệ điều hành, lỗi framework, library, network chậm dẫn tới việc gọi external service bị timeout, hay lỗi cascading failures (khi một phần nhỏ bị lỗi/chậm, dẫn đến những service gọi nó bị lỗi/chậm, dẫn đến những service ở tầng cao hơn bị lỗi/chậm, dẫn đến sập toàn bộ hệ thống)</li>
+  <li>Con người: nhập sai input, thực hiện sai quy trình, …</li>
+</ul>
+
+<h2 id="2-scalability-khả-năng-mở-rộng">2. Scalability (Khả năng mở rộng)</h2>
+<p>Scalability chỉ khả năng mở rộng của hệ thống nhằm đáp ứng với lượng tải (load) tăng.</p>
+
+<p>Tuỳ thuộc vào từng hệ thống, lượng tải (load) có thể định nghĩa bằng request per second đối với web application, tỉ lệ read:write đối với database, hit rate với cache, …</p>
+
+<p>Khi nói tới tải, cũng cần nói đến normal rate và peak rate. Peaking rate xảy ra khi có 1 biến cố/sự kiện nào đó khiến lượng tải tăng đột biến. Đó có thể là tin nóng, idol live stream, các này lễ tết, …</p>
+
+<p>Một số khái niệm:</p>
+<ul>
+  <li>Response time: (thời gian phản hồi): là tổng thời gian khi client gửi request và nhận được response. Response time = network transmit time + queueing delays + service processing time. Thường dùng để mô tả performance of application</li>
+  <li>Latency (độ trễ/sự chờ): thời gian request chờ để được xử lý. Latency = network transmit time + queueing delays. Thông thường dùng để mô tả sự tắc nghẽn mạng (network cogestion) hoặc khoảng cách vật lý xa giữa client và server [3]</li>
+  <li>Throughput (thông lượng): với networking, thông lượng chỉ lượng dữ liệu thực sự đi qua mạng trong một đơn vị thời gian. Với ứng dụng web, có thể xem thông lượng là lượng request thực mà ứng dụng có thể xử lý trong một đơn vị thời gian</li>
+  <li>Băng thông (băng thông): với networking, băng thông là lượng dữ liệu tối đa có thể đi qua mạng trong 1 đơn vị thời gian. Với ứng dụng web, có thể xem bandwidth là lượng request tối đa mà ứng dụng có thể xử lý trong một đơn vị thời gian.</li>
+</ul>
+
+<p>Đế thích ứng với lượng tải tăng, thường có 2 cách scale phổ biến: vertical scaling và horizontal scaling.</p>
+
+<ul>
+  <li>Vertical scaling (scale the chiều dọc): Thêm CPU, RAM, ổ cứng, làm cho máy mạnh hơn để có thể đáp ứng nhiều request hơn. Tuy nhiên, luôn có giới hạn có RAM, CPU và ổ cứng</li>
+  <li>Horizontal scaling (scale theo chiều ngang): phân phối/chia đều lượng tải tới nhiều máy nhỏ khác nhau.</li>
+</ul>
+
+<p>Tuỳ vào từng trường hợp mà việc vertical scaling hoặc horizontal scaling sẽ được chọn. Không có 1 giải pháp nào phù hợp cho tất cả các trường hợp. Điều này phải thật sự chú ý vì thời gian viết bài này, thời của microservice, horizontal scaling gần như trở thành giải pháp mặc định.</p>
+
+<p>Lấy một ví dụ trong sách [1], hệ thống được thiết kế để xử lý 100K request/s, mỗi request 1kB sẽ rất khác với hệ thống xử lý 3 request/phút, mỗi request 2GB, mặc dù cả 2 hệ thống đều có chung giá trị throughput.</p>
+
+<p>Một ví dụ khác là việc Amazon Prime đã chuyển từ kiến trúc microservice sang monolothic cho ứng dụng xử lý video của họ, và kết quả là giảm tới 90% chi phí [4]. Vấn đề chủ yếu ở đây chính là việc truyền tải dữ liệu trung gian (intermediate data) trong quá trình xử lý data giữa các microservice tốn nhiều băng thông và thời gian. Thay vào đó, xử lý trên video trên cùng 1 máy sẽ không tốn chi phí này.</p>
+
+<p><strong>Referenes:</strong></p>
+<ol>
+  <li><a href="https://www.amazon.com/Designing-Data-Intensive-Applications-Reliable-Maintainable/dp/1449373321">Book: Designing Data-Intensive Applications</a></li>
+  <li><a href="https://topdev.vn/blog/cac-tinh-chat-chinh-cua-mot-he-thong-phan-tan">Các tính chất chính của một hệ thống phân tán</a></li>
+  <li><a href="https://stackoverflow.com/questions/58082389/what-is-the-difference-between-latency-and-response-time">What is the difference between latency and response time?</a></li>
+  <li><a href="https://www.primevideotech.com/video-streaming/scaling-up-the-prime-video-audio-video-monitoring-service-and-reducing-costs-by-90">Scaling up the Prime Video audio/video monitoring service and reducing costs by 90%</a></li>
+</ol>]]></content><author><name></name></author><category term="technical" /><summary type="html"><![CDATA[Bài này sẽ bắt đầu chuỗi bài về System Design (thiết kế hệ thống), đặc biệt chú trọng vào Distributed system (hệ thống phân tán) cho những ứng dụng có lượng tải lớn.]]></summary></entry></feed>
