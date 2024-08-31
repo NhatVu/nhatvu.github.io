@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "74.  [Kinh Dịch] Dịch Kinh giản lược"
+title:  "73.  [Kinh Dịch] Dịch Kinh giản lược"
 date:   2024-08-10 00:02:00 +0000
 category: philosophy
 ---

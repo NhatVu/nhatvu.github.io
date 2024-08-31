@@ -1,7 +1,7 @@
 ---
 layout: post
-title:  "77.  [Kinh Dịch] Quẻ 2: Bát thuần Khôn"
-date:   2024-08-17 03:03:00 +0000
+title:  "75.  [Kinh Dịch] Quẻ 2: Bát thuần Khôn"
+date:   2024-08-12 03:03:00 +0000
 category: philosophy
 ---
 

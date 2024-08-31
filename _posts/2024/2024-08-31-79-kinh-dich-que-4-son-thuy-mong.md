@@ -1,7 +1,7 @@
 ---
 layout: post
-title:  "73.  [Kinh Dịch] Quẻ 4: Sơn Thuỷ Mông"
-date:   2024-07-28 00:02:00 +0000
+title:  "79.  [Kinh Dịch] Quẻ 4: Sơn Thuỷ Mông"
+date:   2024-08-31 00:02:00 +0000
 category: philosophy
 ---
 

@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "75.  [Kinh Dịch] Quẻ 1: Bát thuần càn"
+title:  "74.  [Kinh Dịch] Quẻ 1: Bát thuần càn"
 date:   2024-08-10 00:03:00 +0000
 category: philosophy
 ---
