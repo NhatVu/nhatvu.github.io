@@ -1,0 +1,1103 @@
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.9.2">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" /><updated>2024-12-14T16:55:25+00:00</updated><id>/feed.xml</id><title type="html">Minh Nhật’s blog</title><entry><title type="html">81. Book: SQL Performance Explained</title><link href="/technical/81-SQL-performance-explained" rel="alternate" type="text/html" title="81. Book: SQL Performance Explained" /><published>2024-12-14T00:02:00+00:00</published><updated>2024-12-14T00:02:00+00:00</updated><id>/technical/81-SQL-performance-explained</id><content type="html" xml:base="/technical/81-SQL-performance-explained"><![CDATA[<p>Mặc dù đã có lịch sử lâu đời nhưng hiện nay, SQL vẫn được sử dụng rộng rãi. Tôi tin ít nhất những người học lập trình đều có một vài môn học liên quan đến SQL. SQL vẫn có chỗ đứng nhất định giữa sự nổi lên của nhiều công nghệ NoSQL như key-value, document based, graph, time-series, …</p>
+
+<p>SQL cho phép ta tách biệt giữa what và how. Câu lệnh SQL dễ dàng cho ta biết cần phải thực hiện những gì (what) và ẩn đi việc thực hiện nó như thế nào (how). Thông thường, ta chỉ được dạy về “what” và “how” để database tự vận hành</p>
+
+<p>Tuy nhiên, khi gặp về vấn đề performance, cần tối ưu hoá câu lệnh SQL, ta cần phải biết một số những kiến thức nhất định về việc database xử lý câu lệnh như thế nào. “Đánh index giúp tăng tốc câu lệnh SQL” là 1 giải pháp thường được nghe. Đúng nhưng chưa đủ. Và trong một số trường hợp, đánh index không có tác dụng.</p>
+
+<p>Để hiểu rõ hơn về database index và internal implemenation of database, cuốn sách <strong>“SQL Performance Explained”</strong> của Markus Winand [1] là 1 nguồn tham khảo rất có giá trị. Với việc trình bày chi tiết cấu tạo database index, cách database tổ chức lưu trữ dữ liệu dưới dạng block trên disk, các chiến thuật quét dữ liệu khác nhau (ex: full scan, index scan, index only scan, bitmap scan), … ta có thể hiểu rõ hơn nên index như thế nào, index những cột nào để tối ưu hoá câu SQL.</p>
+
+<p>Với bản web edition, tác giả cung cấp script để tạo database và dữ liệu test. Do đó, ta có thể vừa đọc, vừa thực hành những kiến thức vừa học.</p>
+
+<p>Tôi tin rằng, cuốn sách sẽ mang lại giá trị nhất định cho những bạn muốn tìm hiểu về tối ưu hoá SQL.</p>
+
+<p>Ngoài ra, cuốn <strong>“PostgreSQL Query Optimization”</strong> cũng là 1 nguồn tham khảo tốt. Tuy nhiên, cuốn này không có bản web edition.</p>
+
+<h3 id="references">References</h3>
+<ol>
+  <li><a href="https://use-the-index-luke.com/">Book: SQL Performance Explained by Markus Winand</a></li>
+  <li><strong>PostgreSQL Query Optimization</strong> by Henrietta Dombrovskaya, Boris Novikov, Anna Bailliekova (Apress, 2021).</li>
+</ol>]]></content><author><name></name></author><category term="technical" /><summary type="html"><![CDATA[Mặc dù đã có lịch sử lâu đời nhưng hiện nay, SQL vẫn được sử dụng rộng rãi. Tôi tin ít nhất những người học lập trình đều có một vài môn học liên quan đến SQL. SQL vẫn có chỗ đứng nhất định giữa sự nổi lên của nhiều công nghệ NoSQL như key-value, document based, graph, time-series, …]]></summary></entry><entry><title type="html">80. [Kinh Dịch] Quẻ 5: Thuỷ thiên nhu</title><link href="/philosophy/80-kinh-dich-que-5-thuy-thien-nhu" rel="alternate" type="text/html" title="80. [Kinh Dịch] Quẻ 5: Thuỷ thiên nhu" /><published>2024-09-15T00:02:00+00:00</published><updated>2024-09-15T00:02:00+00:00</updated><id>/philosophy/80-kinh-dich-que-5-thuy-thien-nhu</id><content type="html" xml:base="/philosophy/80-kinh-dich-que-5-thuy-thien-nhu"><![CDATA[<p>Tượng quẻ Nhu</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>__ __    
+_____    
+__ __    
+_____    
+_____    
+_____    
+</code></pre></div></div>
+
+<p>Nhu có 2 nghĩa:</p>
+
+<p>1/ Tu dưỡng, ăn uống (nơi Tự Quái, Tượng, Hào 5)</p>
+
+<p>2/ Chờ đợi thời cơ ( nơi Hào 1, 2, 3, 4,và 6 )</p>
+
+<h3 id="thoán-từ">Thoán từ:</h3>
+<p>Nhu: Hữu phu, quang hanh, trinh, cát. Lợi thiệp đại xuyên.</p>
+
+<p>Dịch: Chờ đợi: có lòng thành thực tin tưởng, sáng sủa, hanh thông, giữ vững điều
+chính thì tốt. “Dù gặp việc hiểm như qua sông cũng sẽ thành công” [2]</p>
+
+<p>Đại tượng truyện giải thích cũng đại khái như vậy: dưới là Càn, trời, trên là Khảm,
+mây (Khảm còn có nghĩa là mây); có cái tượng mây đã bao kín bầu trời, thế nào cũng mưa; cứ “ăn uống yến lạc” (ẩm thực yến lạc) yên vui di dưỡng thể xác và tâm chí mà đợi lúc mưa đổ. [2]</p>
+
+<p>Trong trường hợp gặp nguy hiểm, nếu mình là người tài đức, minh chính, tự tín, tự cường, lại khôn ngoan biết lựa thời, lựa thế, không mua chuốc cho mình những nguy hiểm vô ích, thì đến khi hành sự chắc sẽ được hay. [1] “Tiểu bất nhẫn, tất loạn đại mưu”.</p>
+
+<p>Sáu Hào quẻ Nhu chủ trương rằng: Dở, hay, không phải là chỗ ở xa, hay gần nguy hiểm, mà là ở chỗ biết chờ thời, hay không biết chờ thời. Gặp Hào Dương cương, thì khuyên nên nén lòng chờ đợi. Gặp Hào Âm nhu, thời dạy phải mềm dẻo để thoát nguy. [1]</p>
+
+<p>Quẻ Nhu còn khuyên ta: Phải biết chờ đợi. Phàm công chuyện gì mà mình đã làm hết sức, thời không nên nóng nẩy muốn gặt hái ngay thành quả. . . Trái lại, hãy nên bình tĩnh, hãy dưỡng tâm, dưỡng trí, dưỡng thần, mà đợi ngày thành công tới. [1]</p>
+
+<p>Tóm lại, Nhu, là phải biết chờ đợi! Chờ đợi lúc thuận tiện mới hành động, đó là đức Nhẫn. [3]</p>
+
+<h3 id="hào-1">Hào 1</h3>
+<p>Sơ cửu: Nhu vu giao, lợi dụng hằng, vô cữu.</p>
+
+<p>Dịch: Hào 1 là dương, cương kiện, sáng suốt mà ở xa ngoại quái là Khảm, tức xa
+nước, xa chỗ hiểm (cũng như còn ở ngòai thành, không gần sông nước), đừng nóng nảy xông vào chỗ hiểm nạn, cứ chịu chờ đợi thì không có lỗi. Chu Công khuyên như vậy vì
+hào dương này không đắc trung mà có ý muốn tiến [2]</p>
+
+<p>Mặc dù hào 1 đang đứng xa, ngoài chỗ hiểm nhưng vì tính nóng nảy (hào 1, dương ở dương vị) nên có khi sẽ không giữ được tính điềm đạm, vậy nên hào từ mới khuyên nên giữ thái độ bình tĩnh, chớ tưởng mình đã đứng xa chỗ hiểm mà vội vàng khinh tiến. Có được như vậy mới mong được không phạm lỗi [3]</p>
+
+<h3 id="hào-2">Hào 2</h3>
+<p>Cửu nhị: Nhu vu sa, tiểu hữu ngôn, chung cát.</p>
+
+<p>Dịch: Hào 2, dương: Đợi ở bãi cát, tuy có khẩu thiệt một chút, nhưng sau sẽ tốt. [2]</p>
+
+<p>Giảng: Hào này đã gần quẻ Khảm hơn, ví như đã tới bãi cát ở gần sông, chưa tới nỗi
+sụp hiểm; mà hào lại đắc trung, cho nên tuy là dương cương mà biết khôn khéo, ung dung, không nóng nảy như hào 1, cho nên dù có điều tiếng nho nhỏ (bị ganh gét, đàm điếu, cũng không hại gì), rốt cuộc cũng vẫn tốt. [2]</p>
+
+<p>Quan trọng nhất, là Cửu Nhị được 2 chữ đắc Trung. Đắc Trung, là đắc được cái gọi là Trung đạo, tuy nhiệt tâm nhưng vẫn trầm tĩnh, không quá nóng, cũng không quá lạnh, tuy hết sức thận trọng dè dặt mà không biến thành kẻ đa nghi, tuy thấy hết sức ung dung mà không phải chậm trễ! Thời chưa đến, dù có ai dụ dẫn, khuyến khích cũng chẳng đi; thời mà đến, thì có cố gắng ngăn cản cũng cứ đi tới [3]</p>
+
+<h3 id="hào-3">Hào 3</h3>
+<p>Cửu tam: Nhu vu nê, trí khấu chí.</p>
+
+<p>Dịch: Hào 3, dương : đợi ở chỗ bùn lầy, như tự mình vời giặc đến. [2]</p>
+
+<p>Giảng: Hào này đã ở sát quẻ Khảm, tuy chưa sụp xuống nước, nhưng đã ở chỗ bùn
+lầy rồi; thể của nó là dương cương, vị của nó cũng là dương, mà lại không đắc trung, có cái “tượng rất táo bạo nóng nảy, làm càn, tức như tự nó vời giặc đến, tự gây tai họa cho nó. Nếu nó biết kính cẩn, thận trọng thì chưa đến nỗi nào, vì tai họa vẫn còn ở ngoài (ở ngoại quái) (theo tiểu tượng truyện). [2]</p>
+
+<p>Kẻ mà không làm chủ được mình, cứ nghe theo cương tánh mà làm càn làm bướng, dĩ nhiên phải bị tai ương [3]</p>
+
+<h3 id="hào-4">Hào 4</h3>
+<p>Lục tứ: Nhu vu huyết, xuất tự huyệt.</p>
+
+<p>Dịch: Hào 4, âm: như đã chờ đợi ở chỗ lưu huyết mà rồi ra khỏi được. [2]</p>
+
+<p>Giảng: hào này đã bắt đầu vào quẻ Khảm, tức chỗ hiểm, nhưng nhờ nó là âm, nhu thuận lại đắc chính (ở vị âm) , nên tránh được họa. [2]</p>
+
+<p>Lục Tứ, là đã rớt ngay vào biển thẳm rồi! Tượng như kẻ đã gieo mình trong biển máu (nhu vu huyết) cũng như lọt vào hố sâu, cần phải lo leo lên khỏi “huyệt” (xuất tự huyệt 出 自 穴), và chỉ còn có một cách, là nếu biết dùng phép “nhu” thì có thể ra được, bởi Lục Tứ là hào Âm cư Âm, được trùng âm… Mà Âm, thì phải dùng Âm thuật, dùng Nhu thuật, nghĩa là biết nghe theo Thiên lý (ở thời Nhu mà hào lại thuộc Âm nhu) đó là biết thuận theo Thiên lý (thuận thiên giả tồn). [3]</p>
+
+<h3 id="hào-5">Hào 5</h3>
+<p>Cửu ngũ: Nhu vu tửu thực, trinh cát.</p>
+
+<p>Dịch: Hào 5, dương: Chờ đợi ở chỗ ăn uống no say (chỗ yên vui), bền giữ đức trung
+chính thì tốt. [2]</p>
+
+<p>Giảng: Hào 5, địa vị tôn quí, mà là dương cương trung chính, cho nên tốt, nhưng
+muốn hạnh phúc được bền thì phải giữ đức trung chính</p>
+
+<p>Tại sao, lời Tượng lại còn răn đe, nhắc nhở phải giữ đức trung chính, là vì, họa thường sinh ra ở những lúc hưởng phúc tuyệt vời… “lạc cực sinh bi”. Chớ bao giờ quên qui tắc ấy của Dịch lý! Làm việc nhiều, phải có lúc giải trí, và trong lúc giải trí nên tổ chức những cuộc giải trí lành mạnh! Đây, là chỗ bí hiểm nhất của quẻ Nhu. [3]</p>
+
+<p>Cũng nên nhớ 1 câu răn của người xưa: Nhàn cư, vi bất thiện.</p>
+
+<h3 id="hào-6">Hào 6</h3>
+<p>Thượng lục: Nhập vu huyệt, hữu bất tốc chi khách tam nhân lai, kính chi, chung
+cát.</p>
+
+<p>Dịch: Hào trên cùng, âm: Vào chỗ cực hiểm rồi, nhưng có ba người khách thủng
+thẳng tới, biết kính trọng họ thì sau đựơc tốt lành [2]</p>
+
+<p>Giảng: Hào này ở trên cùng ngọai quái là Khảm, cho nên bảo là chỗ cực hiểm. (Nhập vu huyệt = rơi vào lỗ sâu) Nó có hào 3 ở dưới ứng với nó, hào 3 là dương , kéo theo cả hào 1 và 2 cũng là dương, cho nên nói là có 3 người khách sẽ tới; họ không tới ngay được vì họ ở xa hào 6, cho nên nói là họ thủng thẳng sẽ tới. [2]</p>
+
+<p>Lục là âm cực nhu nên hiếu khách (hào Âm có tánh thu hút, quyến rũ) tiếp đón nồng hậu 3 chàng trai, nhờ vậy mà Lục được kéo ra khỏi hố sâu của cảnh cô đơn, rốt cùng được hưởng phần nào sự tiếp viện về sự dinh dưỡng. [3]</p>
+
+<p>Cũng có người mắc phải hiểm nguy ghê gớm, nhưng vì có bạn bè đông đúc, hết lòng phù ủng, nên đã thoát hiểm. Đó là trường hợp Tiết Nhân Quí bị Lý Đạo Tông hãm hại, đến nỗi lâm đại nạn, may nhờ bè bạn bên ngoài như Uất Trì Cung, Từ Mậu Công, Trình Giảo Kim, hết lòng giúp đỡ, nên cuối cùng đã thoát được tai ương [1]</p>
+
+<h3 id="references">References</h3>
+<ol>
+  <li>Dịch Kinh đại toàn - Nhân Tử Nguyễn Văn Thọ &amp; Huyền Linh Yến Lê</li>
+  <li>Kinh Dịch, đạo của người quân tử - Nguyễn Hiến Lê</li>
+  <li>Dịch Kinh tưởng giải (Di cảo) - Thu Giang Nguyễn Duy Cần</li>
+</ol>]]></content><author><name></name></author><category term="philosophy" /><summary type="html"><![CDATA[Tượng quẻ Nhu]]></summary></entry><entry><title type="html">79. [Kinh Dịch] Quẻ 4: Sơn Thuỷ Mông</title><link href="/philosophy/79-kinh-dich-que-4-son-thuy-mong" rel="alternate" type="text/html" title="79. [Kinh Dịch] Quẻ 4: Sơn Thuỷ Mông" /><published>2024-08-31T00:02:00+00:00</published><updated>2024-08-31T00:02:00+00:00</updated><id>/philosophy/79-kinh-dich-que-4-son-thuy-mong</id><content type="html" xml:base="/philosophy/79-kinh-dich-que-4-son-thuy-mong"><![CDATA[<p>Tượng quẻ Mông</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>_____    Thượng cửu
+__ __    Lục Ngũ
+__ __    Lục Tứ
+__ __    Lục Tam
+_____    Cửu nhị
+__ __    Sơ Lục 
+</code></pre></div></div>
+
+<h3 id="thoán-từ">Thoán từ:</h3>
+<p>Mông: Hanh, Phỉ ngã cầu đồng mông, đồng mông cầu ngã. <br />
+Sơ phệ cáo, tái tam độc, độc tắc bất cáo. Lợi trinh.</p>
+
+<p><strong>Dịch</strong>: trẻ thơ được hanh thông. Không phải thầy tìm trẻ thơ mà trẻ thơ tìm thầy. Hỏi (bói) một lần thì bảo cho, hỏi hai ba lần thì là nhàm, nhàm thì không bảo. Hợp với đạo chính thì lợi (thành công). [2]</p>
+
+<p>Quẻ Mông muốn đề cập đến công trình giáo hóa, để khai phóng cho con người khỏi dốt nát,
+mông muội; hoặc là con người lịch sử khi còn man di, mông muội; hoặc là con người lê thứ còn dốt nát, u mê; hoặc là những trẻ thơ còn khờ khạo, vừa chập chững bước vào đời. Nếu xét về thời gian và tuổi tác, con người có thể ngu muội nhất thời, nhưng nếu xét về bản tính, về tính chất, thì con người vốn thông minh. Dẫu hồng trần, dẫu ngoại cảnh, có thể nhất thời như sương mù che mất cốt cách, mất tâm linh, con người vẫn có thể nhờ giáo hóa mà trở nên sáng láng. Vì vậy Thánh nhân đề cao sự giáo hóa, giáo dục. [1]</p>
+
+<p>Con người có tha thiết đi tìm chân lý, con người có tha thiết muốn hoán cải mình, thì khi ấy minh sư mới dễ bề khai quang, điểm hóa. Chân lý là cái gì quý báu, cần được truyền thụ trong một bầu không khí kính cẩn, chứ không phải ngọc để ngâu vầy [1].</p>
+
+<p>Tìm Chân sư, đâu phải khó, mà cũng đâu phải dễ! Đã mê muội lại còn tự tôn tự đại thì làm gì gặp được Chân sư? Có khi có Chân sư, nhưng Chân sư biết mình chưa xứng đáng, không dạy gì cả, nghĩa là Có mà như Không, bởi chưa có chỗ đồng thinh đồng khí!. Chỉ có khi nào lòng chí thành, mới mong gặp đặng Chân sư chịu dạy cho. [3]</p>
+
+<h3 id="hào-1-sơ-lục">Hào 1: Sơ Lục</h3>
+<p>Sơ lục: phát mông, lợi dụng hình nhân, Dụng thoát chất cốc, dĩ vãng lận.</p>
+
+<p>Dịch: Hào 1, âm: mở mang cái tối tăm (cho hạng người hôn ám) thì nên dùng hình phạt, cốt cho họ thoát khỏi gông cùm, nhưng đừng đi quá mức, sẽ hối tiếc. [2]</p>
+
+<p>Hào Sơ Lục Phát Mông đề cập đến phương pháp giáo hóa, và cho rằng khi con người còn
+ngu si, dốt nát, khi mà tâm hồn còn đần độn, cứng cỏi, chưa biết rung động trước Chân, Thiện, Mỹ, thì cũng cần dùng hình phạt, thị uy. [1]</p>
+
+<p>Lập ra hình phạt, thị uy để con người biết sợ hãi, biết nép mình vào khuôn phép, để dần dần
+hấp thụ được lời giáo huấn, và sẽ sửa đổi được tâm tính. Hình phạt chỉ là phương tiện nhất thời; khi con người đã biết phục thiện, thời phải bỏ. Dùng hình phạt mãi đâu có hay. [1]</p>
+
+<p>Lai Tri Đức khi bình Hào này, cho rằng nếu không biết dùng hình phạt, mà chỉ dùng đường lối
+ngọt ngào để giáo hóa, thì thường sẽ đi đến thất bại. Xét cho cùng, hình phạt cần hay không cần, cũng tùy nơi, tùy thời, tùy người. [1]</p>
+
+<p>Tóm lại, trong công trình giáo hóa, phải phối hợp cả nghiêm, lẫn khoan. [1]</p>
+
+<p>Khi bàn về sự hôn ám, mê muội, Nguyễn Duy Cần cho rằng Kẻ còn hôn ám, mê muội, (là người) bị nhiều thứ gông cùm trói buộc chân tay, tượng (như) những “giáo điều cố định”, những thành kiến của xã hội, luân lý, tôn giáo, chánh trị còng trói lại rồi, nên không còn hoạt động tự nhiên được nữa [3]. Tóm lại, đây là một tên nô lệ: nô lệ dục vọng của mình, nô lệ những ước lệ của xã hội hay dư luận của chung quanh con người. [3]</p>
+
+<h3 id="hào-2-cửu-nhị">Hào 2: Cửu nhị</h3>
+<p>Cửu nhị: Bao mông cát, nạp phụ cát, tử khắc gia.</p>
+
+<p>Dịch: Hào, dương: Bao dung kẻ mờ tối, dung nạp hạng người nhu ám như đàn bà, (note: điều này được cho là) tốt; (ở ngôi dưới mà gánh vác việc trên) như người con cai quản được việc nhà. [2]</p>
+
+<p>Cửu nhị là một minh sư, có bổn phận khải mông (note: giải khai sự mông muội) cho tất cả đám người mông muội. Vì thế Hào Cửu nhị là chủ Hào trong quẻ này. Vì Cửu nhị cảm thông, bao dung được mọi hạng người, lại biết linh động giáo hóa, khiến mọi hạng người đều được mang ơn giáo dục, cải hoá. Cửu nhị ở bậc dưới, mà lại làm công việc trên, có khác nào như bầy tôi lương đống (note: từ cũ, chỉ người có tài năng, làm trụ cột cho nước nhà), được quân vương ủy thác công việc, như con cái được cha giao phó cho trách nhiệm lo lắng gia đình. Vì thế nên nói: Tử khắc gia. Cửu nhị mà làm nên công trình, chính là nhờ ở chỗ đồng tâm, nhất trí giữa nhị và ngũ, giữa đôi bên thầy trò [1]</p>
+
+<h3 id="hào-3-lục-tam">Hào 3: Lục tam</h3>
+<p>Lục tam: Vật dụng thủ nữ kiến kim phu <br />
+Bất hữu cung, vô du lợi.</p>
+
+<p>Dịch: hào 3, âm: đừng dùng hạng con gái thấy ai có vàng bạc là (theo ngay) không biết thân mình nữa; chẳng có lợi gì cả. [2]</p>
+
+<p>Trong xã hội vẫn có những hạng người nan giáo (note: nan giáo: rất khó, nan giản trong việc giáo dục). Đó là những hạng người tham vàng bỏ nghĩa, những hạng người ăn xổi, ở thì, không cần đếm xỉa gì đến lương tâm, đến Đạo lý, những hạng người giả dối, bôi bác, sống bừa phứa, gặp chăng hay chớ, chẳng cần gì đến danh dự, đến tình nghĩa. Dịch dùng Hào Lục tam bất trung, bất chính để đề cập đến hạng người ấy một cách bóng bẩy, coi họ như là những đàn bà con gái trắc nết (note: xấu nết, ko đứng đắn), vong tình; chẳng kể gì đến người tình chính đáng của mình là Thượng Cửu, mà muốn hiến thân cho Cửu nhị gần kề, một người mà đời đang lên hương, vừa có tài, vừa có đức. [1]</p>
+
+<p>Ở một cách nhìn khác, thủ tượng, lấy hình ảnh một người con gái, nhưng thực sự không phải nói chuyện về đứa con gái trắc nết ấy. Đây, là muốn nói một kẻ yếu đuối mà không có thể thống, có tánh hễ thấy ai hơn mình, vội vàng xem người ấy như là thần tượng, như người con gái ham tiền, thấy người nào giàu là xem đó như thần tượng (“Kim phu”, con người bằng vàng khối). Hạng người này, quá yếu đuối, nên thích thờ phục kẻ Tài Đức hơn mình kia như hạng thần tượng. [3]</p>
+
+<p>Khi quá thần tượng ai đó, để cả ông thầy khai sáng cho mình, thì ta tự dưng đã tự nguyện trở thành “nô lệ”.</p>
+
+<h3 id="hào-4-lục-tứ">Hào 4: Lục Tứ</h3>
+<p>Lục tứ : Khốn, mông, lận.</p>
+
+<p>Dịch: Hào 4, âm: Bị khốn trong vòng hôn ám, hối tiếc. [2]</p>
+
+<p>Chung quanh hào Lục Tứ, là toàn Âm, tượng của kẻ đã bị hôn ám (u mê), chung quanh lại toàn là hôn cảnh, chung quanh không có bạn bè tốt, không thầy để học, thật đáng thẹn! Hết sức bạc phúc! [3]. Có chăng, đây là một con người “cô độc” tự mình xa thầy xa bạn tốt [3]</p>
+
+<p>Lại còn một hạng người nan hóa nữa, là hạng người thà chịu dốt nát, chứ chẳng thà tìm thầy,
+chọn bạn. Họ như bóng tối, mà muốn trốn tránh ánh sáng mặt trời, thì hỏi sao mà chẳng tối tăm, khốn nạn, hổ cho thân mới được chứ. Vì thế Lục tứ nói Khốn mông. [1]</p>
+
+<h3 id="hào-5-lục-ngũ">Hào 5: Lục ngũ</h3>
+<p>Lục ngũ. Đồng mông. Cát.</p>
+
+<p>Dịch: Hào 5, âm: Bé con, chưa biết gì (nhưng dễ dạy), tốt. [2]</p>
+
+<p>Dịch đề cao những người ở ngôi cao, vị cả, mà vẫn giữ được tấm lòng thành khẩn như trẻ thơ,
+hạ mình cầu học. Đó là đường lối của các minh chúa xưa kia đã dùng để đi vào lịch sử như Thành Thang học Y Doãn, như Cao Tông học Phó Duyệt [1], như Lưu Bị hạ mình mời Khổng Minh</p>
+
+<p>Lẽ đời, khi ở ngôi cao thì tự cao, tự đại không chịu khuất kỷ cầu nhân (người). Đây trái lại, Lục ngũ, nhu trung cư tôn vị (note: tuy ở ngôi cao), mà vẫn vui lòng cầu ứng với minh sư là Cửu nhị. Đó là những hạng người, trong thì tri thức chưa tạp loạn, mà ngoài thì kiến văn chưa tập nhiễm, Thiên tính, Thiên chân còn y nguyên, chưa bị hao tán, Xích tử chi tâm (note: con mới đẻ ra còn đỏ gọi là Xích tử. Xích tử chi tâm ý chỉ tâm hồn còn toàn vẹn như đứa trẻ vừa mới được sinh ra) còn toàn vẹn chưa pha phách mùi đời, vì thế không ỷ mình, vẫn để trống lòng, để thụ giáo cùng những bậc Thánh Hiền. Nuôi dưỡng mình bằng chính lý, chính Đạo, thế là thành công, thế là có cơ thành tựu. Vậy cho nên tốt, cho nên hay. [1]</p>
+
+<h3 id="hào-6-thượng-cửu">Hào 6: Thượng cửu</h3>
+<p>Thượng cửu: Kích mông bất lợi vi khấu, lợi ngự khấu.</p>
+
+<p>Dịch : Hào trên cùng, dương : phép trừ cái ngu tối mà nghiêm khắc quá thì kẻ mình dạy dỗ sẽ phẫn uất, có thể thành giặc (note: chống đối lại mình), như vậy không có lợi. Ngăn ngừa giặc ở ngoài (tức những vật dục quyến rũ kẻ đó) thì có lợi. [2]</p>
+
+<p>Người xưa có câu “phòng bệnh hơn trị bệnh” tức là ý này. Tốt hơn là nên phòng tránh những cơ hội, hoàn cảnh khiến ta dễ dàng đi vào đường xấu. Đôi khi, bệnh quá nặng sẽ ko còn cứu chữa được nữa.</p>
+
+<p>Chữ “Kích” là đả phá, là công kích. Nhưng “phá Mông” mà lại dùng cương đạo là sai lầm! Người ta đã có lỗi, lại còn bị dùng lời nặng nề, đe dọa, thì có ai mà chịu nghe! Vấn đề giáo dân, cần phải có vẻ ôn tồn, nhã nhặn nên mới gọi là “văn hóa” (hóa người bằng văn vẻ). [3].</p>
+
+<p>Nơi Hào Thượng Cửu Kích mông, Dịch cho rằng dẫu sao trong công trình giáo hóa, cũng không nên quá nghiêm khắc. Khi mà người còn quá mông muội, mà chính mình lại quá nghiêm khắc, ép buộc người học hỏi, làm những điều quá tầm họ, thì rút cuộc lại làm hại họ; làm cho họ phát khùng, phát tặc, phản lại mình mà thôi. [1]</p>
+
+<p>Như vậy, thầy phải biết hướng dẫn trò, trò phải biết tự lượng tài sức, khả năng, và khuynh hướng, có như vậy mới đưa đến những thành quả tốt đẹp cho cá nhân, và thế quân bình cho xã hội. [1]</p>
+
+<h3 id="một-vài-suy-nghĩ">Một vài suy nghĩ</h3>
+<p>Nói về phương pháp giáo dục, xã hội hiện đại cấm tiệt việc dùng đòn roi để đưa trẻ vào nề nếp. Khác hẳn với Kinh Dịch, chú trọng việc vận dụng thích hợp đòn roi vào từng người, từng hoàn cảnh. Nếu coi hào 1 là đứa trẻ, thì có thể dùng kỷ luật 1 cách hợp lý. Còn hào 6 là người trưởng thành, lúc này đòn roi sẽ đem lại tác dụng ngược. Trong tác phẩm “Vài suy nghĩ về giáo dục”, nếu như mình nhớ ko lầm thì John Locke cũng khuyến khích việc đưa trẻ vào nề nếp khi còn nhỏ. Và sau khi đã có nền nếp và trẻ lớn dần, thì giảm dần việc dùng đòn roi, thay vào đó là dùng lời lẽ, đạo lý để khuyên giải.</p>
+
+<p>Về hào số 2, sự cần thiết của 1 vị minh sư. Hào 1 như đứa trẻ mong muội cần được khai sáng. Cần thiết nhất là chúng cần được tiếp xúc với những tư tưởng cao đẹp từ nhỏ. Với việc tràn lan các video, clip câu view, nhảm nhí như hiện tại, tôi khó e sợ về vấn đề này. Trong cuốn “Khi người ta tư duy”, James Allen ví tư tưởng ta như 1 mảnh vườn vậy, cần phải được chăm sóc tỉ mỉ. Vườn mọc lên hoa hay cỏ dại thì tuỳ thuộc vào sự chăm sóc của ta.</p>
+
+<p>Về hào số 3, có thể liên tưởng đến văn hoá thần tượng, có thể là 1 hệ tự tưởng, 1 con người hoặc một điều gì đó. Nếu thần tượng quá đà, thì có thể ta sẽ đánh mất chính mình. Và với Kinh Dịch, đây cũng là 1 loại mông muội.</p>
+
+<h3 id="references">References</h3>
+<ol>
+  <li>Dịch Kinh đại toàn - Nhân Tử Nguyễn Văn Thọ &amp; Huyền Linh Yến Lê</li>
+  <li>Kinh Dịch, đạo của người quân tử - Nguyễn Hiến Lê</li>
+  <li>Dịch Kinh tưởng giải (Di cảo) - Thu Giang Nguyễn Duy Cần</li>
+</ol>]]></content><author><name></name></author><category term="philosophy" /><summary type="html"><![CDATA[Tượng quẻ Mông]]></summary></entry><entry><title type="html">78. Not Just Code Monkeys • Martin Fowler • GOTO 2014</title><link href="/technical/78-not-just-code-monkeys-martin-fowler" rel="alternate" type="text/html" title="78. Not Just Code Monkeys • Martin Fowler • GOTO 2014" /><published>2024-08-21T03:03:00+00:00</published><updated>2024-08-21T03:03:00+00:00</updated><id>/technical/78-not-just-code-monkeys-martin-fowler</id><content type="html" xml:base="/technical/78-not-just-code-monkeys-martin-fowler"><![CDATA[<p>Keynote for the Martin Fowler talk at GOTO 2014 conferences: Not Just Code Monkeys</p>
+
+<h3 id="frustration-with-agile">Frustration with Agile</h3>
+<p>Some Aigle benefits:</p>
+<ul>
+  <li>No need upfront software design (like Waterfall model)</li>
+  <li>Aigle breaks project into multiple small stories, which can be one at the time</li>
+  <li>Can quickly get feedback, visible process and steering (hướng đi, có thể change direction as we learn more)</li>
+</ul>
+
+<p>Problems:</p>
+<ul>
+  <li>Stories are usually given by Business Analytics or other kind of role, and hand/pass to developer to code. <strong>The development team ends up being a passive recipient of stories</strong></li>
+  <li>Developer build what’s told to be build, and not involved in thinking about what it will build</li>
+</ul>
+
+<h3 id="conversational-stories">Conversational stories</h3>
+<ul>
+  <li>Developers and analysis should collaborate together to decide what story should be built</li>
+  <li>It’s true that business can prioritize stories but it should be collaboration</li>
+  <li>A/B testing</li>
+</ul>
+
+<h3 id="domain-knowledge">Domain knowledge</h3>
+<ul>
+  <li>In order to collaborate on story creation process, developer should have domain knowledge on the field they’re working on</li>
+  <li>But in reality, developer in general, shouldn’t put enough effort on trying to know the domain we work with (note: at least, it’s true for me)</li>
+  <li><strong>To be really effective as software developer, you need to understand the domain knowledge. only need knowledge, not expert</strong></li>
+</ul>
+
+<h3 id="reponsibility">Reponsibility</h3>
+<ul>
+  <li>A dark pattern (also known as a “deceptive design pattern”) is “a user interface that has been carefully crafted to trick users into doing things, such as buying overpriced insurance with their purchase or signing up for recurring bills”</li>
+  <li>Not enncourage to use dark pattern</li>
+</ul>
+
+<h3 id="impact-judgement">Impact Judgement</h3>
+<ul>
+  <li>Asking question: what impact is our software having on the world around us? And it affects what we choose and where we choose to work.</li>
+</ul>
+
+<h3 id="references">References</h3>
+<ol>
+  <li><a href="https://www.youtube.com/watch?v=4E3xfR6IBII">Not Just Code Monkeys • Martin Fowler • GOTO 2014</a></li>
+</ol>]]></content><author><name></name></author><category term="technical" /><summary type="html"><![CDATA[Keynote for the Martin Fowler talk at GOTO 2014 conferences: Not Just Code Monkeys]]></summary></entry><entry><title type="html">77. [Kinh Dịch] Quẻ 3: Thuỷ lôi truân</title><link href="/philosophy/77-kinh-dich" rel="alternate" type="text/html" title="77. [Kinh Dịch] Quẻ 3: Thuỷ lôi truân" /><published>2024-08-15T03:03:00+00:00</published><updated>2024-08-15T03:03:00+00:00</updated><id>/philosophy/77-kinh-dich-</id><content type="html" xml:base="/philosophy/77-kinh-dich"><![CDATA[<p>Tượng quẻ Truân</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>__ __    
+_____    
+__ __    
+__ __    
+__ __    
+_____    
+</code></pre></div></div>
+
+<p>Ngoại quái (ở trên) là Khảm, nội quái (ở dưới) là Chấn.</p>
+
+<p>Khảm là thủy (mà cũng là vân: mây), chấn là lội (sấm) cho nên quẻ này gọi là Thủy
+lôi (hoặc Vân Lôi), có nghĩa là Truân [2]</p>
+
+<p>Theo Tự quái truyện thì sở dĩ sau hai quẻ Càn, Khôn tới quẻ Truân là vì có trời đất
+rồi, vạn vật tất sinh sôi nảy nở đầy khắp, mà lúc sinh sôi đó là lúc khó khăn. Chữ Truân [
+屯] có cả hai nghĩa đó: đầy (rẫy) và khó khăn. [2]</p>
+
+<h3 id="thoán-từ">Thoán từ</h3>
+<p>Truân: Nguyên, hanh, lợi , trinh, vật dụng hữu du vãng, lợi kiến hầu.</p>
+
+<p>Dịch: Gặp lúc gian truân, có thể hanh thông lắm (nguyên hanh), nếu giữ vững điều
+chính (trái với tà) và đừng tiến vội, mà tìm bậc hiền thần giúp mình (kiến hầu là đề cử
+một người giỏi lên tước hầu). [2]</p>
+
+<p>Trong lúc gian nan mà hành động thì có thể tốt, nhưng phải kiên nhẫn giữ điều
+chính; đừng vội hành động mà trước hết nên tìm người tài giỏi giúp mình. Người tài
+đứng ra cáng đáng lúc đầu (người mình cất nhắc lên tước hầu) đó là hào 1 dương. [2]</p>
+
+<p>“Truân”, là lúc vạn vật mới sinh, chưa lấy gì được hanh thái, còn nhiều nỗi truân chuyên. Cách ngôn thường nói: <strong>“Vạn sự khởi đầu nan!”</strong> (Việc gì cũng thế, lúc khởi đầu, bao giờ cũng đầy gian khổ). Cho nên việc gì cũng vậy: hễ lúc ban đầu mà quá dễ dàng, về sau khó được hanh thông. Đời người cũng thế: lúc còn nhỏ mà quá sung sướng, đầy may mắn hơn người, về sau gặp thực tế cuộc đời đầy gian lao sẽ làm cho con người nhiều lúng túng. Các bậc vĩ nhân trong thiên hạ, lúc nhỏ bao giờ cũng gặp nhiều tranh đấu khổ sở, nên về sau mới lướt qua sóng gió của cuộc đời, tay lái bao giờ cũng hay hơn những đứa trẻ lúc nhỏ sống trong nhung lụa! [3]</p>
+
+<h3 id="hào-1">Hào 1</h3>
+<p>Sơ cửu: Bàn hoàn, lợi cư trinh, lợi kiến hầu.</p>
+
+<p>Dịch: Hào 1, dương : còn dùng dằng, giữ được điều chính thì lợi, được đặt lên tước
+hầu (nghĩa là được giao cho việc giúp đời lúc gian truân) thì lợi. [2]</p>
+
+<p>Giảng: Như trên tôi đã nói, hào này là dương, tượng người có tài, lại đắc chính vì
+dương ở dương vị, cho nên giữ được điều chính và có lợi; sau cùng nó là dương mà lại dưới
+hai hào âm trong nội quái, có cái tượng khiêm hạ, được lòng dân. Vậy là người quân tử
+mới đầu tuy còn do dự, sau sẽ được giao cho trọng trách giúp đời. [2]</p>
+
+<p>Tiếc vì hào Sơ lại bị ở dưới một bầy tiểu nhân (trên hào Sơ, có đến 3 hào âm) nên có vẻ như dùng dằng, do dự nên hào từ mới nói “bàn hoàn” (do dự, e dè). Ở thời Truân, cần nên dè dặt, chớ hấp tấp, chớ vội vàng (lợi cư trinh 利 居 貞 (nghĩa là có lợi những vẫn ẩn nhẫn chờ thời)) thì tốt hơn [3]. Cần phải xem xét cẩn thận xem cái lợi đó có phải là cái mình muốn, phù hợp với đạo lý, giá trị mình đang theo đuổi và bền vững hay không. Người xưa từng nói: “Quân tử ái tài, thủ chi hữu đạo” ý nói: Người quân tử coi trọng của cải nhưng lấy của cải phải đúng đạo lý.</p>
+
+<p>Tóm lại, được hào này, cần phải lo tạo được nhân tâm để củng cố địa vị, không nên tự hào, tự cao, tự đại, mà phạm đến nhân quyền. [3]</p>
+
+<h3 id="hào-2">Hào 2</h3>
+<p>Lục nhị: Truân như, chuyên như, thừa mã ban như. Phỉ khấu hôn cấu, nữ tử trinh bất tự, thập niên nãi tự.</p>
+
+<p>Dịch : hào 2, âm : Khốn đốn khó khăn như người cưỡi ngựa còn dùng dằng lẫn
+quẩn. (Nhưng hào 1 kia) không phải là kẻ cướp, chỉ là muốn cầu hôn với mình thôi. Mình
+cứ giữ vững chí, đừng chịu (nhận lời), mười năm nữa sẽ kết hôn (với hào 5). [2]</p>
+
+<p>Giảng: Hào 2, âm, vừa đắc trung lẫn đắc chính, lại ứng với hào 5 cũng đắc trung đắc
+chính ở trên, như vậy là tốt. Chỉ là cách xa hào 5, mà lại ở sát ngay trên hào 1, dương ,
+bị 1 níu kéo, cho nên còn ở trong cảnh truân chuyên (khó khăn). Nhưng đừng ngại, hào 1
+có tư cách quân tử, không phải là kẻ xấu muốn hảm hại mình, chỉ muốn cưới mình thôi
+(1 là dương, 2 là âm). Đừng nhận lời, cứ giữ vững chí, mươi năm nữa sẽ kết hôn với hào 5.
+Chữ tự [字] ở đây nghĩa là gả chồng. [2]</p>
+
+<p>Hào này lấy hình ảnh người con gái (hào 2), đã biết được right person của mình là hào 5. Nhưng hào 5 còn đang ở quá xa, mãi lo những việc khác. Trong khi đó, hào 1 là 1 người đàn ông khác, là người tốt, cũng để ý đến người con gái ở hào 2. Tuy nhiên, hào 1 lại không quá hợp với hào 2. Tóm lại thì Hào 1 thì ở gần, sẵn sàng cầu hôn nhưng ko quá hợp. Còn hào 5 thì ở xa, hợp nhưng đang mải mê chuyện khác. Điều này đưa hào 2 vào tình cảnh khó xử, không biết nên chọn 1 hay 5. Theo Kinh Dịch, hào 2 nên đợi hào 5, dù có phải đợi 10 năm. Một điểm hay ở đây là mặc dù đợi, những vẫn có giới hạn nhất định. Một thời gian đủ dài để hào 5 trưởng thành. Tuy nhiên, không phải là đợi vô hạn. Có thể sẽ có người hiểu rằng nên chờ vô hạn, mình không coi đó là sai, chỉ là với mình, sẽ chỉ là hữu hạn mà thôi. Đấy cũng là 1 điểm thú vị của các cuốn sách hay. Chúng nêu vấn đề, gợi ý giải quyết những vẫn chừa 1 phần để độc giả có thể suy nghĩ, tự phát triển. Nếu dùng từ hoành tráng hơn thì có thể gọi quá trình này là critical thinking.</p>
+
+<p>Cũng có thể xem việc này trong các khúc rẽ của sự nghiệp. Có thể bạn thích lĩnh vực A, nhưng hiện tại lĩnh vực này đang ko được tốt lắm, có thể làm một số việc khác nhưng đừng quên ước mơ của mình. Hãy cứ kiên nhẫn theo đuổi nó, dù có phải mất tới 10 năm. Ko biết hiểu như vậy có đúng không ??</p>
+
+<h3 id="hào-3">Hào 3</h3>
+<p>Lục tam: Tức lộc, vô ngu, duy nhập vu lâm trung. Quân tử cơ, bất như xả, vãng lận.</p>
+
+<p>Dịch: Hào 3 âm: đuổi hươu mà không có thợ săn giúp sức thì chỉ vô sâu trong rừng mà thôi (không bắt được). Người quân tử hiểu cơ sự ấy, thì bỏ đi còn hơn, cứ tíếp tục tiến nữa
+thì sẽ hối hận.  [2]</p>
+
+<p>Giảng: Hào 3 là âm, ở dương vị, bất chính bất trung; tính chất đã không tốt mà ở vào thời truân; hào 6 ở trên cũng là âm nhu không giúp được gì mình, như vậy mà cứ muốn làm càn, như người ham đuổi hươu mà không được thợ săn giúp (chặn đường con hươu, đuổi nó ra khỏi rừng cho mình bắt) thì mình cứ chạy theo con hươu mà càng vô sâu trong rừng thôi. Bỏ đi là hơn. [2]</p>
+
+<h3 id="hào-4">Hào 4</h3>
+<p>Lục tứ: Thừa mã ban như. Cầu hôn cấu, vãng cát, vô bất lợi.</p>
+
+<p>Dịch: Hào 4, âm: cưỡi ngựa mà dùng dằng. Cầu bạn trăm năm (hay đồng tâm) ở dưới (ở xa) thì không gì là không tốt. [2]</p>
+
+<p>Giảng: Hào này âm nhu, đắc chính là người tốt nhưng tài tầm thường, gặp thời
+Truân không tự mình tiến thủ được (Thời Truân rất cần người có tài [3]). Tuy ở gần hào 5, muốn cầu thân với 5, nhưng 5 đã ứng với 2 rồi, thế là 4 muốn lên mà không được, như người cưỡi ngựa (thừa mã) muốn tiến mà dùng dằng (không dám đi tới, tức “ban như” [3]). Chu Công khuyên hào 4 nên cầu hôn với hào 1 ở dưới thì hơn: (vì 1 có tài đức) mà cùng nhau giúp đời, không gì là không lợi. [2]</p>
+
+<p>Hào 4 là người kém tài, nhưng ở địa vị cao. Hào 1 là người có tài, nhưng lại ở vị trí thấp. Nên hào 4 cần phải ngó xuống, hạ mình kết hợp với hào 1. Và đừng cho thế là “mất thể diện”, ngược lại, như thế mới là sáng suốt [3]</p>
+
+<h3 id="hào-5">Hào 5</h3>
+<p>Cửu ngũ: Truân kì cao; tiểu trinh cát, đại trinh hung</p>
+
+<p>Dịch: Hào 5, dương: Ân trạch không ban bố được (nguyên văn: dầu mỡ (cao) không trơn (truân), chỉnh đốn việc nhỏ thì tốt, việc lớn thì xấu. [2]</p>
+
+<p>Giảng: Hào cửu ngũ này vừa chính vừa trung, ở địa vị chí tôn, đáng lẽ tốt; nhưng vì
+ở trong thời gian truân (quẻ Truân) lại ở giữa ngọai quái là Khảm, (Khảm là hiểm, nguy hiểm), nên chỉ tốt vừa thôi. Hào 2 tuy ứng với nó nhưng âm nhu , không giúp được nhiều; lại thêm hào 1 ở dưới, có tài đức, được lòng dân, uy quyền gần như lấn 5, mà ân trạch của 5 không ban bố khắp nơi được. Cho nên 5 phải lần lần chỉnh đốn các việc nhỏ đã, đừng vội làm việc lớn mà hỏng. Nghĩa là tuy có tài đức, có địa vị, nhưng cũng phải đợi có thế có thời nữa [2]</p>
+
+<p>Đó là trường hợp na ná như vua Lê, chúa Trịnh nước ta: Vua ở ngôi, Chúa nắm quyền (Thiên hạ phân qui nhị chủ). Nhà vua có thể là người có tài đức, nhưng quần thần, thủ túc, không ai là kẻ có tài. Trong trường hợp này, nhà vua nên nhẫn nhục, làm những công việc nho nhỏ, mới có cơ bền vững. Còn muốn làm những chuyện to lớn sẽ chuốc lấy bại vong. Gương lịch sử còn đó, Vua Lê Cảnh Hưng biết chịu đựng, có thể ngồi lặng ở ngôi 46 năm. Đó là Tiểu trinh cát. Vua Lê Chiêu Thống vì muốn thanh toán họ Trịnh và nhà Nguyễn Tây Sơn, nên đã mang hận táng thân nơi đất khách.. Đó là Đại trinh hung [1]</p>
+
+<h3 id="hào-6">Hào 6</h3>
+<p>Thượng lục: Thừa mã ban như, khấp huyết liên như.</p>
+
+<p>Dịch: Hào trên cùng âm. Cưỡi ngựa mà dùng dằng, khóc tới máu mắt chảy đầm đìa. [2]</p>
+
+<p>Hào này ở trên cùng, là thời gian truân tới cực điểm. Nếu là hào dương (có tài trí) thì gian truân cùng cực sẽ biến thông; nhưng hào này là hào âm, bất tài, bất trí, nhu nhược, chỉ biết lên lưng ngựa rồi mà vẫn dùng dằng mà khóc đến chảy máu mắt [2]</p>
+
+<h3 id="lưu-ý">Lưu ý</h3>
+<p>Đọc xong ba quẻ đầu này chúng ta cũng đã thấy: thể của hào chỉ có: âm và dương, vị
+của hào chỉ có 6: từ hào sơ đến hào thượng; nhưng ý nghĩa mỗi hào rất thay đổi, tùy ý nghĩa của trọn quẻ, cho nên hào 1 dương quẻ Càn không giống hào 1 dương quẻ Truân; hào
+5 dương quẻ Truân cũng không giống hào 5 dương quẻ Càn; hào 2 âm quẻ Khốn không
+giống hào đó quẻ Truân, hào 6 âm quẻ Truân cũng không giống hào đó quẻ khôn. <strong>Ý nghĩa của quẻ quyết định ý nghĩa của hào</strong>, nói cách khác: quẻ là cái thời chung của các hào, mà hào là mỗi việc, mỗi hoàn cảnh trong thời chung đó. [2]</p>
+
+<h3 id="references">References</h3>
+<ol>
+  <li>Dịch Kinh đại toàn - Nhân Tử Nguyễn Văn Thọ &amp; Huyền Linh Yến Lê</li>
+  <li>Kinh Dịch, đạo của người quân tử - Nguyễn Hiến Lê</li>
+  <li>Dịch Kinh tưởng giải (Di cảo) - Thu Giang Nguyễn Duy Cần</li>
+</ol>]]></content><author><name></name></author><category term="philosophy" /><summary type="html"><![CDATA[Tượng quẻ Truân __ __ _____ __ __ __ __ __ __ _____]]></summary></entry><entry><title type="html">76. The important of domain knowledge</title><link href="/technical/76-the-important-of-domain-knowledge" rel="alternate" type="text/html" title="76. The important of domain knowledge" /><published>2024-08-13T00:03:00+00:00</published><updated>2024-08-13T00:03:00+00:00</updated><id>/technical/76-the-important-of-domain-knowledge</id><content type="html" xml:base="/technical/76-the-important-of-domain-knowledge"><![CDATA[<p>Bài này copy phần trả lời từ ChatGPT. Mình thấy không cần bổ sung gì thêm.</p>
+
+<p>Domain knowledge is crucial in the career path of a software engineer for several reasons:</p>
+
+<h3 id="1-enhanced-problem-solving-ability">1. Enhanced Problem-Solving Ability</h3>
+<ul>
+  <li>
+    <p><strong>Understanding the Context</strong>: Domain knowledge helps software engineers understand the specific challenges and needs of the industry or field they are working in. This contextual understanding allows them to create more effective and relevant solutions.</p>
+  </li>
+  <li>
+    <p><strong>Better Requirements Analysis</strong>: With domain knowledge, engineers can better interpret and analyze the requirements provided by stakeholders. This reduces the risk of misunderstandings and helps in <strong>developing software that truly meets the user’s needs.</strong></p>
+  </li>
+</ul>
+
+<h3 id="2-improved-communication">2. Improved Communication</h3>
+<ul>
+  <li>
+    <p><strong>Speaking the Same Language</strong>: Being familiar with the terminology and concepts of a particular domain allows engineers to communicate more effectively with domain experts, clients, and other stakeholders. This leads to smoother collaborations and more accurate interpretations of project goals.</p>
+  </li>
+  <li>
+    <p><strong>Trust and Credibility</strong>: Engineers with domain knowledge are often seen as more credible by clients and colleagues, as they can engage in meaningful discussions and provide insights that go beyond just the technical aspects.</p>
+  </li>
+</ul>
+
+<h3 id="3-higher-quality-software">3. Higher Quality Software</h3>
+<ul>
+  <li>
+    <p><strong>Tailored Solutions</strong>: Knowledge of the domain enables engineers to design and implement software solutions that are better aligned with industry standards, regulatory requirements, and best practices. This results in higher quality software that is more likely to succeed in the market.</p>
+  </li>
+  <li>
+    <p><strong>Fewer Errors and Rework</strong>: When engineers understand the domain, they are less likely to make assumptions that lead to errors. This reduces the need for rework and helps in delivering projects on time and within budget.</p>
+  </li>
+</ul>
+
+<h3 id="4-career-advancement-opportunities">4. Career Advancement Opportunities</h3>
+
+<ul>
+  <li>
+    <p><strong>Specialization</strong>: Engineers with deep domain knowledge can become specialists in their field, making them more valuable and sought after. This can lead to roles such as technical lead, domain architect, or consultant.</p>
+  </li>
+  <li>
+    <p><strong>Leadership Roles</strong>: Those with strong domain knowledge are often well-positioned for leadership roles, as they can guide both the technical and business aspects of a project, making strategic decisions that balance both perspectives.</p>
+  </li>
+</ul>
+
+<h3 id="5-innovation-and-competitive-advantage">5. Innovation and Competitive Advantage</h3>
+
+<ul>
+  <li>
+    <p><strong>Identifying Opportunities</strong>: Domain knowledge enables engineers to identify gaps in the market and opportunities for innovation. They can leverage this knowledge to create unique solutions that provide a competitive advantage.</p>
+  </li>
+  <li>
+    <p><strong>Adaptation to Industry Changes</strong>: With domain expertise, engineers are better equipped to adapt to changes in the industry, such as new regulations, technologies, or market trends. This adaptability is key to staying relevant and competitive in the field.</p>
+  </li>
+</ul>
+
+<h3 id="6-job-satisfaction-and-fulfillment">6. Job Satisfaction and Fulfillment</h3>
+
+<ul>
+  <li>
+    <p><strong>Engagement</strong>: Working in a domain you understand and are passionate about can lead to greater job satisfaction. Engineers are more likely to be engaged and motivated when they see the impact of their work on a field they care about.</p>
+  </li>
+  <li>
+    <p><strong>Professional Growth</strong>: Continuous learning in a specific domain allows engineers to grow their expertise, contributing to a sense of achievement and personal development.</p>
+  </li>
+</ul>
+
+<h3 id="7-networking-and-professional-relationships">7. Networking and Professional Relationships</h3>
+<ul>
+  <li>
+    <p><strong>Industry Connections</strong>: Domain knowledge helps engineers build connections within a specific industry, opening up opportunities for collaboration, mentorship, and career advancement.</p>
+  </li>
+  <li>
+    <p><strong>Community Recognition</strong>: Engineers who contribute to domain-specific projects, conferences, or publications can gain recognition within the community, further enhancing their career prospects.</p>
+  </li>
+</ul>
+
+<h3 id="summary">Summary</h3>
+<p>In summary, domain knowledge is not just a complementary skill for software engineers; it is a powerful enabler that can significantly impact their effectiveness, career progression, and job satisfaction.</p>
+
+<h3 id="references">References</h3>
+<ol>
+  <li>https://www.sihui.io/domain-knowledge-and-vision</li>
+</ol>]]></content><author><name></name></author><category term="technical" /><summary type="html"><![CDATA[Bài này copy phần trả lời từ ChatGPT. Mình thấy không cần bổ sung gì thêm.]]></summary></entry><entry><title type="html">75. [Kinh Dịch] Quẻ 2: Bát thuần Khôn</title><link href="/philosophy/75-kinh-dich-2-bat-thuan-khon" rel="alternate" type="text/html" title="75. [Kinh Dịch] Quẻ 2: Bát thuần Khôn" /><published>2024-08-12T03:03:00+00:00</published><updated>2024-08-12T03:03:00+00:00</updated><id>/philosophy/75-kinh-dich-2-bat-thuan-khon</id><content type="html" xml:base="/philosophy/75-kinh-dich-2-bat-thuan-khon"><![CDATA[<p>Tượng quẻ Khôn</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>__ __    Thượng lục
+__ __    Lục Ngũ
+__ __    Lục Tứ
+__ __    Lục Tam
+__ __    Lục nhị
+__ __    Sơ lục 
+</code></pre></div></div>
+
+<h3 id="thoán-từ">Thoán từ</h3>
+<p>Khôn: Nguyên, hanh , lợi, tẫn mã chi trinh. Quân tử hữu du vãng, tiền mê hậu đắc,
+chủ lợi. Tây nam đắc bằng, đông bắc táng bằng. An trinh, cát.</p>
+
+<p>Dịch: Khôn có đức đầu tiên và lớn, hanh thông, thích đáng, đức chính và bền của
+con ngựa cái. Người quân tử có việc làm mà thủ xướng thì lầm, để người khác thủ xướng
+mà mình theo sau thì được. Chỉ cốt lợi ích cho vạn vật. Đi về phía tây nam thì được bạn,
+về phía đông bắc thì mất bạn. An lòng giữ đức vền vững, tốt. [2]</p>
+
+<p>Các đức nguyên, hanh, lợi, Khôn có đủ như Càn; chỉ riêng về đức trinh (chính và bền) thì Khôn hơi khác: tuy chính và bền nhưng phải thuận. Văn Vương dùng con ngựa cái để “tượng” Không: ngựa là giống mạnh mà ngựa cái có tính thuận theo ngựa đực. [2] <strong>Kiền, thì lấy sự cường kiện làm Trinh; Khôn, trái lại, lấy sự mềm dẻo nhu thuận làm Trinh.</strong> “Tẩn mã chi
+trinh là sự mềm dẻo và nhu thuận của “con ngựa cái”. [3]</p>
+
+<p>Cũng vì Khôn có đức thuận, cho nên khởi xướng phải là Càn, Khôn chỉ tiếp tục công việc của Càn. Người quân tử nếu ở vào địa vị khôn, phải tùy thuộc người trên thì làm việc cũng đừng nên khởi xướng để khỏi lầm lẫn, chờ người ta khởi xướng rồi mới theo thì được việc [2]. Ấy cũng là lẽ “tiên mê, hậu đắc” như lời thoán từ [3]. “tiên mê” nghĩa là đi trước, khởi xướng thì mê muội, ko đc việc. “Hậu đắc”, là đi sau, phụ hoạ theo thì được việc.</p>
+
+<h3 id="hào-1">Hào 1</h3>
+<p>Sơ lục: Lý sương, kiên băng chí.</p>
+
+<p>Dịch: Hào 1, âm: Đạp lên sương thì biết băng dày sắp đến [2]</p>
+
+<p>Giảng: Đây là hào âm đầu tiên trong quẻ. Âm thì lạnh, nên Chu Công ví với sương
+lạnh mới kết lại thì thành sương, rồi lần lần, lạnh hơn, nước sẽ đông lại thành băng. Hao
+này có hàm cái ý phải thận trọng từ bước đầu. [2]</p>
+
+<p>Phàm việc trong thiên hạ, loạn đâu phải sinh ra ở thời loạn, mà sinh ra trong cảnh thanh bình. Mầm họa ở ngay lúc “lý sương”, bởi không biết răn mình ở lúc “lý sương” mà phải gặt lấy cái họa “kiên băng”! cũng chẳng lâu đâu. Khi nó đến, là sự đã rồi! Họa, bao giờ cũng “từ từ mà đến”, nhưng khi đến thì đột nhiên mà đến, khó mà phòng: Khó là ở chỗ đó! [3] Bởi vậy người Trung Hoa mới có câu: Trong phúc có hoạ, trong hoạ có phúc.</p>
+
+<h3 id="hào-2">Hào 2</h3>
+<p>Lục nhị: trực phương đại, bất tập vô bất lợi.</p>
+
+<p>Dịch: Hào 2, âm (Đức của mình) thẳng, vuông, lớn thì chẳng phải học tập mà cũng
+không có gì là không lợi [2]</p>
+
+<p>Người Quân tử, khi mới bước chân vào con đường Tu thân, Tu Đạo, hãy biết lấy chữ Kính
+làm đầu. Kính sợ Trời ẩn áo, huyền vi ngay trong tâm khảm mình, chỉnh trang lại tâm thần cho nên hẳn hoi, ngay ngắn. Cải thiện lại đời sống bên ngoài, cố sao cho hành vi, cử chỉ nhất thiết hợp Đạo, hợp nghĩa. Có như vậy mới đi đến chỗ cao đại được [1]</p>
+
+<p>Ba chữ “Trực” (ngay thẳng), “Phương” (vuông vức) và “Đại” (to lớn) là 3 đức tánh của quẻ Khôn. “Bất tập”, là để tự nhiên. Theo đạo Khôn, phải giữ cho bền ba đức tánh Phương Trực Đại cho được tự nhiên, và như vậy, khuyên ta đừng thêm gì nữa, đừng nói gì cả, mà hãy để
+tự nhiên, đừng mó tay vào làm trở ngại sự phát triển tự nhiên của sự vật. Tức là chỗ mà Lão Tử bảo ở chương 33. “Hi ngôn, tự nhiên” (Ít nói, hãy để tự nhiên). [3]</p>
+
+<h3 id="hào-3">Hào 3</h3>
+
+<p>Lục tam: hàm chương khả trinh, hoặc tòng vương sự, vô thành hữu chung.</p>
+
+<p>Dịch: Hào 3, âm: Ngậm chứa (đừng để lộ ra) đức tốt mà giữ vững được, có khi theo
+người trên mà làm việc nước, đừng chiếm lấy sự thành công thì sau cùng sẽ có kết quả. [2]</p>
+
+<p>Quẻ Khôn cũng dạy Đạo làm thần tử. Người thần tử lo thi hành phận vụ, không ỷ chức, ỷ
+quyền, không tâng công, không khoe tài, khoe trí, dẫu có tài cũng không phô trương, luôn khiêm cung, kín đáo, tùy thời, tùy thế mà thi thố tài năng để làm tròn phận vụ [1]</p>
+
+<p>Văn ngôn bàn thêm: Ngậm chứa đức tốt, theo người trên làm việc mà không dám chiếm lấy sự thành công, đó là đạo của Đất, của bề tôi [2]. Liệu điều này còn đúng với thế giơi hiện đại ???</p>
+
+<h3 id="hào-4">Hào 4</h3>
+
+<p>Lục tứ: quát nang, vô cữu, vô dự.</p>
+
+<p>Dịch: Hào 4 âm: như cái túi thắt miệng lại, (kín đáo giữ gìn) thì khỏi tội lỗi mà
+cũng không danh dự [2]</p>
+
+<p>Giảng: hào 4 là âm ở địa vị âm trong một quẻ tòan âm, mà không đắc trung như
+hào 2, ví như người quá nhu thuận, vô tài, không có chút cương cường nào. Đã vậy, mà ở
+sát hào 5, tức là có địa vị một đại thần, tài thấp mà địa vị cao, nên phải thận trọng thì mới khỏi tội lỗi, an thân, mặc dầu không có danh dự gì [2]</p>
+
+<p>Phải luôn luôn dè dặt cẩn thận, may ra không hại đến thân (thận, bất hại dã). Câu “thận, bất hại dã” là câu đầu lưỡi của Dịch dùng để răn đe những ai hay xem thường việc đời mà không bao giờ lo đề phòng họa hoạn! [3]</p>
+
+<h3 id="hào-5">Hào 5</h3>
+
+<p>Lục ngũ: hoàng thường, nguyên cát.</p>
+
+<p>Dịch : hào 5, âm: như cái xiêm màu vàng, lớn, tốt (rất tốt) [2]</p>
+
+<p>Người Trung Hoa thời xưa rất quí màu vàng, chỉ vua chúa mới được dùng màu vàng trong y phục. Xiêm là một bộ phận y phục ở phía dưới, đẹp đẽ, hàm cái nghĩa khiêm hạ, không tự tôn. [2]</p>
+
+<p>Văn ngôn bàn thêm: người quân tử có đức trung (màu vàng) ở trong mà thông suốt đạo lý, ở ngôi cao mà vẫn khiêm, tự coi mình ở thế dưới (như cái xiêm); như vậy là chất tốt đẹp ở bên trong mà phát ra bề ngòai, làm nên sự nghiệp lớn, tốt đẹp như vậy là cùng cực. [2]</p>
+
+<p>Khiêm tốn là vẻ đẹp bên trong của một con người và nó quan trọng. Nhưng, nói thế không phải bảo chỉ cần có cái đẹp bên trong mà thôi! Phải nói: Cái đẹp bên trong cũng cần phải có cái đẹp tương đương bên ngoài, bằng thiếu một trong 2 yếu tố ấy thì cũng là một cái đẹp “phiến diện” mà thôi. Dịch lý, phải thế, bởi phải thực hiện sự “nội ngoại vi nhất”! [3] (note: ở trong và ở ngoài đều đồng nhất, hợp nhất, ý là cần cả trong và ngoài đều đẹp)</p>
+
+<h3 id="hào-6">Hào 6</h3>
+
+<p>Lục thượng: Long chiến vu dã, kỳ huyết huyền hoàng.</p>
+
+<p>Dịch: Hào trên cùng âm : Như rồng đánh nhau ở đồng nội, đổ máu đen máu vàng.[2]</p>
+
+<p>Nên nhớ là quẻ Khôn, mà đến chỗ cực âm, thường là kẻ âm hiểm khôn khéo vô cùng lại mất cả bản tánh yếu mềm, nhu thuận [3]</p>
+
+<p>Không hiểu hào này =))</p>
+
+<h3 id="áp-dụng-vào-thời-đại">Áp dụng vào thời đại</h3>
+
+<p><strong>Quẻ Khôn dạy chúng ta phải luôn gia ý đề phòng, đừng để nước đến chân mới nhẩy, phải biết nhìn xa, trông rộng, biết lo lường, ngăn chặn ngay từ lúc hung họa mới manh nha</strong>  Nếu chúng ta biết đề phòng, biết ngăn ngừa căn cơ hung họa từ khi mới nứt nanh sơ khởi, thì làm sao chúng ta có thể lâm cảnh thân tàn, ma dại, nước mất, nhà tan. [1]</p>
+
+<p>Một mặt khác, nếu chúng ta biết tích đức, tu thân, gặp điều lành dẫu là nhỏ mấy, cũng tha thiết mà làm, mà gom, mà góp, cứ như thế thì lo chi không được phúc khánh miên trường. Trong Thái Thượng Cảm ứng thiên có câu: Hoạ phúc vô môn duy nhân tự chiêu (Họa phúc không cửa ngõ, do người tự chiêu lai), cũng không ngoài ý đó. [1]</p>
+
+<p>Tóm lại, quẻ Khôn dạy ta lẽ Xướng tùy, hòa hợp: nhân tâm phải biết tùy thuộc Đạo tâm, Người phải biết tùy thuộc Trời; người dưới tùy thuộc người trên; vợ tùy thuộc chồng. Tùy thuộc đây phải được hiểu theo lẽ xướng họa hô ứng, một bên khởi xướng, một bên thi hành, chung lưng góp sức, cùng nhau đắp xây đại cuộc. [1]</p>
+
+<h3 id="cảm-nhận-cá-nhân">Cảm nhận cá nhân</h3>
+<p>Có lẽ ấn tượng nhất với mình về quẻ Khôn này là việc để thành công, không nhất thiết phải khởi xướng, làm chủ mà có thể làm phụ tá, hỗ trợ người khác. Và điều này cũng có vị trí rất quan trọng.</p>
+
+<p>Nếu xét về cấu trúc công ty, thông thường thì bộ phận chiến lược, hoặc cấp cao sẽ đề ra chiến lược phát triển và nhân viên cấp thấp thi hành. Cảm giác điều này giống như tinh thần của quẻ Khôn, người khác khởi xướng, và mình thi hành. Dịch là dịch chuyển, biến đổi. Nên có sẽ sau này, mình có thể là người khởi xướng, nhưng đó là chuyện của sau này, khi đã đủ kinh nghiệm, tài đức.</p>
+
+<p>Ngoài ra, “Quẻ Khôn dạy chúng ta phải luôn gia ý đề phòng, đừng để nước đến chân mới nhẩy, phải biết nhìn xa, trông rộng, biết lo lường, ngăn chặn ngay từ lúc hung họa mới manh nha” [1]. Giống như phương châm sống “Cẩn tắc vô ưu vậy”. Không phải ta không tiến về phía trước, nhưng mọi thứ cần phải được xem xét một cách toàn diện, đánh gía rủ ro.</p>
+
+<p>Ngoài ra, nên xây dựng cái đẹp bên trong lẫn bên ngoài, tránh sự “phiến diện” khi quá đề cao cái đẹp bên trong. Trong ngoài đều quan trọng, nhưng ưu ái bên trong hơn tí tí, có lẽ là tỉ lệ trong/ngoài = 60/40.</p>
+
+<h3 id="references">References</h3>
+<ol>
+  <li>Dịch Kinh đại toàn - Nhân Tử Nguyễn Văn Thọ &amp; Huyền Linh Yến Lê</li>
+  <li>Kinh Dịch, đạo của người quân tử - Nguyễn Hiến Lê</li>
+  <li>Dịch Kinh tưởng giải (Di cảo) - Thu Giang Nguyễn Duy Cần</li>
+</ol>]]></content><author><name></name></author><category term="philosophy" /><summary type="html"><![CDATA[Tượng quẻ Khôn __ __ Thượng lục __ __ Lục Ngũ __ __ Lục Tứ __ __ Lục Tam __ __ Lục nhị __ __ Sơ lục]]></summary></entry><entry><title type="html">74. [Kinh Dịch] Quẻ 1: Bát thuần càn</title><link href="/philosophy/74-kinh-dich-1-que-can" rel="alternate" type="text/html" title="74. [Kinh Dịch] Quẻ 1: Bát thuần càn" /><published>2024-08-10T00:03:00+00:00</published><updated>2024-08-10T00:03:00+00:00</updated><id>/philosophy/74-kinh-dich-1-que-can</id><content type="html" xml:base="/philosophy/74-kinh-dich-1-que-can"><![CDATA[<p>Tượng quẻ Càn (tên gọi khác là Kiền)</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>_____    Thượng cửu
+_____    Cửu Ngũ
+_____    Cửu Tứ
+_____    Cửu Tam
+_____    Cửu nhị
+_____    Sơ cửu 
+</code></pre></div></div>
+
+<h3 id="thoán-từ">Thoán từ:</h3>
+<p>Càn: Nguyên, Hanh, Lợi, Trinh</p>
+
+<p>Dịch: Càn (có bốn đức – đặc tính): đầu tiên và lớn, hanh thông, thích đáng, chính
+và bền [2]</p>
+
+<p>Ở các quẻ ngoài Kiền và Khôn, thời Nguyên, Hanh, Lợi, Trinh được bình giảng như sau: [1]</p>
+
+<p>-Nguyên là lớn mạnh, hào  hùng, cao đại.</p>
+
+<p>-Hanh là thông suốt, chôi chẩy, không bị bế tắc.</p>
+
+<p>-Lợi là lợi ích, hay thích nghi, thích đáng.</p>
+
+<p>-Trinh là chính, là bền (Trinh cố, chính trực, bền vững)</p>
+
+<p>Chúng dạy ta bài học thực tế sau đây:</p>
+
+<p><strong>Ở đời muốn thoát khỏi mọi bế tắc, muốn lướt thắng được mọi trở lực, chúng ta phải lớn, phải mạnh. Muốn được lợi ích lâu bền, và đích thực, phải theo chính Đạo, Chính Lý.</strong>[1]</p>
+
+<h3 id="đại-tượng-truyện">Đại Tượng Truyện</h3>
+
+<p>Tượng viết: Thiên hành kiện. Quân tử dĩ tự cường bất tức.</p>
+
+<p>Tượng Truyện:  Người quân tử phải cố gắng không ngừng, y như Trời hoạt động không ngừng. Người quân tử phải luôn luôn cố gắng tiến đức, tu nghiệp, cốt làm sao vươn lên đến một đời sống lý tưởng, qui tụ vào nơi mình mọi vẻ đẹp đẽ, rồi ra làm cho mọi người cũng được Tiến Hoá, cũng được hoan lạc, sung sướng và cũng thực hiện được lý tưởng hoàn thiện như mình [1]</p>
+
+<p>Chữ “Kiện” là sự cường Kiện, là cứng rắn và lâu bền.</p>
+
+<p>“Tự cường” là một đức tánh đặc biệt của Trời là then chốt của cả một đời người quân tử. Có tự cường là phải có “tự lực”… người quân tử không bao giờ chịu nhờ đến bất cứ một thứ “tha lực” nào. Còn mong đến tha lực, chưa phải là đức Trời! Cho nên người quân tử tu đức, là tu theo tự lực, chứ không theo tha lực. [3]</p>
+
+<p>“Bất tức” là không bao giờ bỏ dở một việc làm gì. Không phải “tự cường”, “tự lực” một lúc nào cao hứng thôi, lâu ngày thối chí mà bỏ dở… Trái lại, phải trì chí kiên gan và luôn luôn nhẫn nại… [3]</p>
+
+<h3 id="hào-1">Hào 1</h3>
+<p>Sơ cửu: Tiềm long vật dụng.</p>
+
+<p>Dịch : hào 1 dương: Rồng còn ẩn náu, chưa (đem tài ra) dùng được [2]</p>
+
+<p>Người Trung Hoa cho con rồng là thần vật, rất biến hóa, lúc ẩn lúc hiện, mà
+lại thuộc về lòai dương, cho nên chu Công dùng nó để cho ta dễ thấy ý nghĩa các hào – đều là dương cả - trong quẻ Càn.</p>
+
+<p>Hào 1, ở dưới thấp nhất, cho nên ví nó với con rồng còn nấp ở dưới vực sâu, chưa thể làm mây biến hóa được, còn phải đợi thời [2]</p>
+
+<p>Cũng giống như người quân tử, dẫu có chí cả, nhưng chưa đủ tài đức, chưa gặp được thời cơ, thì cũng không được khinh suất [1].</p>
+
+<p>Dịch, bởi vậy, mới có lời khuyến cáo: Đức mỏng mà ngôi vị cao; trí nhỏ mà lại đi mưu việc lớn; sức nhỏ mà đi gánh việc nặng, ít thấy ai được thành công!. Không thành công, có sao, nhưng còn bị tai họa khủng khiếp là khác nữa! Chẳng những gây tai họa cho mình, lại còn gây tai họa cho người là khác! [3]</p>
+
+<h3 id="hào-2">Hào 2</h3>
+<p>Cửu nhị: Hiện long tại điền, lợi kiến đại nhân.</p>
+
+<p>Dịch: Hào 2, dương: rồng đã hiện ở cánh đồng, ra mắt đại nhân thì lợi. [2]</p>
+
+<p>Khi đã gặp thời cơ thuận tiện hơn, có địa vị khả quan hơn, khi tài đức mình đã bắt đầu hiển lộ, khi đã được mọi người đặt kỳ vọng vào mình, thời nên cộng tác với các bậc Minh vương, hoặc vị nguyên thủ có tài đức để mưu ích cho thiên hạ [1]</p>
+
+<p>Văn ngôn: khuyên người có tài đức gặp thời này nên giữ đức tín, đức thận trọng trong ngôn, hành, tránh tà bậy, giữ lòng thành, giúp đời mà không khoe công, như vậy là giữ được đức trung chính của hào 2 [2]</p>
+
+<h3 id="hào-3">Hào 3</h3>
+<p>Cửu tam: Quân tử chung nhật càn càn, tịch dịch nhược. Lệ, vô cữu.</p>
+
+<p>Dịch: hào 3, dương: Người quân tử mỗi ngày hăng hái tự cường, đến tối vẫn còn
+thận trọng như lo sợ. Nguy hiểm, nhưng không tội lỗi. [2]</p>
+
+<p>Hào 3 là dương lại ở vị ngôi dương, như vậy là rất cương, mà không đắc
+trung. Hơn nữa, nó ở trên cùng nội quái mà chưa tiến lên ngọai quái, nghĩa là ở một chỗ chông chênh, rất khó xử, cho nên bảo là nguy hiểm (lệ). Nhưng nó vẫn là quân tử, có đức tự cường không ngừng, rất thận trọng, lúc nào cũng như lo sợ, cho nên tuy gặp thời nguy mà cũng không đến nỗi tội lỗi [2]</p>
+
+<p>Dẫu đã có địa vị hơn người, nhưng vẫn phải một lòng cầu tiến, luôn luôn gắng gỏi ra công tiến đức, tu nghiệp, luôn luôn biết phòng nguy, lự hiểm, có vậy mới vô sự [1]</p>
+
+<h3 id="hào-4">Hào 4</h3>
+<p>Cửu tứ: Hoặc dược, tại uyên, vô cữu.</p>
+
+<p>Dịch: Hào 4, dương: như con rồng có khi bay nhảy, có khi nằm trong vực (biết tùy
+thời như thế thì) không lầm lỗi. [2]</p>
+
+<p>Giảng: Hào 4 là dương ở vị (ngôi) âm, như vậy là bất chính và bất trung; nó lại cũng
+như hào 3 ở địa vị chông chênh, mới rời nội quái tiến lên ngọai quái, tiến chưa chắc đã
+tốt mà thóai thì dở dang. Cho nên phải thận trọng xem xét thời cơ, nên tiến thì tiến (như
+con rồng bay nhảy) nếu không thì chờ thời (con rồng nằm trong vực), cho nên Chu Công
+dùng chữ “hoặc”: không nhất định. [2]</p>
+
+<p>Tuy bất chính, bất trung nhưng nó có chất cương kiện (hào dương trong quẻ Càn) nên
+cũng như hào 3 là bậc quân tử , biết giữ tư cách, biết tùy thời, và rốt cuộc không có lỗi. Hào này chỉ khác hào 3 ở chỗ nó có thể tiến được, còn hào 3 chưa thể tiến được [2]</p>
+
+<p>Hơn nữa càng lên cao, càng phải e dè, thận trọng, càng cần phải biết xét nét nhân tình, xét nét tâm lý người trên, kẻ dưới. Phải biết cơ vi tiến thoái; phải biết đợi thời cơ thuận tiện mới hành động, mới vẫy vùng; không bao giờ được quyết định, được hành động cẩu thả. Tóm lại, sống ở đời cần phải biết nhẽ tiến thoái. Tiến thoái cho thích đáng, hành động cho hợp thời, mới tránh được mọi chuyện đáng tiếc, đáng phàn nàn [1]</p>
+
+<h3 id="hào-5">Hào 5</h3>
+<p>Cửu ngũ: Phi long tại thiên, lợi kiến đại nhân.</p>
+
+<p>Dịch: Hào 5, dương: Rồng bay trên trời, ra mắt kẻ đại nhân thì lợi. [2]</p>
+
+<p>Giảng : Hào 5 là dương ở vị (ngôi) dương cao nhất trong quẻ lại đắc trung (ở giữa
+ngọai quái), như vậy là có đủ những điều tốt,vừa cao quí vừa chính trung. Nó lại được hào 2 ở dưới ứng với nó, mà hào 2 cũng cương kiện, đắc trung như nó. Nó là hào tốt nhất trong quẻ , cho nên ví nó với con rồng bay trên trời, và ngôi của nó là ngôi chí tôn (ngôi
+vua) [2]</p>
+
+<p>Khi đã lên ngôi trời, thống trị muôn dân, thì phải thi hành thiên Đạo, chọn
+hiền tài phụ bật, để thực hiện một cuộc cai trị lý tưởng cho muôn dân [1]</p>
+
+<h3 id="hào-6">Hào 6</h3>
+<p>Thượng cửu: Kháng long hữu hối.</p>
+
+<p>Dịch: Hào trên cùng, dương: Rồng lên cao quá, có hối hận. [2]</p>
+
+<p>Giảng: hào dương này ở trên cao của quẻ , cương kiện đến cùng rồi, như con rồng
+bay lên cao quá, không xuống được nữa, nếu vẫn còn hành động thì sẽ có điều đáng tiếc, vì
+lẻ thịnh quá thì tất suy, đầy thì không được lâu. Tóm lại thời của hào này là thời không nên hoạt động gì cả, sớm rút lui đi thì còn giữ được tư cách người quân tử [2]</p>
+
+<p>Khi đã lên tới tuyệt đỉnh, lại càng phải gia ý đề phòng, và cũng nên nghĩ đến chuyện công thành thân thoái, mới được vẹn toàn [1]. Giống như Trương Lương, Phạm Lãi</p>
+
+<h3 id="hào-7">Hào 7:</h3>
+<p>Dụng cửu: Kiến quần long vô thủ. Cát.</p>
+
+<p>Dịch: (nghĩa từng chữ) Dùng hào dương: thấy bầy rồng không có đầu, tốt. [2]</p>
+
+<p>KHÔNG HIỂU HÀO NÀY !!!</p>
+
+<h3 id="tổng-quát-về-phương-diện-tu-thân-1">Tổng quát về phương diện tu thân [1]</h3>
+<p>Quẻ Kiền cho rằng: Nếu chúng ta có căn cơ, có chí khí, có nghị lực, lúc nào cũng cương quyết, cũng hăng hái, thì dẫu làm gì cũng nên công. Tuy nhiên, hăng hái, mạnh mẽ cũng chưa đủ, mà phải hăng hái, mạnh mẽ theo đúng đường Đạo lý, theo đúng gương Trời, đúng đường lối Trời mà hành sự, mới có thể lập được đại công, đại nghiệp.</p>
+
+<p>Ngoài ra, dẫu rằng mình là người tài cao, trí cả, cũng không bao giờ được vọng động, mà phải hành động cho hợp thời, hợp cảnh, hợp Đạo lý. Khi chưa đạt tới mức hoàn thiện, hãy cố gắng vươn lên. Khi đã đạt mức hoàn thiện, phải lo triển dương tài đức, giáo hóa chúng dân, thi ân bá trạch cho thiên hạ.</p>
+
+<p>Phải luôn luôn gắng gỏi công trình và như con rồng thiêng, luôn luôn biến hóa. Phải noi gương Trời mà hành sự. Phải tiến lên Thiên đức, Thiên vị.</p>
+
+<h3 id="references">References</h3>
+<ol>
+  <li>Dịch Kinh đại toàn - Nhân Tử Nguyễn Văn Thọ &amp; Huyền Linh Yến Lê</li>
+  <li>Kinh Dịch, đạo của người quân tử - Nguyễn Hiến Lê</li>
+  <li>Dịch Kinh tưởng giải (Di cảo) - Thu Giang Nguyễn Duy Cần</li>
+</ol>]]></content><author><name></name></author><category term="philosophy" /><summary type="html"><![CDATA[Tượng quẻ Càn (tên gọi khác là Kiền)]]></summary></entry><entry><title type="html">73. [Kinh Dịch] Dịch Kinh giản lược</title><link href="/philosophy/73-dich-kinh-gian-luoc" rel="alternate" type="text/html" title="73. [Kinh Dịch] Dịch Kinh giản lược" /><published>2024-08-10T00:02:00+00:00</published><updated>2024-08-10T00:02:00+00:00</updated><id>/philosophy/73-dich-kinh-gian-luoc</id><content type="html" xml:base="/philosophy/73-dich-kinh-gian-luoc"><![CDATA[<p>Bài này chủ yếu sao chép nội dung từ link: https://nhantu.net/DichHoc/THUONGKINH/TK_DKGL.htm</p>
+
+<p>Mục đích: tóm gọn lại một số ý và tránh bị lạc mất nếu website có sự cố</p>
+
+<h2 id="i--ít-nhiều-nhận-định-về-quẻ-thoán-hào">I.  ÍT NHIỀU NHẬN ĐỊNH VỀ QUẺ, THOÁN, HÀO</h2>
+<h3 id="1-nhận-định-về-quẻ">1. Nhận định về quẻ</h3>
+<p>Quẻ có quẻ đơn và quẻ kép.</p>
+
+<p>Quẻ Đơn.  Quẻ Đơn gồm 8 quẻ; mỗi quẻ có 3 vạch (Hào):</p>
+
+<p>Kiền, Khảm, Cấn, Chấn, Tốn, Ly, Khôn, Đoài</p>
+
+<p>Quẻ Đơn tượng trưng cho Vạn Vật, Vạn Hữu</p>
+
+<p>Quẻ Kép.  Quẻ Kép gồm 64 quẻ, mỗi quẻ có 6 Hào.</p>
+
+<p>Quẻ Kép tượng trưng cho hết mọi biến hóa, mọi tình trạng, mọi hoàn cảnh mà Vạn hữu và Nhân quần gây nên trong khi giao tiếp với nhau.  Thượng Kinh và Hạ Kinh viết lại 64 quẻ , <strong>tức là đưa ra 64 hoàn cảnh tượng trưng, để dạy con người phương pháp xử sự cho khéo léo, tùy theo mỗi hoàn cảnh mình gặp.</strong></p>
+
+<p>Quẻ Kép gồm 2 quẻ đơn, ta gọi:</p>
+
+<p>-Quẻ phía dưới là  Nội Quái</p>
+
+<p>-Quẻ phía trên là Ngoại Quái</p>
+
+<p>Vì  mỗi  hoàn  cảnh  có   nhiều  khía  cạnh,  nhiều giai đoạn, nhiều nhân vật  bị dính dấp ảnh hưởng, nên  mỗi  quẻ lại có 6 Hào.  Sáu Hào cốt là để nói lên cho rõ ràng:</p>
+
+<ul>
+  <li>
+    <p>Mọi khía cạnh, mọi trạng thái biến thiên của hoàn cảnh.</p>
+  </li>
+  <li>
+    <p>Mọi giai đọan của một công trình.</p>
+  </li>
+  <li>
+    <p>Mọi tầng lớp trong xã hội, đang cùng chia xẻ một hoàn cảnh</p>
+  </li>
+  <li>
+    <p>Những trường hợp khác nhau, có thể xảy ra cho từng hạng người sống cùng chung một hoàn cảnh..</p>
+  </li>
+</ul>
+
+<p>Dịch Kinh dùng 11 chữ để xét đoán hay dở:</p>
+
+<p>1) Nguyên</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>        =  chí thiện,
+
+        = nguyên thủy (gốc gác vạn hữu)
+
+        = lớn, mạnh, hào hùng, cao đại.
+</code></pre></div></div>
+
+<p>2) Hanh</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    = Thông suốt (hanh thông)
+
+    = Chí mỹ (Gia chi hội - Văn ngôn)
+</code></pre></div></div>
+
+<p>3) Lợi</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    =  Lợi, thuận nhân tâm, thích nghi,   thích đáng.
+</code></pre></div></div>
+
+<p>4) Trinh</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    = Chính, bền, thành đạt, bền vững, hằng cửu, chủ chốt, chủ đích của mọi việc.
+</code></pre></div></div>
+
+<p>5) Cát</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    = Tốt, được, thành công.
+</code></pre></div></div>
+
+<p>6) Hung</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    = Xấu, mất, thất bại.
+</code></pre></div></div>
+
+<p>7) Hối</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    = Hối lận, ưu lự, băn khoăn.
+</code></pre></div></div>
+
+<p>8) Lận</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    =  Xấu hổ.
+</code></pre></div></div>
+
+<p>9) Lệ</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    = Nguy hiểm.
+</code></pre></div></div>
+
+<p>10 &amp; 11)  Vô cữu</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    = là không có lỗi.
+</code></pre></div></div>
+
+<h3 id="2-hào">2. Hào</h3>
+<p>Trong 1 hoàn cảnh có nhiều khía cạnh, nhiều nhân vật liên hệ, quẻ là một hoàn cảnh, nên cũng lấy các Hào mà tượng trưng cho sự diễn biến của hoàn cảnh, những khía cạnh khác nhau của hoàn cảnh, những nhân vật liên hệ đến hoàn cảnh.  Hào có Hào Tài &amp; Hào Vị.</p>
+
+<p><strong>Hào Tài</strong></p>
+
+<p>là bản chất của từng Hào, tài đức của từng Hào.  Hào Tài được diễn tả bằng Âm và Dương.</p>
+
+<p>Âm Hào (__ __)    tượng trưng cho những kẻ tiểu nhân, hoặc những người bất tài, nhu nhược.</p>
+
+<p>Dương Hào (_____)    tượng trưng cho quân tử, người tài cán, cương nghị.</p>
+
+<p><strong>Hào Vị</strong></p>
+
+<p>Mỗi  quẻ Kép có 6 vị  ngôi, tức là 6 Hào</p>
+
+<p>Mỗi một hào mang một số thứ tự tính từ dưới lên trên : 1, 2, 3, 4, 5, 6 có tên là Hào Sơ, Hào Nhị, Hào Tam, Hào Tứ, Hào Ngũ và Hào Thượng.</p>
+
+<p>Số lẻ 1, 3, 5 là vị Dương.  Số chẵn  2, 4, 6 là vị Âm.</p>
+
+<p>Tùy Hào tài là Dương hay Âm, ta dùng thêm chữ Cửu hay Lục. Từ dưới lên trên ta xưng danh như sau:</p>
+
+<ul>
+  <li>
+    <p>Nếu là Dương Hào ta có: Sơ Cửu, Cửu Nhị, Cửu Tam, Cửu Tứ, Cửu Ngũ, Thượng Cửu.</p>
+  </li>
+  <li>
+    <p>Nếu là Âm Hào ta có:  Sơ Lục, Lục Nhị, Lục Tam, Lục Tứ, Lục Ngũ, Thượng Lục.</p>
+  </li>
+</ul>
+
+<p>Hào Vị có nhiều công dụng:</p>
+
+<p>a) Nó biểu dương không gian TRÊN, DƯỚI, GIỮA.</p>
+
+<p>b) Thời gian: ĐẦU, GIỮA, CUỐI.</p>
+
+<p>c) Các tầng lớp xã hội từ lê thứ, đến quan, vua, đến miếu mạo, triều ca.</p>
+
+<p>d) Nó xác định ngôi vị của từng nhân vật.</p>
+
+<p>e) Các giá trị tinh thần từ thấp đến cao.</p>
+
+<p>f) Chiều hướng biến hóa từ trong ra ngoài, hoặc từ ngoài vào trong. Từ dưới lên trên là biến chuyển từ trong ra ngoài.</p>
+
+<h3 id="trung-chính--bất-trung-bất-chính">TRUNG CHÍNH &amp; BẤT TRUNG BẤT CHÍNH</h3>
+
+<ul>
+  <li>
+    <p>Hào 2 và 5 là Trung Hào, nên gọi là Trung.</p>
+  </li>
+  <li>
+    <p>Hào 3, 4 chẳng hạn, không phải Hào giữa nên gọi là Bất trung.</p>
+  </li>
+  <li>
+    <p>Hào Dương cư Dương vị, hào Âm cư Âm vị gọi là Chính.</p>
+  </li>
+  <li>
+    <p>Hào Dương cư Âm vị, hào Âm cư Dương vị gọi là Bất chính.</p>
+  </li>
+</ul>
+
+<p>Trung chính &amp; Bất trung chính cốt để chỉ 2 sự kiện:</p>
+
+<p>1) Trung là những người thành khẩn, trung thực, có lương tâm chức nghiệp, tận tụy vì công vụ.</p>
+
+<p>2) Chính là những người được dùng vào những ngôi vị, những công việc xứng với tài đức của mình.</p>
+
+<p>Bất trung chỉ những người gian ngoan, không thành khẩn.</p>
+
+<p>Bất chính chỉ những người sống trong những địa vị bất xứng, không thích hợp với tài đức của mình, ví như dốt nát, bất tài mà lại ở địa vị cao (Âm cư Dương vị); hoặc có tài, có đức mà không được trọng dụng, không được đặt vào những chức vị xứng đáng (Dương  cư  Âm vị)  Nhân đó ta suy ra được tình trạng hay dở rất nhiều.</p>
+
+<h3 id="ứng--tỉ">ỨNG &amp; TỈ</h3>
+
+<p><strong>Ứng</strong></p>
+
+<p>Mỗi người trong xã hội lại có một số người hỗ trợ, hay không hỗ trợ, Dịch kinh diễn tả sự kiện này bằng ỨNG HÀO .  ỨNG HÀO thì</p>
+
+<p>1 ứng với 4</p>
+
+<p>2 ứng với 5</p>
+
+<p>3 ứng với 6</p>
+
+<p>*Âm ở dưới ứng Dương ở trên thì phải hiểu là tiểu nhân dựa thế quân tử, tiểu nhân dựa thế lực người có quyền thế ở trên, như vậy đâu có hay.</p>
+
+<p>*Dương ở trên ứng với Âm ở dưới thì phải hiểu là người trên hay, mà người dưới dở, không giúp ích được bao lâu.</p>
+
+<p>*Âm lại gặp Âm, Dương lại gặp Dương thì thường phải hiểu là một người hoạt động đơn độc, không người hỗ trợ.</p>
+
+<p>*Nhưng ở Hào ngũ, Hào nhị, nếu Cửu Ngũ mà lại gặp Cửu Nhị thì có thể hiểu là Minh quân lại gặp Hiền thần. (Xem Kiền)</p>
+
+<p><strong>TỈ</strong></p>
+
+<p>Tỉ : là thân cận, là sống kế cận nhau.</p>
+
+<p>ỨNG là nói 2 Hào cách xa nhau, TỈ  là nói 2 Hào kề cận nhau.  Phàm gần nhau phải giống tính, giống nết nhau mới tốt.  Vì thế Âm cận Hào Âm mới tốt, Dương cận Hào Dương mới hay. Còn như Âm bên Dương, Dương bên Âm, vì một đằng Cương, một đằng Nhu, một đằng quân tử, một đằng tiểu nhân, một đằng hữu tài, một đằng vô tài, nên thường khủng khiểng, kèn cựa.</p>
+
+<p>Nếu Âm ở dưới Dương, tức là kẻ bất tài nhường nhịn người có tài.</p>
+
+<p>Nếu Âm ở trên Dương, tức kẻ vô tài mà lại trèo đầu, cưỡi cổ người có tài thì sẽ sinh lắm chuyện.</p>
+
+<ul>
+  <li>
+    <p>Trường hợp quị lụy, nhường nhịn, Dịch gọi là THỪA</p>
+  </li>
+  <li>
+    <p>Trường hợp đè đầu, cưỡi cổ, Dịch cũng gọi là THỪA.</p>
+  </li>
+</ul>
+
+<p>Như vậy, để đoán định CÁT, HUNG, Dịch theo những tiêu chuẩn sau đây:</p>
+
+<p>1) Địa vị phải xứng kỳ đức mới hay.</p>
+
+<p>2) Làm việc gì phải có người hỗ trợ, hưởng ứng, phụ bật mới hay.</p>
+
+<p>3) Không hợp nhau, mà xa nhau thì còn khả trợ, vì không giao tiếp với nhau.  Nhưng đã không hợp nhau mà phải sống bên nhau, thật là căn cớ mọi hung họa.</p>
+
+<p>4) Thành khẩn mà đối đãi nhau mới hay.  Giả dối mà đối đãi với  nhau thật là điều tai hại.</p>
+
+<p>5) Và như vậy, cả bộ Dịch khuyên ta phải ở những nơi, giữ những công việc thích hợp với tài đức mình, giao thiệp với những người đồng tâm, đồng chí với mình.vv…</p>
+
+<h2 id="ii--áp--dụng--những--nguyên--tắc--của--dịch-kinh--vào--cuộc--đời">II.  ÁP  DỤNG  NHỮNG  NGUYÊN  TẮC  CỦA  DỊCH KINH  VÀO  CUỘC  ĐỜI</h2>
+
+<p>Áp dụng nguyên tắc Dịch kinh để đoán định công việc ta làm hay, hay dở</p>
+
+<p>Phàm một công việc ta làm, muốn biết là dở, hay hay, ta sẽ phân tách nó theo những tiêu chuẩn sau đây:</p>
+
+<p>-Lý:  Minh chính hay tà khuất.</p>
+
+<p>-Tình: Thành khẩn hay giả dối, đắc ý hay không đắc ý. Ta thích làm hay làm miễn cưỡng.</p>
+
+<p>-Tài:  Ta là người có chân tài hay không?</p>
+
+<p>-Đức: Ta là người có đức hay không?</p>
+
+<p>-Thời: Công việc ta làm có hợp thời hay không?.  Có hợp với tuổi ta không?.</p>
+
+<p>-Vị:  Địa vị và hoàn cảnh của ta chính đáng, hay không?,  thích hợp với ta hay không?</p>
+
+<p>-Sự hiểu biết của ta về công việc: Ta có am tường công việc này hay không?</p>
+
+<p>-Sự chuẩn bị của ta: Làm công việc này ta có chuẩn bị chu đáo hay không?</p>
+
+<p>-Ứng: Ta làm công việc này có người giúp hay không, có người hưởng ứng hay không? Có bị ai phá phách, gàng quải hay không?</p>
+
+<p>-Cát Hung: Ta làm công việc này để thành công, hay là để thất bại?</p>
+
+<p>-Hối lận: Ta làm công việc này có bị lương tâm phiền trách hay không? Có bị người đời đàm tiếu hay không.  Ta sung sướng, hãnh diện mỗi khi nghĩ đến công việc ta làm, hay trái lại nó làm ta xấu hổ.</p>
+
+<p>-Lệ, Vô Cữu: Khi làm công việc này, mỗi khi ta thấy ta sai đường, lạc lối, mỗi khi ta thấy ta lầm lẫn, ta sẽ có thực tình sửa đổi đường lối hay không?</p>
+
+<p>Nếu xét từng tiêu chuẩn, mà ta thấy phải trả lời là không, thì việc của ta là không hay, đừng có làm.  Như vậy, là ta theo đúng đường lối  của Trời Đất, theo đúng Mệnh Trời.</p>
+
+<p>MỖI KHI TA  TÍNH  TOÁN  MỘT  CÔNG  VIỆC  GÌ, MỖI    KHI  TA  LÂM VÀO MỘT HOÀN  CẢNH  NÀO, ta phải:</p>
+
+<p><strong>1) Nghiên cứu, tìm hiểu công việc hay hoàn cảnh ta cho tận tường.</strong></p>
+
+<ul>
+  <li>
+    <p>Tìm xem những yếu tố nào đã gây nên hoàn cảnh này.</p>
+  </li>
+  <li>
+    <p>Xem ai làm chủ chốt, ai làm chốt, làm nọc trong hoàn cảnh này.</p>
+  </li>
+  <li>
+    <p>Ta có can dự nào đối với hoàn cảnh.  Trực tiếp bị ảnh hưởng, gián tiếp bị ảnh hưởng, hay không bị ảnh hưởng?</p>
+  </li>
+</ul>
+
+<p><strong>2) Nghiên cứu các lực lượng bạn và thù.</strong></p>
+
+<p><strong>3) Nghiên cứu các vấn đề cần phải giải quyết.</strong></p>
+
+<p><strong>4) Nghiên cứu xem các khó khăn vấp phải.</strong></p>
+
+<ul>
+  <li>
+    <p>Vượt tầm giải quyết của ta.</p>
+  </li>
+  <li>
+    <p>Vừa tầm giải quyết của ta.</p>
+  </li>
+  <li>
+    <p>Ta có thể giải quyết dễ dàng với tài sức ta.</p>
+  </li>
+</ul>
+
+<p><strong>5) Hoàn cảnh ta gặp, công việc ta tìm đang ở vào thời kỳ nào: đầu hay đuôi.</strong></p>
+
+<p><strong>6) Hoàn cảnh ta đang gặp, thuận lợi hay không thuận lợi đối với ta.</strong></p>
+
+<p>Tóm lại, Dịch Kinh muốn dạy ta những điều chính yếu sau đây trong cuộc sống hàng ngày:</p>
+
+<ul>
+  <li>Muốn làm việc gì phải thông suốt vấn đề, nghiên cứu tỉ mỉ, phân tách công việc ra thành từng giai đoạn, phải biết tiên liệu những đường đi, nước bước của mình, tiên đoán những trường hợp mình sẽ gặp phải, chương trình hoạt động của mình phải có mục phiêu sáng suốt rõ ràng, những phương thế để đạt mục phiêu ấy phải được hoạch định, nghiên cứu tỉ mỉ.  Phải chọn người cộng tác có tài đức, khả dĩ thi hành được công việc cho đến thành công.</li>
+</ul>
+
+<p>-Muốn đối phó hoàn cảnh cho xuôi xắn,  phải biết tùy thời xử thế.  Lúc cương, lúc nhu, khi mạnh thì cương, khi yếu thời nhu, phải luôn luôn theo đường lối tự nhiên, công chính và phổ quát.</p>
+
+<p>-Trong khi hành sự, phải bình tĩnh, sáng suốt, bình dị, đừng có rối rắm, đừng có phức tạp cầu kỳ.</p>
+
+<p>-Đừng làm gì để cho lương tâm, người đời chê trách.  Đừng làm gì để di hại đến tinh thần, thể xác, hoàn cảnh, sự nghiệp, danh giá của mình.</p>
+
+<p>-Gặp nguy biến, phải ẩn lánh để bảo toàn tấm thân.</p>
+
+<p>-Gặp lúc thuận tiện, phải đem tài năng, đức độ ra giúp nước, giúp dân.</p>
+
+<p>-Không cộng tác với bạo chúa, cường quyền.</p>
+
+<p>-Chỉ cộng tác với người tài đức, vì dân, vì nước.</p>
+
+<p>-Không thân cận với kẻ tiểu nhân, với người ác đức. Khi cần giao thiệp với họ, phải giữ gìn cho lắm.</p>
+
+<p>-Phải tránh những sự giao thiệp giả dối.</p>
+
+<p>-Đối với mọi người, cần sự thành khẩn.</p>
+
+<p>-Không có tài, đừng ham địa vị cao.</p>
+
+<p>-Không phải việc mình, đừng rây vào.  Những nguy hiểm có  thể  tránh được thì  nên  tránh, đừng  có  dấn  thân vào.  Nếu chúng ta giữ được như vậy, thì công việc chúng ta thi hành thường được trôi chẩy, cuộc đời chúng ta luôn được vui tươi như ý.</p>
+
+<p>Dịch Kinh đã dạy chúng ta những tôn chỉ chính xác, để hướng dẫn hành động chúng ta cho chúng ta trở nên hoàn bị.  Có những tư tưởng sáng suốt, những tôn chỉ chính xác, mục phiêu cao cả, những hành vi, cử chỉ, tác phong hợp lý hợp nghĩa, tức là có những phương tiện để tiến tới hoàn thiện, trở thành Thánh Hiền.</p>]]></content><author><name></name></author><category term="philosophy" /><summary type="html"><![CDATA[Bài này chủ yếu sao chép nội dung từ link: https://nhantu.net/DichHoc/THUONGKINH/TK_DKGL.htm]]></summary></entry><entry><title type="html">72. [Dịch] Những trói buộc của sự nghiện học hành</title><link href="/opinion/72-Learning-Addiction-Keeps-Programmers-in-Chains" rel="alternate" type="text/html" title="72. [Dịch] Những trói buộc của sự nghiện học hành" /><published>2024-06-09T00:02:00+00:00</published><updated>2024-06-09T00:02:00+00:00</updated><id>/opinion/72-Learning-Addiction-Keeps-Programmers-in-Chains</id><content type="html" xml:base="/opinion/72-Learning-Addiction-Keeps-Programmers-in-Chains"><![CDATA[<p>Lợi ích của việc học thêm điều mới thì đã có rất nhiều người nói, tuy nhiên, nói đến mặt trái của việc nghiện học hành thì rất hiếm (theo quan sát chủ quan của tôi). Vẫn theo nguyên tắc “Vật cực tất phản” của Lão Tử, bài này tổng hợp lại một số khía cạnh xấu mà việc nghiện học hành mang lại. Nội dung chính đến từ 1 clip từ youtube tên <strong>“Learning Addiction Keeps Programmers in Chains”</strong> [1]. Để tránh việc sa đà vào cái bẫy học hành, ta có thể nhớ rõ 3 điểm cốt yếu:</p>
+<ul>
+  <li>Thời gian, năng lượng của mỗi người là hữu hạn.</li>
+  <li>Do đó, phải có sự ưu tiên, phân bổ nguồn lực hợp lý. Cái gì trước, cái gì sau</li>
+  <li>Tuân theo nguyên tắc “Giỏi, khá, khá, khá”, nhằm master 1 chuyên ngành (học sâu), rồi sau đó mở rộng ra những chuyên ngành liên quan (học rộng). Theo hướng này, ta có thể giảm thiểu việc học những thứ không thực sự cần thiết với công việc và cuộc sống.</li>
+</ul>
+
+<h2 id="1-sự-nguy-hại-của-việc-nghiện-học-hành">1. Sự nguy hại của việc nghiện học hành</h2>
+<h3 id="11-một-dạng-của-sự-trì-hoãn">1.1 Một dạng của sự trì hoãn</h3>
+<p>Dùng việc học 1 công nghệ mới làm lý do “trì hoãn” cho việc đáng ra bạn phải thực hiện.</p>
+
+<p>Đại ý bạn đang làm 1 công việc giang dở, quan trọng và gặp 1 task khó thực hiện. Thay vì tập trung năng lượng để giải quyết vấn đề hiện tại này, với các công cụ hiện tại, bạn đi học 1 công cụ mới để xử lý task khó đó. Đôi lúc công cụ cũ và mới không tương thích với nhau, bạn cần migrate toàn bộ project sang công cụ mới. Rốt cuộc thì project/task ko hoàn thành được.</p>
+
+<p>Nên nhớ, ưu tiên hàng đầu vẫn là giải quyết vấn đề và hoàn thành project.</p>
+
+<h3 id="12-sunk-cost">1.2 Sunk cost</h3>
+<p>Chi phí chìm là những khoản đầu tư tiền bạc và thời gian không thể thu hồi lại bởi những quyết định sai lầm của doanh nghiệp/ chủ đầu tư trong quá khứ.</p>
+
+<p>Chúng ta tự thuyết phục rằng phải học new framework, new technology, pattern vì có thể sử dụng trong tương lai. Tuy nhiên, job hiện tại không thực sự dùng tới nó. Và có thể cũng sẽ không dùng tới trong tương lai gần. Đây là 1 loại chi phí chìm. Ta đầu tư nhiều thời gian, công sức, tiền bạc vào những kiến thức không sử dụng.</p>
+
+<p>Với những người nghiện học hành, việc này dễ mắc phải.</p>
+
+<h3 id="13-declining-value">1.3 Declining Value</h3>
+<p>Những gì bạn học, giá trị của nó suy giảm theo thời gian</p>
+
+<p>Những giá trị mà kiến thức mang lại suy giảm theo thời gian. Thử nghĩ, nếu skills set của chúng ta không thay đổi, thì 5 - 10 năm nữa, giá trị của chúng ta trên thị trường việc làm sẽ như thế nào? Liệu có thể cạnh tranh với lớp trẻ tại thời điểm đó?</p>
+
+<p>Ví dụ, công nghệ Visual Basic được sử dụng nhiều vào những năm 1990, nhưng hiện tại, rất hiếm hoặc không có ai sử dụng nó.</p>
+
+<p>Tôi nghĩ đều này cũng đúng cho những ngành khác.</p>
+
+<h3 id="14-social-avoidance">1.4 Social avoidance</h3>
+<p>Sử dụng việc học làm cớ cho việc xa lánh xã hội.</p>
+
+<p>Giả sử bạn đã có 1 nền tảng về technical, sẽ dễ dàng trong việc học 1 ngôn ngữ lập trình mới, 1 framework mới hơn là việc học cách thuyết phục người khác tốt hơn, hay việc giao tiếp với người non-technical tốt hơn. Có rất nhiều thứ phải học ngoài technical nhằm gia tăng giá trị thị trường (market value) của bạn. Nếu bạn từ chối học những điều này, bạn tự đặt ra giới hạn về sự phát triển của bạn</p>
+
+<p><strong>Điểm tai hại nhất của việc học 1 ngôn ngữ hay framework mới, là làm cho ta cảm thấy ta đã hoàn thành 1 cái gì đó, học một cái gì đó, keep up với công nghệ trong khi lảng tránh/ trì hoãn những điều quan trọng hợn để gia tăng giá trị bản thân. Ta tự lừa dối mình một cách vô thức.</strong></p>
+
+<h3 id="15-worklife-imbalance">1.5 Work/life imbalance</h3>
+<p>Mất cân bằng trong công việc và cuộc sống</p>
+
+<p>Cần dành thời gian để duy trì các mối quan hệ gia đình, xã hội.</p>
+
+<h2 id="2-dấu-hiệu-để-nhận-biết-khi-việc-học-ở-thành-bẫy">2. Dấu hiệu để nhận biết khi việc học ở thành “bẫy”</h2>
+<ul>
+  <li>Tự đánh lừa bản thân rằng dự án cần công nghệ mới</li>
+  <li>Tự đánh lừa bản thân rằng bạn phải học để có job mới.
+    <ul>
+      <li>Nếu bạn stick với 1 framework trong 1 thời gian dài, có lẽ bạn cần học framework mới để tăng market value</li>
+      <li>Đôi khi, điều cần và hiệu quả hơn cho việc kiếm việc mới lại là học hacker rank, leetcode, networking</li>
+    </ul>
+  </li>
+  <li>Vì sự phổ biến trên mạng != value for your career
+    <ul>
+      <li>quyết định dựa trên số đông không hẳn là 1 quyết định khôn ngoan.</li>
+    </ul>
+  </li>
+  <li>FOMO: phải làm, phải học nếu không muốn bị bỏ lại phía sau</li>
+  <li>Challenge hiện tại có vẻ dễ giải quyết bằng công nghệ mới.
+    <ul>
+      <li>vd 1 người sử dụng Java từ 2-3 năm, rồi chuyển sang Go 2-3 năm, rồi sang công nghệ khác =&gt; ko chuyên sâu về một tech stack cụ thể</li>
+      <li>Solution: cố gắng tìm cách giải quyết với tech stack hiện tại. Những stack lâu đời và được sử dụng rộng rãi như Java, Spring boot, thường thì sẽ có giải pháp.</li>
+    </ul>
+  </li>
+</ul>
+
+<p><strong>Referenes:</strong></p>
+<ol>
+  <li><a href="https://www.youtube.com/watch?v=AtextKpPO-w">Learning Addiction Keeps Programmers in Chains</a></li>
+</ol>]]></content><author><name></name></author><category term="opinion" /><summary type="html"><![CDATA[Lợi ích của việc học thêm điều mới thì đã có rất nhiều người nói, tuy nhiên, nói đến mặt trái của việc nghiện học hành thì rất hiếm (theo quan sát chủ quan của tôi). Vẫn theo nguyên tắc “Vật cực tất phản” của Lão Tử, bài này tổng hợp lại một số khía cạnh xấu mà việc nghiện học hành mang lại. Nội dung chính đến từ 1 clip từ youtube tên “Learning Addiction Keeps Programmers in Chains” [1]. Để tránh việc sa đà vào cái bẫy học hành, ta có thể nhớ rõ 3 điểm cốt yếu: Thời gian, năng lượng của mỗi người là hữu hạn. Do đó, phải có sự ưu tiên, phân bổ nguồn lực hợp lý. Cái gì trước, cái gì sau Tuân theo nguyên tắc “Giỏi, khá, khá, khá”, nhằm master 1 chuyên ngành (học sâu), rồi sau đó mở rộng ra những chuyên ngành liên quan (học rộng). Theo hướng này, ta có thể giảm thiểu việc học những thứ không thực sự cần thiết với công việc và cuộc sống.]]></summary></entry></feed>
