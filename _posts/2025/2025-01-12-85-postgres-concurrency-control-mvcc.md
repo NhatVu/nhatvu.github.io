@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "84.  PostgreSQL Concurrency control: MVCC"
+title:  "85.  PostgreSQL Concurrency control: MVCC"
 date:   2025-01-12 00:02:00 +0000
 category: technical
 ---
@@ -9,10 +9,7 @@ category: technical
   - [1.2. Ưu Điểm Của MVCC](#12-ưu-điểm-của-mvcc)
   - [1.3. Hạn Chế Của MVCC](#13-hạn-chế-của-mvcc)
   - [1.4. Demo](#14-demo)
-- [2. Exclusive lock và Shared lock](#2-exclusive-lock-và-shared-lock)
-  - [2.1. Exclusive lock (Khoá độc quyền)](#21-exclusive-lock-khoá-độc-quyền)
-  - [2.2. Shared lock](#22-shared-lock)
-- [3. References](#3-references)
+- [2. References](#2-references)
 
 Series bài này tổng hợp các kiến thức liên quan tới concurrency control cho Postgres. Mục đích để hiểu rõ hơn cách thức PostgreSQL quản lý 2 hoặc nhiều session truy cập 1 dữ liệu tại cùng 1 thời điểm. 
 
@@ -82,63 +79,6 @@ SELECT ctid, xmin, xmax, * from test_table;
 | 6      |         | `COMMIT;`       |
 
 
-
-### 2. Exclusive lock và Shared lock
-Exclusive lock và Shared lock là 2 khái niệm nên biết trong Concurrency Control theory 
-
-#### 2.1. Exclusive lock (Khoá độc quyền)
-Loại khóa này đảm bảo rằng chỉ một giao dịch duy nhất có thể truy cập vào tài nguyên (như một hàng, một bảng) tại cùng một thời điểm.
-
-Các giao dịch khác bị chặn cho đến khi giao dịch giữ khóa độc quyền kết thúc (COMMIT hoặc ROLLBACK).
-
-Khoá Exclusive lock được sử dụng cho tác tác vụ ghi như INSERT, UPDATE, DELETE 
-
-```sql
-
--- Giao dịch 1: Cập nhật dữ liệu và giữ Exclusive Lock
-BEGIN;
-
-UPDATE test_table SET value = '150' WHERE id = 1;
-
--- Sau đó, trong transaction 1, row có id = 1, value = 150. Để transction tiếp tục chạy 
-
--- Giao dịch 2: Cố gắng đọc hoặc ghi dữ liệu cùng dòng sẽ bị chặn.
-BEGIN;
-
-SELECT * from test_table where id = 1;
--- câu lệnh trả về kết quả id = 1, value = 'Updated value'. Giá trị cũ.
-```
-
-#### 2.2. Shared lock 
-
-Loại khóa này cho phép nhiều transaction đọc dữ liệu cùng lúc, nhưng không cho phép transaction khác ghi dữ liệu lên tài nguyên đang bị khóa chia sẻ.
-
-Tài nguyên bị khóa chia sẻ vẫn có thể bị khóa thêm bởi các giao dịch khác, miễn là chúng không yêu cầu Exclusive Lock.
-
-Khi một giao dịch thực hiện các thao tác đọc có khóa (LOCK FOR SHARE), như: SELECT ... FOR SHARE
-
-Dùng trong các trường hợp cần đảm bảo dữ liệu không bị thay đổi trong khi đang đọc.
-
-```sql
--- Giao dịch 1: Đọc dữ liệu với Shared Lock
-BEGIN;
-
-SELECT * FROM test_table WHERE id = 1 FOR SHARE;
-
--- Giao dịch 2: Cũng có thể đọc dữ liệu với Shared Lock.
-BEGIN;
-
-SELECT * FROM test_table WHERE id = 1 FOR SHARE;
-
--- Giao dịch 3: Cố gắng cập nhật hoặc xóa dữ liệu
--- Default behaviour: câu lệnh dưới sẽ rơi vài trạng thái WAITING. Chờ cho transaction 1 và 2 commit hoặc rollback, sau đó sẽ thực hiện. Tuy nhiên, hết wait_timeout, sẽ báo lỗi. 
-BEGIN;
-
-UPDATE test_table SET value = '200' WHERE id = 1; 
-
-```
-
-
-### 3. References 
+### 2. References 
 1. [How does MCVV work?](https://vladmihalcea.com/how-does-mvcc-multi-version-concurrency-control-work/)
 2. [Why Uber Engineering Switched from Postgres to MySQL](https://www.uber.com/en-IE/blog/postgres-to-mysql-migration/)
