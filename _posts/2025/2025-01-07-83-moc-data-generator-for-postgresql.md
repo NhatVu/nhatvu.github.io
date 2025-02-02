@@ -4,12 +4,13 @@ title:  "83.  Mock data generator for PostgreSQL"
 date:   2025-01-07 00:02:00 +0000
 category: technical
 ---
-- [Tạo schema](#tạo-schema)
-- [Tạo lorem text](#tạo-lorem-text)
-- [Tạo hàm cho mỗi bảng](#tạo-hàm-cho-mỗi-bảng)
-- [Gọi hàm tạo test data](#gọi-hàm-tạo-test-data)
-- [Thảo luận](#thảo-luận)
-- [References](#references)
+- [1. Tạo schema](#1-tạo-schema)
+- [2. Tạo lorem text](#2-tạo-lorem-text)
+- [3. Tạo hàm cho mỗi bảng](#3-tạo-hàm-cho-mỗi-bảng)
+- [4. Gọi hàm tạo test data](#4-gọi-hàm-tạo-test-data)
+  - [4.1. Thảo luận](#41-thảo-luận)
+- [5. Tablesample](#5-tablesample)
+- [6. References](#6-references)
 
 Bài viết này dựa trên ý tưởng của bài "Creating PostgreSQL Test Data with SQL, PL/pgSQL, and Python" [1]. Tuy nhiên, tôi cụ thể hoá từng bước và thêm một số câu hỏi cần thảo luận về việc tạo mock data cho PostgreSQL 
 
@@ -22,7 +23,7 @@ Tôi cũng từng viết các ứng dụng tạo mock data bằng Java. Tuy nhi�
 Bài này tôi sẽ tập trung theo hướng sử dụng PL/pgSQL hơn là SQL. 
 
 
-### Tạo schema 
+### 1. Tạo schema 
 
 ```sql
 
@@ -58,7 +59,7 @@ CREATE TABLE album_genres (
 );
 ```
 
-### Tạo lorem text 
+### 2. Tạo lorem text 
 Đối với các field dạng text như tên, địa chỉ, title, ... random text rất khó nhìn và trông không thực. Ta sẽ tạo 1 bảng chứa các word trong tiếng anh, sau đó, tạo 1 hàm để tạo ngẫu nhiên 1 câu chứa n word. Như vậy, sẽ dễ nhìn hơn rất nhiều 
 
 **Tạo bảng words và thử chạy random từng word** 
@@ -101,7 +102,7 @@ SELECT generate_random_title(ceil(random() * 4 + _g * 0)::int)
 FROM generate_series(1, 4) AS _g;
 ```
 
-### Tạo hàm cho mỗi bảng 
+### 3. Tạo hàm cho mỗi bảng 
 Trước tiên, xoá data trên toàn bộ bảng theo thứ tự
 
 ```sql 
@@ -188,7 +189,7 @@ END;
 $$ LANGUAGE plpgsql;
 ```
 
-### Gọi hàm tạo test data 
+### 4. Gọi hàm tạo test data 
 
 ```sql
 -- create genres 
@@ -212,8 +213,112 @@ select generate_albums_genres(10000);
 select count(*) from album_genres ;
 ```
 
-### Thảo luận 
+#### 4.1. Thảo luận 
 - Việc lấy ngẫu nhiên 1 dòng trong bảng chưa tối ưu, hiện tại ta thực hiện `SELECT album_id FROM albums ORDER BY random() LIMIT 1`. Việc này cần sort toàn bộ bảng theo `random()`. Nếu bảng lớn, việc này tốn nhiều thời gian và memory vì `ORDER BY` cần lấy tất cả rows, sau đó mới thực hiện sort. Để hạn chế việc này, ta có thể dùng câu lệnh thay thế `SELECT artist_id FROM artists where artist_id > floor(random() * 10000)  limit 1`. Việc thực hiện riêng rẻ thì câu lệnh 2 nhanh hơn cầu lệnh gốc, nhưng khi áp dụng vào việc generate mock data, tôi vẫn chưa thấy sự khác biệt. Một nguyên nhân có thể nghĩ đến là dữ liệu hiện tại vẫn đang nhỏ. Nếu có từ 5m - 10m dòng, có lẽ sẽ thấy sự khác biệt ?
 
-### References 
+### 5. Tablesample 
+Để khắc phục hạn chế của `ORDER BY random() limit 1`, Postgres từ phiên bản 9.5 cung cấp `TABLESPACE`, cho phép trả về random sample [2]. Khi sử dụng explain, ta thấy `TABLESPACE` sử dụng `SAMPLESCAN` method, hoàn toàn các so với việc SeqScan hay IndexScan.
+
+Hiện tại, Postgres cung cấp 2 phương pháp sample chính: SYSTEM và BERNOULLI
+- SYSTEM: sử dụng random IO, nhanh hơn BERNOULLI. Thực hiện sample ở block/page level. Nó đọc và trả về page ngẫu nhiên từ disk. Nên đôi khi, giữa 2 lần chạy, kết quả trả về giống nhau. Để hạn chế tình trạng này, ta có thể thêm dòng `ORDER BY random()` 
+- BERNOULLI: sử dụng sequentail IO. Thực hiện ở tuple level, cho kết quả sample distribution tốt hơn SYSTEM. Tuy nhiên, với dữ liệu lớn, sẽ chậm hơn SYSTEM 
+
+Ví dụ:
+
+```sql
+SELECT album_id FROM albums tablesample system(1) ORDER BY random() 
+
+--- equivalent query: không đảm bảo số row giống nhau, xấp xỉ mà thôi 
+SELECT album_id FROM albums  ORDER BY random() < 0.01
+```
+
+SYSTEM và BERNOULLI đều yêu cầu percentage parameter, % return rows. Tuy nhiên, cần lưu ý, câu query trên có thể trả về null. Nếu percentage nhỏ, tỉ lệ trả về null lớn hơn. 
+
+Một lưu ý quan trọng là `WHERE` clause sẽ được áp dụng sau khi thực hiện sampling. Để hiểu rõ hơn, có thể dùng lệnh explain để xem. Để khắc phục việc này, ta có thể tạo ra 1 temp table, và thực hiện sample trên temp table đó. Tuy nhiên, kỹ thuật này tôi vẫn chưa nghiên cứu kỹ về hệ quả của temp table. 
+
+Viết lại hàm `generate_albums_genres` có sử dụng sample method 
+
+```sql
+CREATE OR REPLACE FUNCTION generate_albums_genres_using_tablesample(size int default 10) 
+RETURNS void AS $$
+DECLARE
+  dj_album RECORD;
+  sample_album_id int;
+BEGIN
+  FOR i in 1..size loop
+	SELECT album_id 
+	into sample_album_id
+	FROM albums tablesample system(1) ORDER BY random() LIMIT 1;
+
+	if sample_album_id is null then 
+		continue; -- skip when sample id is null
+	end if;
+
+    INSERT INTO album_genres (album_id, genre_id)
+    VALUES (
+      sample_album_id,
+      (SELECT genre_id FROM genres ORDER BY random() LIMIT 1)
+    )
+    -- If we insert a row that already exists, do nothing (don't raise an error)
+    ON CONFLICT DO NOTHING;
+  END LOOP;
+ 
+  -- Ensure all albums by a 'DJ' artist belong to the Electronic genre.
+  FOR dj_album IN
+    SELECT albums.* FROM albums
+    INNER JOIN artists USING (artist_id)
+    WHERE artists.name LIKE 'DJ %'
+  LOOP
+    RAISE NOTICE 'Ensuring DJ album % belongs to Electronic genre!', quote_literal(dj_album.title);
+    INSERT INTO album_genres (album_id, genre_id)
+    SELECT dj_album.album_id, (SELECT genre_id FROM genres WHERE name = 'Electronic')
+    -- If we insert a row that already exists, do nothing (don't raise an error)
+    ON CONFLICT DO NOTHING;
+  END LOOP;
+END;
+$$ LANGUAGE plpgsql;
+```
+
+Đoạn code để đo tốc độ query 
+```sql 
+DO $$
+DECLARE
+    start_time TIMESTAMP;
+    end_time TIMESTAMP;
+    elapsed INTERVAL;
+BEGIN
+    -- Capture start time
+    start_time := clock_timestamp();
+
+    -- Your SQL/PLpgSQL logic here 
+   -- 10k: 1535 ms
+   -- 10k: 1500 ms
+   -- 50k: 5065
+   -- PERFORM generate_albums_genres_using_tablesample(10000);
+   
+   -- 10k: 59138 ms
+   -- 10k: 59546 ms
+   	PERFORM generate_albums_genres(10000);
+
+    -- Capture end time
+    end_time := clock_timestamp();
+
+    -- Calculate elapsed time
+    elapsed := end_time - start_time;
+
+    -- Display the result
+    RAISE NOTICE 'Execution Time : % ms', EXTRACT(MILLISECONDS FROM elapsed);
+END $$;
+```
+
+So sánh khi generate 10k records
+
+| No | generate_albums_genres | generate_albums_genres_using_tablesample |
+|----|------------------------|------------------------------------------|
+| 1  | 59138 ms               | 1535 ms                                  |
+| 2  | 59546 ms               | 1500 ms                                  |
+
+
+### 6. References 
 1. [Creating PostgreSQL Test Data with SQL, PL/pgSQL, and Python](https://www.tangramvision.com/blog/creating-postgresql-test-data-with-sql-pl-pgsql-and-python)
+2. [Tablesample In PostgreSQL 9.5](https://www.enterprisedb.com/blog/tablesample-postgresql-95)
