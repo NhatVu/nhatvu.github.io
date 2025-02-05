@@ -86,6 +86,8 @@ wheel -> admin -> joe
 island -> joe 
 */
 ```
+Minh hoạ membership hierarchy 
+![alt text](/assets/images/2025/86_membership_hierarchy.png)
 
 Để kiểm tra xem user có thuộc vào 1 group nào không, ta có thể dùng DBEaver để kiểm tra, đây cũng là cách dễ nhất nếu ta không thường xuyên tiếp xúc với command line. Tuy nhiên, PostgreSQL có hỗ trợ hàm để kiểm tra membership. Điểm lợi của hàm này là ta có thể kiểm tra direct và indirect membership 
 ```sql 
