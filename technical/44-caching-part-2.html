@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Caching part 2 | Minh Nhật’s blog</title>
+<meta name="generator" content="Jekyll v3.10.0" />
+<meta property="og:title" content="Caching part 2" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Tiếp tục bài trước, bài này tôi sẽ tổng hợp những kiến thức về disbuted cache và cache replacement/invalication" />
+<meta property="og:description" content="Tiếp tục bài trước, bài này tôi sẽ tổng hợp những kiến thức về disbuted cache và cache replacement/invalication" />
+<link rel="canonical" href="/technical/44-caching-part-2" />
+<meta property="og:url" content="/technical/44-caching-part-2" />
+<meta property="og:site_name" content="Minh Nhật’s blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2023-05-24T00:01:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Caching part 2" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2023-05-24T00:01:00+00:00","datePublished":"2023-05-24T00:01:00+00:00","description":"Tiếp tục bài trước, bài này tôi sẽ tổng hợp những kiến thức về disbuted cache và cache replacement/invalication","headline":"Caching part 2","mainEntityOfPage":{"@type":"WebPage","@id":"/technical/44-caching-part-2"},"url":"/technical/44-caching-part-2"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="Minh Nhật&apos;s blog" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Minh Nhật&#39;s blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <!-- <div class="trigger"><a class="page-link" href="/404.html"></a><a class="page-link" href="/about/">Về tôi</a><a class="page-link" href="/art">art</a><a class="page-link" href="/finance">Finance</a><a class="page-link" href="/"></a><a class="page-link" href="/assets/main.css"></a><a class="page-link" href="/opinion">opinion</a><a class="page-link" href="/philosophy">Philosophy</a><a class="page-link" href="/technical">technical</a><a class="page-link" href="/art">art</a><a class="page-link" href="/art/">art</a><a class="page-link" href="/finance">Finance</a><a class="page-link" href="/finance/">Finance</a><a class="page-link" href="/"></a><a class="page-link" href="/"></a><a class="page-link" href="/page1/"></a><a class="page-link" href="/page2/"></a><a class="page-link" href="/page3/"></a><a class="page-link" href="/page4/"></a><a class="page-link" href="/opinion">opinion</a><a class="page-link" href="/opinion/">opinion</a><a class="page-link" href="/philosophy">Philosophy</a><a class="page-link" href="/philosophy/">Philosophy</a><a class="page-link" href="/technical">technical</a><a class="page-link" href="/technical/">technical</a><a class="page-link" href="/feed.xml"></a></div> -->
+        <div class="trigger">
+          <a class="page-link" href="/philosophy">Triết học</a>
+          <a class="page-link" href="/art">Văn, thơ, nhạc</a>
+          <a class="page-link" href="/opinion">Góc nhìn cá nhân</a>
+          <a class="page-link" href="/technical">IT</a>
+          <a class="page-link" href="/finance">Finance</a>
+          <a class="page-link" href="/about">Về tôi</a>
+        </div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">44. Caching part 2</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2023-05-24T00:01:00+00:00" itemprop="datePublished">May 24, 2023
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>Tiếp tục bài trước, bài này tôi sẽ tổng hợp những kiến thức về disbuted cache và cache replacement/invalication</p>
+
+<p>Link bài 1: <a href="/technical/42-caching-part-1">Caching part 1</a></p>
+
+<p><strong>Caching phần 2</strong></p>
+<ol>
+  <li>Distribted cache
+    <ul>
+      <li>modulus sharding</li>
+      <li>range-based sharding</li>
+      <li>consistent hashing</li>
+    </ul>
+  </li>
+  <li>Cache replacement and invalidation
+    <ul>
+      <li>Cache replacement: LRU, LFU</li>
+      <li>Cache invalidation: TTL, invalidation event</li>
+    </ul>
+  </li>
+</ol>
+
+<h3 id="4-distributed-cache-là-gì-1">4. Distributed cache là gì? [1]</h3>
+<p>Phần này chủ yếu sẽ tóm lược nội dung của bài viết <em>A Crash Course in Caching - Part 2</em> trên blog ByteByteGo. Xem link ở phần Reference</p>
+
+<p>Ở phần trước, ta nói đến cache trên remote server. Nếu chỉ dùng 1 server, thì không có chuyện gì để nói. Tuy nhiên, khi dữ liệu cần cache lớn, ta phải cache trên nhiều server khác nhau. Lúc này, ta có distributed cache.</p>
+
+<p>Trong distributed cache, mỗi node sẽ chỉ lưu trữ 1 phần dữ liệu. Khi client yêu cầu, cache system cần biết tìm dữ liệu ở node nào.</p>
+
+<p>Có nhiều cách cho việc phần chia dữ liệu giữa các node, bao gồm modulus, range-based và consistent hashing. Lưu ý rằng, việc chia dữ liệu này đều dựa vào key (dữ liệu có dạng key-value). Giả sử key của chúng ta là user_id</p>
+
+<h4 id="modulus">Modulus</h4>
+<p>Với phương pháp modulus, gọi n là tổng số server. Việc xác định key nằm trên server nào được tính bằng công thức: hash(user_id) % n.</p>
+
+<p>Phương pháp này đơn giản, nhưng yêu cầu phải redistribute cache khi tăng hoặc giảm số lượng server. Điều này sẽ gây gánh nặng lên database khi có quá nhiều cache miss. Nghiêm trọng hơn, có thể gây crash hệ thống.</p>
+
+<h3 id="range-based">Range-based</h3>
+<p>Với phương pháp này, key sẽ được chia thành nhiều range khác nhau, mỗi range sẽ được map vào 1 node nhất định.</p>
+
+<p>Vd: Node 1 khi min_user_id &lt;= user_id &lt; 10 
+    Node 2 khi 10 &lt;= user_id &lt; 20 
+    Node 3: 20 &lt;= user_id &lt; max_user_id</p>
+
+<p>Range-based sẽ phù hợp với 1 số trường hợp, khi mà dữ liệu được group hoặc partition vào 1 range cụ thể.</p>
+
+<p>Tuy nhiên, vì số lượng node được xác định trước dựa vào range, rất khó để scale. Khi scale, cần phải re-define lại range này. Đồng nghĩa với việc có nhiều miss cache.</p>
+
+<p>Từ đó, có thể thấy 2 phương pháp trên, modulus và range-based, tuy đơn giản nhưng khó scale. Khi scale, yêu cầu phải redistribute data.</p>
+
+<h4 id="consistent-hashing">Consistent hashing</h4>
+<p>Để không phải redistribute nhiều dữ liệu, ta cần 1 phương pháp mà ở đó việc chọn node không liên quan trực tiếp tới số lượng server. Consistent hashing cho phép ta thực hiện điều này.</p>
+
+<p>Key và node sẽ được map vào 1 vòng tròn với vị trí xác định. Vòng tròn này gọi là hash ring. Để cho dễ hiểu, vòng tròn là 360 độ. Nếu giá trị của node sau khi hash là 90 độ, thì node đó nằm ở vị trí 90 độ trên vòng tròn. Tương tự cho key.</p>
+
+<p>Để xác định key thuộc về node nào, từ vị trí của key, di chuyển theo chiều kim đồng hồ, gặp node nào đầu tiên, thì key thuộc về node đó. Lưu ý, quy ước chung là sẽ đi theo chiều kim đồng hồ. Nếu có đi ngược cũng không ảnh hưởng.</p>
+
+<p>Ví dụ. 
+<img src="/assets/images//2023/2023_05_24_hash_ring.png" alt="Hash ring" title="Hash ring. Tham khảo [2]" /></p>
+
+<p>Hình trên mô tả Hash ring và lấy từ link [2]. Gọi A, B, C là vị trí của các node. Lúc này, Jane và Kate sẽ thuộc node C. John và Steve thuộc node B. Bill thuộc node A.</p>
+
+<p>Với phương pháp này, thêm hoặc bỏ 1 node, chỉ ảnh hưởng phần dữ liệu được lưu trữ trên node đó mà thôi. Không cần phải redistribute toàn bộ dữ liệu.</p>
+
+<h3 id="5-cache-replacement-and-invalidation">5. Cache replacement and invalidation</h3>
+<p>Tại sao cần phải có cache replacement? Vì cache storage là có giới hạn và nó chỉ lưu được 1 phần của dữ liệu. Cho nên, ta buộc phải ra quyết định nên giữ/hoặc bỏ những object nào để tối ưu hóa performance.</p>
+
+<h4 id="lru-least-recently-used-3">LRU (Least Recently used) [3]</h4>
+<p>Thuật toán phổ biết nhất cho cache replacement. Như tên đã gợi ý, nó sẽ remove những item ít được sử dụng gần đây nhất.</p>
+
+<p>Với mỗi lần sử dụng item, thuật toán sẽ đưa item lên đầu của list. Do đó, những item ít được sử dụng gần đây nhất sẽ bị đẩy xuống cuối list. Khi list full hoặc tới 1 ngưỡng nào đó, những item ở cuối list sẽ bị loại bỏ.</p>
+
+<h4 id="lfu-least-frequently-used-4">LFU (Least Frequently Used) [4]</h4>
+<p>Về ý tưởng, những item ít được sử dụng nhất sẽ bị remove khi cache full. Để làm điều này, ta cần có 1 counter để theo dõi mức độ được sử dụng của các item.</p>
+
+<p>LFU nghe có vẻ hợp lý nhưng khi thêm 1 item mới vào cache, item này chưa có counter hoặc counter thấp và giả sử rằng, item này sẽ được dùng thường xuyên sau đó. Với LFU, item sẽ bị remove rất nhanh sau đó bởi nó vừa được thêm, và counter còn thấp. Vấn đề này khiến LFU ko được sử dụng rộng rãi như LRU</p>
+
+<h4 id="cache-invalidation">Cache Invalidation</h4>
+<p>Cache validation là quá trình remove hoặc update cache data khi nó không còn valid nữa (bị cũ so với data trong database).</p>
+
+<p>Thông thường, mỗi cache item sẽ đi kèm với 1 giá trị time-to-live (TTL). Khi TTL expires, cache item sẽ bị remove hoặc update mới.</p>
+
+<p>Tuy nhiên, việc chọn TTL sao cho phù hợp là 1 bài toán khó. TTL thấp sẽ dẫn đến việc gọi database quá nhiều. TTL cao sẽ làm tăng nguy cơ client dùng data cũ, dẫn đến kết quả bị sai.</p>
+
+<p>Nếu sử dụng in-process cache và deploy trên nhiều server, sẽ phải đảm bảo cache đồng bộ, consistency giữa các server.</p>
+
+<p>Ngoài kỹ thuật TTL còn nhiều hạn chế, ta có thể sử dụng Event-based invalidation. Kỹ thuật này sẽ trigger 1 events dựa trên những hành động cụ thể như update databse hoặc thay đổi data. Tuy việc thực hiện sẽ hơi phức tạp nhưng event-based invalidation sẽ chính xác và hiệu quả hơn TTL. Tuy nhiên, cũng nên chú ý đến latency của event</p>
+
+<p><strong>Referene:</strong></p>
+<ol>
+  <li><a href="https://blog.bytebytego.com/p/a-crash-course-in-caching-part-2">A Crash Course in Caching - Part 2</a></li>
+  <li><a href="https://www.toptal.com/big-data/consistent-hashing">A Guide to Consistent Hashing</a></li>
+  <li><a href="https://www.geeksforgeeks.org/lru-cache-implementation/">LRU Cache Implementation</a></li>
+  <li><a href="https://en.wikipedia.org/wiki/Least_frequently_used">Least frequently used</a></li>
+  <li><a href="https://levelup.gitconnected.com/why-cache-invalidation-is-hard-and-how-to-solve-it-7921ffe4f6eb">Why Cache Invalidation is Hard and How to Solve It</a></li>
+</ol>
+
+  </div><a class="u-url" href="/technical/44-caching-part-2" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Contact</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Minh Nhật&#39;s blog</li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p></p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

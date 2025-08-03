@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Timezone cho distributed web service | Minh Nhật’s blog</title>
+<meta name="generator" content="Jekyll v3.10.0" />
+<meta property="og:title" content="Timezone cho distributed web service" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="1. Vấn đề Ngày tháng khi insert vào database thường có dạng như sau:" />
+<meta property="og:description" content="1. Vấn đề Ngày tháng khi insert vào database thường có dạng như sau:" />
+<link rel="canonical" href="/technical/29-timezone-cho-web-service" />
+<meta property="og:url" content="/technical/29-timezone-cho-web-service" />
+<meta property="og:site_name" content="Minh Nhật’s blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2023-02-07T00:01:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Timezone cho distributed web service" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2023-02-07T00:01:00+00:00","datePublished":"2023-02-07T00:01:00+00:00","description":"1. Vấn đề Ngày tháng khi insert vào database thường có dạng như sau:","headline":"Timezone cho distributed web service","mainEntityOfPage":{"@type":"WebPage","@id":"/technical/29-timezone-cho-web-service"},"url":"/technical/29-timezone-cho-web-service"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="Minh Nhật&apos;s blog" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Minh Nhật&#39;s blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <!-- <div class="trigger"><a class="page-link" href="/404.html"></a><a class="page-link" href="/about/">Về tôi</a><a class="page-link" href="/art">art</a><a class="page-link" href="/finance">Finance</a><a class="page-link" href="/"></a><a class="page-link" href="/assets/main.css"></a><a class="page-link" href="/opinion">opinion</a><a class="page-link" href="/philosophy">Philosophy</a><a class="page-link" href="/technical">technical</a><a class="page-link" href="/art">art</a><a class="page-link" href="/art/">art</a><a class="page-link" href="/finance">Finance</a><a class="page-link" href="/finance/">Finance</a><a class="page-link" href="/"></a><a class="page-link" href="/"></a><a class="page-link" href="/page1/"></a><a class="page-link" href="/page2/"></a><a class="page-link" href="/page3/"></a><a class="page-link" href="/page4/"></a><a class="page-link" href="/opinion">opinion</a><a class="page-link" href="/opinion/">opinion</a><a class="page-link" href="/philosophy">Philosophy</a><a class="page-link" href="/philosophy/">Philosophy</a><a class="page-link" href="/technical">technical</a><a class="page-link" href="/technical/">technical</a><a class="page-link" href="/feed.xml"></a></div> -->
+        <div class="trigger">
+          <a class="page-link" href="/philosophy">Triết học</a>
+          <a class="page-link" href="/art">Văn, thơ, nhạc</a>
+          <a class="page-link" href="/opinion">Góc nhìn cá nhân</a>
+          <a class="page-link" href="/technical">IT</a>
+          <a class="page-link" href="/finance">Finance</a>
+          <a class="page-link" href="/about">Về tôi</a>
+        </div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">29. Timezone cho distributed web service </h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2023-02-07T00:01:00+00:00" itemprop="datePublished">Feb 7, 2023
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h2 id="1-vấn-đề">1. Vấn đề</h2>
+<p>Ngày tháng khi insert vào database thường có dạng như sau:</p>
+
+<blockquote>
+  <p>2021-03-25 10:00:00</p>
+</blockquote>
+
+<p>Sẽ là đơn giản nếu local and server machine có chung timezone. Hoặc với những quốc gia có timezine cố định như Việt Nam (chỉ có 1 timezone, không có day light saving) thì vấn đề này ít xảy ra.</p>
+
+<p>Tuy nhiên, với sự phát triển của cloud, một hệ thống server có thể deploy ở nhiều vùng khác nhau (Anh, Mĩ, Ấn, …). Hoặc server và client được deploy ở nhiều vùng khác nhau. Với dữ liệu format như trên, ta không thể suy luận được, vì không có timezone.</p>
+
+<h2 id="2-một-số-lưu-ý">2. Một số lưu ý</h2>
+<h3 id="21-không-lưu-datetime-dưới-dạng-varchartext">2.1 Không lưu datetime dưới dạng varchar/text</h3>
+<p>Không lưu ngày tháng dưới dạng text vì nó sẽ mất đi những hỗ trợ của RDMS. Quan trọng nhất là ko có sự hỗ trợ cho trường hợp day light saving, thứ rất khó để xử lý bằng tay. Thêm nữa, với dạng text, phải chọn format phù hợp để sorting operation đúng đắn. Do đó, luốn lưu ngày tháng dưới dạng datetime hoặc timestamp.</p>
+
+<h3 id="22-luôn-lưu-utc-timezone-trên-server-dùng-server-time">2.2 Luôn lưu UTC timezone trên server, dùng server time.</h3>
+<p>Với UTC format, dễ dàng chuyển đổi qua lại giữa các timezone khác nhau. Hơn nữa, ta cũng không cần phải lưu thông tin timezone trong database.</p>
+
+<p>Khi cần hiển thị thời gian tại cliet, chuyển đổi UTC thành user’s timezone 
+Tóm lại, với server, lưu bằng UTC. Với client, chuyển đổi UTC bằng user’s timezone</p>
+
+<h3 id="23-không-xử-lý-timezone-một-cách-thủ-công-khi-dùng-framework">2.3 Không xử lý timezone một cách thủ công khi dùng framework</h3>
+<blockquote>
+
+  <p>#for plain hibernate <br />
+hibernate.jdbc.time_zone=UTC</p>
+
+  <p>#for Spring boot jpa <br />
+spring.jpa.properties.hibernate.jdbc.time_zone=UTC</p>
+</blockquote>
+
+<h3 id="24-tránh-sử-dụng-legacy-package-javautil-dùng-javatime">2.4 Tránh sử dụng legacy package java.util. Dùng java.time</h3>
+<p>Không dử dụng các class cũ, vì rất phức tạp. Từ java 8 trở đi, sử dụng package java.time.</p>
+
+<p>Với timezone, tránh sử dụng offset, mà hãy dùng ZoneId. Vì offset của 1 zoneId có thể thay đổi tùy theo điều chỉnh của chính phủ. Ví dụ, hiện tại ZoneID của Hà Nội là +7. Nhưng sau này, chính phủ có thể chỉnh thành +7.5. Tuy nhiên, cũng phải kiểm tra xem JDBC driver hỗ trợ OffsetDateTime hay ZoneDateTime.</p>
+
+<p>References:</p>
+<ol>
+  <li><a href="https://www.linkedin.com/pulse/guide-time-zone-handling-rest-apis-java-anushka-darshana/">Guide to time zone handling for REST APIs in Java</a></li>
+  <li><a href="https://www.databasestar.com/database-timezones/">How to Handle Database Timezones</a></li>
+  <li><a href="https://yawk.at/java.time/">An introduction to java.time</a></li>
+</ol>
+
+  </div><a class="u-url" href="/technical/29-timezone-cho-web-service" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Contact</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Minh Nhật&#39;s blog</li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p></p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

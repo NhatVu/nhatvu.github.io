@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>[System Design] 01. Reliability and scalability của hệ thống phân tán | Minh Nhật’s blog</title>
+<meta name="generator" content="Jekyll v3.10.0" />
+<meta property="og:title" content="[System Design] 01. Reliability and scalability của hệ thống phân tán" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Bài này sẽ bắt đầu chuỗi bài về System Design (thiết kế hệ thống), đặc biệt chú trọng vào Distributed system (hệ thống phân tán) cho những ứng dụng có lượng tải lớn." />
+<meta property="og:description" content="Bài này sẽ bắt đầu chuỗi bài về System Design (thiết kế hệ thống), đặc biệt chú trọng vào Distributed system (hệ thống phân tán) cho những ứng dụng có lượng tải lớn." />
+<link rel="canonical" href="/technical/61-reliability-scalability-of-distributed-system" />
+<meta property="og:url" content="/technical/61-reliability-scalability-of-distributed-system" />
+<meta property="og:site_name" content="Minh Nhật’s blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2023-12-11T00:01:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="[System Design] 01. Reliability and scalability của hệ thống phân tán" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2023-12-11T00:01:00+00:00","datePublished":"2023-12-11T00:01:00+00:00","description":"Bài này sẽ bắt đầu chuỗi bài về System Design (thiết kế hệ thống), đặc biệt chú trọng vào Distributed system (hệ thống phân tán) cho những ứng dụng có lượng tải lớn.","headline":"[System Design] 01. Reliability and scalability của hệ thống phân tán","mainEntityOfPage":{"@type":"WebPage","@id":"/technical/61-reliability-scalability-of-distributed-system"},"url":"/technical/61-reliability-scalability-of-distributed-system"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="Minh Nhật&apos;s blog" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Minh Nhật&#39;s blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <!-- <div class="trigger"><a class="page-link" href="/404.html"></a><a class="page-link" href="/about/">Về tôi</a><a class="page-link" href="/art">art</a><a class="page-link" href="/finance">Finance</a><a class="page-link" href="/"></a><a class="page-link" href="/assets/main.css"></a><a class="page-link" href="/opinion">opinion</a><a class="page-link" href="/philosophy">Philosophy</a><a class="page-link" href="/technical">technical</a><a class="page-link" href="/art">art</a><a class="page-link" href="/art/">art</a><a class="page-link" href="/finance">Finance</a><a class="page-link" href="/finance/">Finance</a><a class="page-link" href="/"></a><a class="page-link" href="/"></a><a class="page-link" href="/page1/"></a><a class="page-link" href="/page2/"></a><a class="page-link" href="/page3/"></a><a class="page-link" href="/page4/"></a><a class="page-link" href="/opinion">opinion</a><a class="page-link" href="/opinion/">opinion</a><a class="page-link" href="/philosophy">Philosophy</a><a class="page-link" href="/philosophy/">Philosophy</a><a class="page-link" href="/technical">technical</a><a class="page-link" href="/technical/">technical</a><a class="page-link" href="/feed.xml"></a></div> -->
+        <div class="trigger">
+          <a class="page-link" href="/philosophy">Triết học</a>
+          <a class="page-link" href="/art">Văn, thơ, nhạc</a>
+          <a class="page-link" href="/opinion">Góc nhìn cá nhân</a>
+          <a class="page-link" href="/technical">IT</a>
+          <a class="page-link" href="/finance">Finance</a>
+          <a class="page-link" href="/about">Về tôi</a>
+        </div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">61. [System Design] 01. Reliability and scalability của hệ thống phân tán</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2023-12-11T00:01:00+00:00" itemprop="datePublished">Dec 11, 2023
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>Bài này sẽ bắt đầu chuỗi bài về System Design (thiết kế hệ thống), đặc biệt chú trọng vào Distributed system (hệ thống phân tán) cho những ứng dụng có lượng tải lớn.</p>
+
+<p>Khung sườn cho series này sẽ dựa vào cấu trúc của cuốn <strong>Designing Data-Intensive Applications: The Big Ideas Behind Reliable, Scalable, and Maintainable Systems</strong> của tác giả <strong>Martin Kleppmann</strong>. Ngoài ra cũng sẽ tìm kiếm thêm những nguồn tham khảo khác.</p>
+
+<p>Chuỗi bài viết này nhằm tạo động lực giúp tôi tìm hiểu sâu sắc và bài bản hơn về hệ thống phân tán cho ứng dụng lớn. Với kiến thức hạn hẹp của mình, chắc hẳn sẽ có những lầm lẫn, thiếu sót, rất mong nhận được sựu đóng góp của các bạn nếu có tình cờ đọc được. Mọi đóng góp xin để tạo Pull Request hoặc Issue tại địa chỉ: <a href="https://github.com/NhatVu/nhatvu.github.io">https://github.com/NhatVu/nhatvu.github.io</a>. Xin cám ơn mọi người.</p>
+
+<p>Bài viết đầu tiên sẽ tập trung nói về những yếu tố căn bản của một hệ thống phân tán, gồm Reliability (độ tin cậy) và scalability (khả năng mở rộng). Bài tiếp sẽ nói về 2 yếu tố còn lại là Availability (Tính sẵn sàng) và maintainability (khả năng bảo trì) [1][2]</p>
+
+<h2 id="1-reliability-độ-tin-cậy">1. Reliability (Độ tin cậy)</h2>
+<p>Reliability đảm bảo hệ thống vẫn hoạt động bình thường và chính xác ngay cả khi có lỗi (fault) xảy ra. Lỗi ở đây có thể đến từ phần cứng, phần mềm hoặc con người. Khi nhắc tới hệ thống, ta nói đến nhiều server cùng kết hợp lại để hình thành 1 hệ thống phân tán. Tức là mặc dù có lỗi, nhưng business logic vẩn đảm bảo đúng.</p>
+
+<p>Hệ thống có thể hoạt động bình thường và chính xác khi có lỗi xảy ra, còn được gọi là fault-tolerance system. Lưu ý, ở đây hệ thống chỉ chịu được một số lỗi nhất định, chứ nó không bao quát toàn bộ các loại lỗi.</p>
+
+<p>Với một số công ty, để kiểm tra khả năng chịu lỗi của hệ thống, thường sẽ có những bài test định kỳ, khi họ kill 1 hoặc nhiều process/applicaiton mà không báo trước. Nhũng lỗi quan trọng nhất là những lỗi không được handle. Với bài test này, mức độ tự tin về khả năng chịu lỗi của hệ thống sẽ được tăng lên. Lỗi xảy đến lúc ta không ngờ, và không có chuẩn bị nhất.</p>
+
+<p>Lỗi luôn luôn có thể xảy ra và xuất phát từ:</p>
+<ul>
+  <li>Hardware (phần cứng): hard disk đến tuổi đời, …</li>
+  <li>Software: lỗi hệ điều hành, lỗi framework, library, network chậm dẫn tới việc gọi external service bị timeout, hay lỗi cascading failures (khi một phần nhỏ bị lỗi/chậm, dẫn đến những service gọi nó bị lỗi/chậm, dẫn đến những service ở tầng cao hơn bị lỗi/chậm, dẫn đến sập toàn bộ hệ thống)</li>
+  <li>Con người: nhập sai input, thực hiện sai quy trình, …</li>
+</ul>
+
+<h2 id="2-scalability-khả-năng-mở-rộng">2. Scalability (Khả năng mở rộng)</h2>
+<p>Scalability chỉ khả năng mở rộng của hệ thống nhằm đáp ứng với lượng tải (load) tăng.</p>
+
+<p>Tuỳ thuộc vào từng hệ thống, lượng tải (load) có thể định nghĩa bằng request per second đối với web application, tỉ lệ read:write đối với database, hit rate với cache, …</p>
+
+<p>Khi nói tới tải, cũng cần nói đến normal rate và peak rate. Peaking rate xảy ra khi có 1 biến cố/sự kiện nào đó khiến lượng tải tăng đột biến. Đó có thể là tin nóng, idol live stream, các này lễ tết, …</p>
+
+<p>Một số khái niệm:</p>
+<ul>
+  <li>Response time: (thời gian phản hồi): là tổng thời gian khi client gửi request và nhận được response. Response time = network transmit time + queueing delays + service processing time. Thường dùng để mô tả performance of application</li>
+  <li>Latency (độ trễ/sự chờ): thời gian request chờ để được xử lý. Latency = network transmit time + queueing delays. Thông thường dùng để mô tả sự tắc nghẽn mạng (network cogestion) hoặc khoảng cách vật lý xa giữa client và server [3]</li>
+  <li>Throughput (thông lượng): với networking, thông lượng chỉ lượng dữ liệu thực sự đi qua mạng trong một đơn vị thời gian. Với ứng dụng web, có thể xem thông lượng là lượng request thực mà ứng dụng có thể xử lý trong một đơn vị thời gian</li>
+  <li>Băng thông (băng thông): với networking, băng thông là lượng dữ liệu tối đa có thể đi qua mạng trong 1 đơn vị thời gian. Với ứng dụng web, có thể xem bandwidth là lượng request tối đa mà ứng dụng có thể xử lý trong một đơn vị thời gian.</li>
+</ul>
+
+<p>Đế thích ứng với lượng tải tăng, thường có 2 cách scale phổ biến: vertical scaling và horizontal scaling.</p>
+
+<ul>
+  <li>Vertical scaling (scale the chiều dọc): Thêm CPU, RAM, ổ cứng, làm cho máy mạnh hơn để có thể đáp ứng nhiều request hơn. Tuy nhiên, luôn có giới hạn có RAM, CPU và ổ cứng</li>
+  <li>Horizontal scaling (scale theo chiều ngang): phân phối/chia đều lượng tải tới nhiều máy nhỏ khác nhau.</li>
+</ul>
+
+<p>Tuỳ vào từng trường hợp mà việc vertical scaling hoặc horizontal scaling sẽ được chọn. Không có 1 giải pháp nào phù hợp cho tất cả các trường hợp. Điều này phải thật sự chú ý vì thời gian viết bài này, thời của microservice, horizontal scaling gần như trở thành giải pháp mặc định.</p>
+
+<p>Lấy một ví dụ trong sách [1], hệ thống được thiết kế để xử lý 100K request/s, mỗi request 1kB sẽ rất khác với hệ thống xử lý 3 request/phút, mỗi request 2GB, mặc dù cả 2 hệ thống đều có chung giá trị throughput.</p>
+
+<p>Một ví dụ khác là việc Amazon Prime đã chuyển từ kiến trúc microservice sang monolothic cho ứng dụng xử lý video của họ, và kết quả là giảm tới 90% chi phí [4]. Vấn đề chủ yếu ở đây chính là việc truyền tải dữ liệu trung gian (intermediate data) trong quá trình xử lý data giữa các microservice tốn nhiều băng thông và thời gian. Thay vào đó, xử lý trên video trên cùng 1 máy sẽ không tốn chi phí này.</p>
+
+<p><strong>Referenes:</strong></p>
+<ol>
+  <li><a href="https://www.amazon.com/Designing-Data-Intensive-Applications-Reliable-Maintainable/dp/1449373321">Book: Designing Data-Intensive Applications</a></li>
+  <li><a href="https://topdev.vn/blog/cac-tinh-chat-chinh-cua-mot-he-thong-phan-tan">Các tính chất chính của một hệ thống phân tán</a></li>
+  <li><a href="https://stackoverflow.com/questions/58082389/what-is-the-difference-between-latency-and-response-time">What is the difference between latency and response time?</a></li>
+  <li><a href="https://www.primevideotech.com/video-streaming/scaling-up-the-prime-video-audio-video-monitoring-service-and-reducing-costs-by-90">Scaling up the Prime Video audio/video monitoring service and reducing costs by 90%</a></li>
+</ol>
+
+  </div><a class="u-url" href="/technical/61-reliability-scalability-of-distributed-system" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Contact</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Minh Nhật&#39;s blog</li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p></p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

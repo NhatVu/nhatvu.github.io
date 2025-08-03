@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Caching part 3 | Minh Nhật’s blog</title>
+<meta name="generator" content="Jekyll v3.10.0" />
+<meta property="og:title" content="Caching part 3" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Tiếp tục bài trước, bài này tôi sẽ tổng hợp những kiến thức về disbuted cache và cache replacement/invalication" />
+<meta property="og:description" content="Tiếp tục bài trước, bài này tôi sẽ tổng hợp những kiến thức về disbuted cache và cache replacement/invalication" />
+<link rel="canonical" href="/technical/49-caching-part-3" />
+<meta property="og:url" content="/technical/49-caching-part-3" />
+<meta property="og:site_name" content="Minh Nhật’s blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2023-06-23T00:01:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Caching part 3" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2023-06-23T00:01:00+00:00","datePublished":"2023-06-23T00:01:00+00:00","description":"Tiếp tục bài trước, bài này tôi sẽ tổng hợp những kiến thức về disbuted cache và cache replacement/invalication","headline":"Caching part 3","mainEntityOfPage":{"@type":"WebPage","@id":"/technical/49-caching-part-3"},"url":"/technical/49-caching-part-3"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="Minh Nhật&apos;s blog" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Minh Nhật&#39;s blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <!-- <div class="trigger"><a class="page-link" href="/404.html"></a><a class="page-link" href="/about/">Về tôi</a><a class="page-link" href="/art">art</a><a class="page-link" href="/finance">Finance</a><a class="page-link" href="/"></a><a class="page-link" href="/assets/main.css"></a><a class="page-link" href="/opinion">opinion</a><a class="page-link" href="/philosophy">Philosophy</a><a class="page-link" href="/technical">technical</a><a class="page-link" href="/art">art</a><a class="page-link" href="/art/">art</a><a class="page-link" href="/finance">Finance</a><a class="page-link" href="/finance/">Finance</a><a class="page-link" href="/"></a><a class="page-link" href="/"></a><a class="page-link" href="/page1/"></a><a class="page-link" href="/page2/"></a><a class="page-link" href="/page3/"></a><a class="page-link" href="/page4/"></a><a class="page-link" href="/opinion">opinion</a><a class="page-link" href="/opinion/">opinion</a><a class="page-link" href="/philosophy">Philosophy</a><a class="page-link" href="/philosophy/">Philosophy</a><a class="page-link" href="/technical">technical</a><a class="page-link" href="/technical/">technical</a><a class="page-link" href="/feed.xml"></a></div> -->
+        <div class="trigger">
+          <a class="page-link" href="/philosophy">Triết học</a>
+          <a class="page-link" href="/art">Văn, thơ, nhạc</a>
+          <a class="page-link" href="/opinion">Góc nhìn cá nhân</a>
+          <a class="page-link" href="/technical">IT</a>
+          <a class="page-link" href="/finance">Finance</a>
+          <a class="page-link" href="/about">Về tôi</a>
+        </div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">49. Caching part 3</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2023-06-23T00:01:00+00:00" itemprop="datePublished">Jun 23, 2023
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>Tiếp tục bài trước, bài này tôi sẽ tổng hợp những kiến thức về disbuted cache và cache replacement/invalication</p>
+
+<p>Link bài 1: <a href="/technical/42-caching-part-1">Caching part 1</a></p>
+
+<p>Link bài 2: <a href="/technical/44-caching-part-2">Cahcing part 2</a></p>
+
+<p><strong>Caching phần 3</strong></p>
+<ol>
+  <li>cache strategies
+    <ul>
+      <li>cache aside</li>
+      <li>read through</li>
+      <li>write around</li>
+      <li>write through</li>
+      <li>write back</li>
+      <li>which strategies do people prefer? Pros and Cons của mỗi loại</li>
+    </ul>
+  </li>
+  <li>cache challenges
+    <ul>
+      <li>thundering herd</li>
+      <li>cache penetration</li>
+      <li>cache Avalanche</li>
+      <li>big key</li>
+      <li>hot key</li>
+      <li>data consistency</li>
+    </ul>
+  </li>
+  <li>monitoring and alerts</li>
+</ol>
+
+<h3 id="6-cache-strategies-1">6. Cache strategies [1]</h3>
+<p><img src="/assets/images//2023/2023_06_23_cache_strategy.jpg" alt="Cache strategies" title="Cache strategies. Tham khảo [1]" /></p>
+
+<p>Đối với read, tôi thường lựa chọn Read through, xem cache như là interface duy nhất để giao tiếp. 
+Đối với write, nếu sử dụng event-based, thì nên write trực tiếp vào db rồi gửi event xóa cache. Hoặc nếu không dùng event based, cũng ghi trực tiếp vào db và gọi hàm xóa cache. Tôi không ưu tiên việc update data trên cache.</p>
+
+<h3 id="7-cache-challenges">7. Cache challenges</h3>
+<h4 id="71-thundering-herd-problem-cache-break-down-2">7.1 Thundering herd problem (Cache break down) [2]</h4>
+
+<p>Thundering (sấm sét), herd (lượng lớn động vật trong 1 đàn) -&gt; thundering herd mô tả việc server phải xử lý 1 lượng lớn request cùng lúc, lớn hơn mức nó có thể xử lý.</p>
+
+<p>Nhiều request truy cập database tại cùng thời điểm, tìm kiếm cùng key, thundering herd xảy ra. Ví dụ, ta có 1000 request, trong đó 1 request có key là key_A, 999 request có key là key_B. Nếu key_B bị miss cache, lượng lớn request này sẽ gọi database cùng lúc. Điểm cần lưu ý là 999 request của key_B phải được gọi cùng lúc. Do được kiểm tra cache cùng lúc, nên 999 request đều báo cache miss</p>
+
+<p>Mitigate solution:</p>
+<ul>
+  <li>Refresh-ahead strategy: asynchronously refresh hot data, do đó, hot key sẽ không bao giờ bị expired. Giả sử expired time là 60s và refresh factor là 0.5. Nếu data được access ở giây thứ 25, không có chuyện gì xảy ra. Nếu data được access ở giây 45, expired time được reset lại 60s</li>
+</ul>
+
+<h3 id="72-cache-penetration-2">7.2 Cache penetration [2]</h3>
+
+<p>Cache penetration là khi search key không tồn tại trong cache hoặc database. Khi gặp key kiểu này, ta đều gọi cache và database liên tục. Bởi vì database trả về null, ta không cache nó vào cache. Attacker có thể tận dụng điều này, khiến database quá tải bằng việc liên tục gửi key không có trong cache và database.</p>
+
+<p>Giải pháp:</p>
+<ul>
+  <li>Cache empty result trong thời gian ngắn, có thể là 5 phút.</li>
+  <li>Xem xét lại các hàm validation</li>
+  <li>Sử dụng Bloom filtering. Trước khi gọi database, key cần được tìm kiếm trong bloom filter và return ngay lập tức nếu key không tồn tại trong db.</li>
+</ul>
+
+<h3 id="73-cache-avalanche-tuyết-lở-2">7.3 Cache Avalanche (tuyết lở) [2]</h3>
+<p>Xảy ra khi lượng lớn request truy cập database 1 cách bất thường.</p>
+
+<p>Thường xảy ra khi:</p>
+<ul>
+  <li>Lượng lớn cache data bị expired cùng thời điểm</li>
+  <li>Cache service bị down, tất cả request phải truy cập db</li>
+  <li>Cache service bị khởi động, không có warm up cache</li>
+</ul>
+
+<p>Mitigation solution</p>
+<ul>
+  <li>Sử dụng refresh-ahead strategy: asynchronously refresh hot data, do đó, hot key sẽ không bao giờ bị expired</li>
+  <li>Sử dụng cahce cluster, tránh single pont of failure</li>
+</ul>
+
+<h3 id="74-hot-key-problem-3">7.4 Hot key problem [3]</h3>
+<p>Hot key problem xảy ra khi lượng lớn traffic cho 1 key, vượt quá khả năng xử lý của cahce server, dẫn đến giảm performance cho toàn application.</p>
+
+<p>Trong distributed cache, nếu 1 vài hot key tập trung trong 1 server, server này sẽ quá tải, trong khi các server khác không có gì để làm.</p>
+
+<p>Vấn đề này thường xảy ra khi có các chiến dịch quảng cáo, sự kiện phim ảnh, ca nhạc mới nổi, …. Nếu vấn đề thường xảy ra, cần có cơ chế phân tích và định dạng đâu là hot key</p>
+
+<p>Để giảm thiểu, ta có thể</p>
+<ul>
+  <li>Distribute traffic pressure across the entire cache system. Giả sử key1 là hot key. Ta có thể thêm suffix cho nó, như là key1_1, key1_2, key1_3, … key1_n. Cố gắng để key1 được phân phối trên toàn cache cluster. Key có request cho key1, dùng random đẻ chọn suffix.</li>
+  <li>Nếu có 1 lượng đáng kể hot-key, đặc biệt hơn là nó thay đổi theo mùa, thì cần có cơ chế tự động</li>
+  <li>Ta cũng có thể dùng local cache, giảm traffic cho remote cache.</li>
+</ul>
+
+<h3 id="75-large-key-problem-3">7.5 Large key problem [3]</h3>
+<p>Khi giá trị cần cache của key lớn, nó có thể dẫn tới timeout –&gt; large key problem</p>
+
+<ul>
+  <li>Việc thường duyên phải truy suất key lớn, dẫn tới sử dụng nhiều network bandwidth</li>
+  <li>Nếu large key bị invalid, việc reload cũng tốn thời gian.</li>
+</ul>
+
+<h3 id="8-monitoring-and-alerts">8. monitoring and alerts</h3>
+<ul>
+  <li>Sử dụng cache hit ratio để xem xét hiệu quả của cache</li>
+  <li>Có thể monitor xem cache peak có theo quy luật nào không?</li>
+</ul>
+
+<p>Tôi cũng chưa có nhiều kinh nghiệm cho vụ monitor này. Hy vọng sau này có thể cập nhật thêm.</p>
+
+<p><strong>Referene:</strong></p>
+<ol>
+  <li><a href="https://blog.bytebytego.com/p/top-caching-strategies">Top caching strategies</a></li>
+  <li><a href="https://levelup.gitconnected.com/3-caching-problems-every-developer-should-know-1449f07e9166">3 Caching Problems Every Developer Should Know</a></li>
+  <li><a href="https://blog.bytebytego.com/p/a-crash-course-in-caching-final-part">A Crash Course in Caching - Final Part</a></li>
+</ol>
+
+  </div><a class="u-url" href="/technical/49-caching-part-3" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Contact</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Minh Nhật&#39;s blog</li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p></p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>[DevOps] Kiểm tra code coverage, code quality với Jacoco plugin và SonarQube | Minh Nhật’s blog</title>
+<meta name="generator" content="Jekyll v3.10.0" />
+<meta property="og:title" content="[DevOps] Kiểm tra code coverage, code quality với Jacoco plugin và SonarQube" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Testing là một khâu quan trọng trong quá trình phát triển phần mềm. Việc viết unit test thường được xem như là chuẩn tối thiểu nhằm đảm bảo các module hoạt động đúng đắn. Tuy nhiên, ta cũng cần có công cụ để kiểm tra xem bộ test đã viết đã cover/chưa cover những trường hợp nào. Ngoài ra, ta cũng cần có công cụ nhằm kiểm tra xem chất lượng code có đạt một chuẩn đề sẵn hay không. Code hạn chế mắc phải những lỗi thường gặp như NullPointerException, không close FileInputStream, if/else quá nhiều, không dùng constant cho String lặp lại nhiều lần, … Thêm vào đó, ta cũng nên có tool để kiểm tra những thư viện nào đang sử dụng gặp phải lỗi về bảo mật. Tuy nhiên, theo tôi biết thì SonarQube không hỗ trợ tốt trong vấn đề security scanning." />
+<meta property="og:description" content="Testing là một khâu quan trọng trong quá trình phát triển phần mềm. Việc viết unit test thường được xem như là chuẩn tối thiểu nhằm đảm bảo các module hoạt động đúng đắn. Tuy nhiên, ta cũng cần có công cụ để kiểm tra xem bộ test đã viết đã cover/chưa cover những trường hợp nào. Ngoài ra, ta cũng cần có công cụ nhằm kiểm tra xem chất lượng code có đạt một chuẩn đề sẵn hay không. Code hạn chế mắc phải những lỗi thường gặp như NullPointerException, không close FileInputStream, if/else quá nhiều, không dùng constant cho String lặp lại nhiều lần, … Thêm vào đó, ta cũng nên có tool để kiểm tra những thư viện nào đang sử dụng gặp phải lỗi về bảo mật. Tuy nhiên, theo tôi biết thì SonarQube không hỗ trợ tốt trong vấn đề security scanning." />
+<link rel="canonical" href="/technical/71-jacoo-va-sonarqube" />
+<meta property="og:url" content="/technical/71-jacoo-va-sonarqube" />
+<meta property="og:site_name" content="Minh Nhật’s blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2024-05-03T00:02:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="[DevOps] Kiểm tra code coverage, code quality với Jacoco plugin và SonarQube" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2024-05-03T00:02:00+00:00","datePublished":"2024-05-03T00:02:00+00:00","description":"Testing là một khâu quan trọng trong quá trình phát triển phần mềm. Việc viết unit test thường được xem như là chuẩn tối thiểu nhằm đảm bảo các module hoạt động đúng đắn. Tuy nhiên, ta cũng cần có công cụ để kiểm tra xem bộ test đã viết đã cover/chưa cover những trường hợp nào. Ngoài ra, ta cũng cần có công cụ nhằm kiểm tra xem chất lượng code có đạt một chuẩn đề sẵn hay không. Code hạn chế mắc phải những lỗi thường gặp như NullPointerException, không close FileInputStream, if/else quá nhiều, không dùng constant cho String lặp lại nhiều lần, … Thêm vào đó, ta cũng nên có tool để kiểm tra những thư viện nào đang sử dụng gặp phải lỗi về bảo mật. Tuy nhiên, theo tôi biết thì SonarQube không hỗ trợ tốt trong vấn đề security scanning.","headline":"[DevOps] Kiểm tra code coverage, code quality với Jacoco plugin và SonarQube","mainEntityOfPage":{"@type":"WebPage","@id":"/technical/71-jacoo-va-sonarqube"},"url":"/technical/71-jacoo-va-sonarqube"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="Minh Nhật&apos;s blog" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Minh Nhật&#39;s blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <!-- <div class="trigger"><a class="page-link" href="/404.html"></a><a class="page-link" href="/about/">Về tôi</a><a class="page-link" href="/art">art</a><a class="page-link" href="/finance">Finance</a><a class="page-link" href="/"></a><a class="page-link" href="/assets/main.css"></a><a class="page-link" href="/opinion">opinion</a><a class="page-link" href="/philosophy">Philosophy</a><a class="page-link" href="/technical">technical</a><a class="page-link" href="/art">art</a><a class="page-link" href="/art/">art</a><a class="page-link" href="/finance">Finance</a><a class="page-link" href="/finance/">Finance</a><a class="page-link" href="/"></a><a class="page-link" href="/"></a><a class="page-link" href="/page1/"></a><a class="page-link" href="/page2/"></a><a class="page-link" href="/page3/"></a><a class="page-link" href="/page4/"></a><a class="page-link" href="/opinion">opinion</a><a class="page-link" href="/opinion/">opinion</a><a class="page-link" href="/philosophy">Philosophy</a><a class="page-link" href="/philosophy/">Philosophy</a><a class="page-link" href="/technical">technical</a><a class="page-link" href="/technical/">technical</a><a class="page-link" href="/feed.xml"></a></div> -->
+        <div class="trigger">
+          <a class="page-link" href="/philosophy">Triết học</a>
+          <a class="page-link" href="/art">Văn, thơ, nhạc</a>
+          <a class="page-link" href="/opinion">Góc nhìn cá nhân</a>
+          <a class="page-link" href="/technical">IT</a>
+          <a class="page-link" href="/finance">Finance</a>
+          <a class="page-link" href="/about">Về tôi</a>
+        </div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">71. [DevOps] Kiểm tra code coverage, code quality với Jacoco plugin và SonarQube</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2024-05-03T00:02:00+00:00" itemprop="datePublished">May 3, 2024
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>Testing là một khâu quan trọng trong quá trình phát triển phần mềm. Việc viết unit test thường được xem như là chuẩn tối thiểu nhằm đảm bảo các module hoạt động đúng đắn. Tuy nhiên, ta cũng cần có công cụ để kiểm tra xem bộ test đã viết đã cover/chưa cover những trường hợp nào. Ngoài ra, ta cũng cần có công cụ nhằm kiểm tra xem chất lượng code có đạt một chuẩn đề sẵn hay không. Code hạn chế mắc phải những lỗi thường gặp như NullPointerException, không close FileInputStream, if/else quá nhiều, không dùng constant cho String lặp lại nhiều lần, … Thêm vào đó, ta cũng nên có tool để kiểm tra những thư viện nào đang sử dụng gặp phải lỗi về bảo mật. Tuy nhiên, theo tôi biết thì SonarQube không hỗ trợ tốt trong vấn đề security scanning.</p>
+
+<p>Bài này giới thiệu 2 công cụ mã nguồn mở thường được sử dụng. Mỗi loại có ưu, nhược điểm riêng.</p>
+
+<h3 id="code-coverage">Code coverage</h3>
+<p>Trước hết, code coverage là một khái niệm trong testing, chỉ độ phủ unit test trên những đoạn code đã dược viết.</p>
+
+<p>Code coverage có thể xét trên nhiều khía cạnh như method coverage, line coverage, đánh đó hơn là branch coverage (đảm bảo phải cover toàn bộ các condition trong lệnh if/else).</p>
+
+<p>Theo Atlassian và Google, code coverage đạt trên 80% là đủ tốt. Không nhất thiết phải đạt đến mức 95%-99% vì tốt nhiều thời gian nhưng không mang lại quá nhiều lợi ích. [1][2]</p>
+
+<h3 id="jacoco-plugin">Jacoco plugin</h3>
+<p>Jacoco là 1 plugin miễn phí, được tích hợp với Maven, với chức năng chính là phân tích code coverage cho project. Jacoco hỗ trợ cả line coverage và method coverage. Điểm mạnh của Jacoco là nó có thể chạy độc lập (standalone mode), không cần tích hợp hoặc gọi external service.</p>
+
+<p>Hình dưới là minh hoạ Jacoco report</p>
+
+<p><img src="/assets/images/2024/71-jacoco.png" alt="Jacoco plugin" /></p>
+
+<p>Khi click chi tiết vào từng java file, nó cũng sẽ chỉ chi tiết phần nào chưa được cover hoặc bị sót if condition.</p>
+
+<p>Tuy nhiên, điểm yếu lớn nhất là nó không thể kiểm tra được code quality.</p>
+
+<p>Theo tôi thì Jacoco là 1 plugin tốt để tích hợp</p>
+
+<h3 id="sonarqube">SonarQube</h3>
+<p>SonarQube là một open-source application cho phép ta kiểm tra code coverage và code quality. SonarQube tồn tại dưới dạng server, không tồn tại dưới dạng standalone service như Jacoco. Vậy nên quá trình tích hợp sẽ phức tạp hơn.</p>
+
+<p>Tuy nhiên, SonarQube cũng cung cấp 1 plugin tên SonarLint trên Intellij, cho phép thực hiện việc kiểm tra code quality mà không cần kết nối tới SonarQube server. Điểm hạn chế là chức năng của nó không được đầy đủ và toàn diện như khi dùng với server. Điểm lợi là dùng được ở local, đẩy nhanh quá trình sửa lỗi.</p>
+
+<p><img src="/assets/images/2024/71-sonar.png" alt="alt text" /></p>
+
+<h3 id="tích-hợp-unit-test-sonar-analysis-vào-jenkin-pipeline">Tích hợp Unit test, Sonar Analysis vào Jenkin pipeline</h3>
+<p>Để mọi thứ được diễn ra 1 cách tự động, theo tôi, thuận tiện nhất là nên tích hợp Unit test và sonar analysis trực tiếp vào Jenkin pipeline. Nếu một trong 2 bọn chúng không thành công, thì Jenkin pipeline fail và không được phép deploy/merged code.</p>
+
+<p>Nếu có thể, thì thiết lập cơ chế, sao cho mỗi commit lên git, đều trigger Jekin pipeline nhằm chạy unit test và sonar. Đây là ý tưởng ship left trong testing, test và fix lỗi sớm nhất khi có thể. Điều này sẽ làm quá trình merged code vào develop dễ dàng và tự tin hơn. Chúng ra không nên đợi tới khi code chuẩn bị được merged vào develop, lúc đó mới đi sửa lỗi thì sẽ rất áp lực. Nhất là với áp lực thời gian, ta thường exclude vài file source code nhằm vượt qua được sonar threshold. Đây không phải là 1 good practice.</p>
+
+<p>Thêm vào đó, với mỗi phase như PRs review, deployment, create artifact, đều cần đẩm bảo unit test và sonar được chạy.</p>
+
+<p>Với Jacoco và SonarQube, những công cụ open-source, sẽ giúp nâng tầm source code của chúng ta lên một tầng cao mới.</p>
+
+<p><strong>Referenes:</strong></p>
+<ol>
+  <li><a href="https://www.atlassian.com/continuous-delivery/software-testing/code-coverage">What is code coverage?</a></li>
+  <li><a href="https://testing.googleblog.com/2020/08/code-coverage-best-practices.html">Code Coverage Best Practices</a></li>
+</ol>
+
+  </div><a class="u-url" href="/technical/71-jacoo-va-sonarqube" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Contact</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Minh Nhật&#39;s blog</li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p></p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
