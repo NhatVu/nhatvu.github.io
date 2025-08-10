@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "96. [POC] - Key-value cache using Postgres (draft)"
+title: "96. [POC] - Key-value cache using Postgres"
 date: 2025-08-09 08:02:00 +0000
 category: technical
 ---
@@ -29,7 +29,7 @@ CREATE TABLE cache_entries (
     value JSONB,
     expires_at TIMESTAMP,       -- When value is considered expired
     last_accessed_at TIMESTAMP, -- timestamp every time the key is read from cache. Support LRU
-    refreshed_at TIMESTAMP,     -- When value was last recomputed
+    refresh_started_at TIMESTAMP,     -- When value was last recomputed
     is_refreshing BOOLEAN,       -- Used to prevent duplicate refresh
     updated_at TIMESTAMP
 );
@@ -110,6 +110,9 @@ SET last_accessed_at = now()
 WHERE key = ?;
 ```
 
-## References
+### Sample code 
+https://github.com/NhatVu/proof-of-concept/tree/main/postgres-key-value-cache
+
+
 
 
