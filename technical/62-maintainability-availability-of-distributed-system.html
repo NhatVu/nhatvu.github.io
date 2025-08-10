@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>[System Design] 02. Maintainability và Availability của hệ thống phân tán | Minh Nhật’s blog</title>
+<meta name="generator" content="Jekyll v3.10.0" />
+<meta property="og:title" content="[System Design] 02. Maintainability và Availability của hệ thống phân tán" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Bài tiếp sẽ nói về 2 yếu tố còn lại là Maintainability (khả năng bảo trì) và Availability (Tính sẵn sàng). [1][2]" />
+<meta property="og:description" content="Bài tiếp sẽ nói về 2 yếu tố còn lại là Maintainability (khả năng bảo trì) và Availability (Tính sẵn sàng). [1][2]" />
+<link rel="canonical" href="/technical/62-maintainability-availability-of-distributed-system" />
+<meta property="og:url" content="/technical/62-maintainability-availability-of-distributed-system" />
+<meta property="og:site_name" content="Minh Nhật’s blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2023-12-12T00:02:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="[System Design] 02. Maintainability và Availability của hệ thống phân tán" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2023-12-12T00:02:00+00:00","datePublished":"2023-12-12T00:02:00+00:00","description":"Bài tiếp sẽ nói về 2 yếu tố còn lại là Maintainability (khả năng bảo trì) và Availability (Tính sẵn sàng). [1][2]","headline":"[System Design] 02. Maintainability và Availability của hệ thống phân tán","mainEntityOfPage":{"@type":"WebPage","@id":"/technical/62-maintainability-availability-of-distributed-system"},"url":"/technical/62-maintainability-availability-of-distributed-system"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="Minh Nhật&apos;s blog" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Minh Nhật&#39;s blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <!-- <div class="trigger"><a class="page-link" href="/404.html"></a><a class="page-link" href="/about/">Về tôi</a><a class="page-link" href="/art">art</a><a class="page-link" href="/finance">Finance</a><a class="page-link" href="/"></a><a class="page-link" href="/assets/main.css"></a><a class="page-link" href="/opinion">opinion</a><a class="page-link" href="/philosophy">Philosophy</a><a class="page-link" href="/technical">technical</a><a class="page-link" href="/art">art</a><a class="page-link" href="/art/">art</a><a class="page-link" href="/finance">Finance</a><a class="page-link" href="/finance/">Finance</a><a class="page-link" href="/"></a><a class="page-link" href="/"></a><a class="page-link" href="/page1/"></a><a class="page-link" href="/page2/"></a><a class="page-link" href="/page3/"></a><a class="page-link" href="/page4/"></a><a class="page-link" href="/opinion">opinion</a><a class="page-link" href="/opinion/">opinion</a><a class="page-link" href="/philosophy">Philosophy</a><a class="page-link" href="/philosophy/">Philosophy</a><a class="page-link" href="/technical">technical</a><a class="page-link" href="/technical/">technical</a><a class="page-link" href="/feed.xml"></a></div> -->
+        <div class="trigger">
+          <a class="page-link" href="/philosophy">Triết học</a>
+          <a class="page-link" href="/art">Văn, thơ, nhạc</a>
+          <a class="page-link" href="/opinion">Góc nhìn cá nhân</a>
+          <a class="page-link" href="/technical">IT</a>
+          <a class="page-link" href="/finance">Finance</a>
+          <a class="page-link" href="/about">Về tôi</a>
+        </div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">62. [System Design] 02. Maintainability và Availability của hệ thống phân tán</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2023-12-12T00:02:00+00:00" itemprop="datePublished">Dec 12, 2023
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>Bài tiếp sẽ nói về 2 yếu tố còn lại là Maintainability (khả năng bảo trì) và Availability (Tính sẵn sàng). [1][2]</p>
+
+<h2 id="1-maintainability-khả-năng-bảo-trì">1. Maintainability (Khả năng bảo trì)</h2>
+<p>Trong vòng đời phát triển phần mềm, thông thường, thời gian phát triên hệ thống chỉ chiếm 20% nguồn lực, 80% còn lại dùng để bảo trì và vận hành. Bảo trì ở đây có thể là sửa lỗi (fix bugs), thêm một tính năng mới (add a new feature), tương thích với platform/framework/library (ví dụ 1 lib CVE - Common Vulnerabilities and Exposures), … Những hệ thống cũ còn được gọi là legacy system.</p>
+
+<p>Theo sách [1], để dễ dàng trong việc bảo trì và vận hành, khi thiết kế hệ thống, nên tuân thủ những nguyên tắc sau:</p>
+<ul>
+  <li>Operability (khả năng vận hành): đảm bảo operation team có thể dễ dàng vận hành hệ thống một cách trơn tru</li>
+  <li>Simplicity (Đơn giản): New engineer có thể dễ dàng hiểu được hệ thống.</li>
+  <li>Evolvability (khả năng tiến hoá): Có thể dễ dàng thay đổi/sửa feature theo những use case/requirements không đoán trước. Requirement luôn thay đổi, và hệ thống phải thích ứng tốt với việc này. Đặc tính này còn được gọi với những từ khác như extensibility, modifiability</li>
+</ul>
+
+<p>Chi tiết về từng nguyên tắc trên, có thể tham khảo ở chương 1 của sách [1]</p>
+
+<h2 id="2-availability-tính-sẵn-sàng">2. Availability (Tính sẵn sàng)</h2>
+<p>Tính sẵn sàng chỉ việc sẵn sàng xử lý request khi client yêu cầu. Nó được đo bằng tỉ lệ thời gian hệ thống hoạt động (up and running) trong một đơn vị thời gian (ngày, tháng hoặc năm)</p>
+
+<p>Hight availability được đo bằng tỉ lệ phần trăm. 100% nghĩa là system không có downtime (zero downtime). Điều này rất khó có thể xảy ra. Thông thường, service high availability sẽ nằm trong khoảng 99% - 100%. Trong industry, 99.99% (or four nines) được xem như là đáng tin cậy, là tiêu chuẩn của các cloud vendor như Amazon, Google.</p>
+
+<p>Một số giá trị [5]:</p>
+<ul>
+  <li>“Two nines” = 99% up = downtime 3.7 days/year</li>
+  <li>“Three nines” = 99.99% up = downtime 8.8 hours/year</li>
+  <li>“Four nines” = 99.99% up = downtime 53 mintues/year</li>
+  <li>“Five nines” = 99.999% up = downtime 5.3 mintues/year</li>
+</ul>
+
+<p>Để giảm thời gian downtime, có thể cân nhắc loại bỏ các Single point of failure. [3]</p>
+
+<p>Theo [3], một điểm cần lưu ý là cần phải tìm 1 điểm balance/trade-off giữa high availablity, lợi ích của high availablity và sự phức tạp của hệ thống. Đi từ 99% -&gt; 99.99% thì dễ dàng hơn là từ 99.99% tới 99.9999% và xa hơn. Đến 1 điểm nào đó, hệ thống sẽ cực kỳ phức tạp.</p>
+
+<p>Câu hỏi cần đặt ra là nếu hệ thống sập trong 5 phút, 10 phút, 1 giờ, 1 ngày hoặc nhiều ngày, khách hàng sẽ phản ứng như thế nào? Lợi nhuận, danh tiếng của công ty bị ảnh hưởng như thế nào? …. Điều này hoàn toàn tuỳ thuộc vào từng business của công ty.</p>
+
+<p>Một số khái niệm [5]:</p>
+<ul>
+  <li>Failure: toàn bộ system không hoạt động, không thể xử lý request.</li>
+  <li>Fault: 1 bộ phận của hệ thống không hoạt động, vẫn có thể xử lý request. Ví dụ như node crash hoặc network fault</li>
+  <li>Fault tolerence (khả nặng chịu lỗi): hệ thống vẫn hoạt động dù có lỗi xảy ra</li>
+  <li>Single point of failure: 1 node/network bị lỗi, hệ thống sẽ chuyển sang trạng thái Failure</li>
+</ul>
+
+<h2 id="3-reliability-vs-availablity">3. Reliability vs Availablity</h2>
+<p>A high reliable system là 1 hệ thống không crash thường xuyên. 
+A high availability system là 1 hệ thống có thể vận hành trong phần lớn thời gian</p>
+
+<p>Giả sử, 1 hệ thống là unreliable nếu nó crash thường xuyên, nhưng là high availability nếu nó nó khởi động/up lại nhanh. [4]</p>
+
+<p><strong>Referenes:</strong></p>
+<ol>
+  <li><a href="https://www.amazon.com/Designing-Data-Intensive-Applications-Reliable-Maintainable/dp/1449373321">Book: Designing Data-Intensive Applications</a></li>
+  <li><a href="https://topdev.vn/blog/cac-tinh-chat-chinh-cua-mot-he-thong-phan-tan">Các tính chất chính của một hệ thống phân tán</a></li>
+  <li><a href="https://www.atlassian.com/blog/statuspage/high-availability">Four nines and beyond: A guide to high availability infrastructure</a></li>
+  <li><a href="https://medium.com/@sakalli.duran/key-characteristics-of-distributed-systems-0cc6e3ee08d3">Key Characteristics of Distributed Systems</a></li>
+  <li><a href="https://www.youtube.com/watch?v=43TDfUNsM3E">Distributed Systems 2.4: Fault tolerance</a></li>
+</ol>
+
+  </div><a class="u-url" href="/technical/62-maintainability-availability-of-distributed-system" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Contact</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Minh Nhật&#39;s blog</li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p></p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

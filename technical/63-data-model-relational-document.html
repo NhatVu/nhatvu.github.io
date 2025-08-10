@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>[System Design] 03. Data Model: Relational Model versus Document Model | Minh Nhật’s blog</title>
+<meta name="generator" content="Jekyll v3.10.0" />
+<meta property="og:title" content="[System Design] 03. Data Model: Relational Model versus Document Model" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Data model là 1 đặc tả về cách mà database tổ chức dữ liệu. Bài này sẽ tập chung nói về 2 kiểu data model: Relational Model (mô hình dữ liệu quan hệ) và Document model. Theo tôi hiểu, Relational model thường gắn liền với SQL. Còn NoSQL bao gồm nhiều kiểu khác nhau như key-value, document, graph, time series, column-oriented, …" />
+<meta property="og:description" content="Data model là 1 đặc tả về cách mà database tổ chức dữ liệu. Bài này sẽ tập chung nói về 2 kiểu data model: Relational Model (mô hình dữ liệu quan hệ) và Document model. Theo tôi hiểu, Relational model thường gắn liền với SQL. Còn NoSQL bao gồm nhiều kiểu khác nhau như key-value, document, graph, time series, column-oriented, …" />
+<link rel="canonical" href="/technical/63-data-model-relational-document" />
+<meta property="og:url" content="/technical/63-data-model-relational-document" />
+<meta property="og:site_name" content="Minh Nhật’s blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2023-12-12T00:02:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="[System Design] 03. Data Model: Relational Model versus Document Model" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2023-12-12T00:02:00+00:00","datePublished":"2023-12-12T00:02:00+00:00","description":"Data model là 1 đặc tả về cách mà database tổ chức dữ liệu. Bài này sẽ tập chung nói về 2 kiểu data model: Relational Model (mô hình dữ liệu quan hệ) và Document model. Theo tôi hiểu, Relational model thường gắn liền với SQL. Còn NoSQL bao gồm nhiều kiểu khác nhau như key-value, document, graph, time series, column-oriented, …","headline":"[System Design] 03. Data Model: Relational Model versus Document Model","mainEntityOfPage":{"@type":"WebPage","@id":"/technical/63-data-model-relational-document"},"url":"/technical/63-data-model-relational-document"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="Minh Nhật&apos;s blog" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Minh Nhật&#39;s blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <!-- <div class="trigger"><a class="page-link" href="/404.html"></a><a class="page-link" href="/about/">Về tôi</a><a class="page-link" href="/art">art</a><a class="page-link" href="/finance">Finance</a><a class="page-link" href="/"></a><a class="page-link" href="/assets/main.css"></a><a class="page-link" href="/opinion">opinion</a><a class="page-link" href="/philosophy">Philosophy</a><a class="page-link" href="/technical">technical</a><a class="page-link" href="/art">art</a><a class="page-link" href="/art/">art</a><a class="page-link" href="/finance">Finance</a><a class="page-link" href="/finance/">Finance</a><a class="page-link" href="/"></a><a class="page-link" href="/"></a><a class="page-link" href="/page1/"></a><a class="page-link" href="/page2/"></a><a class="page-link" href="/page3/"></a><a class="page-link" href="/page4/"></a><a class="page-link" href="/opinion">opinion</a><a class="page-link" href="/opinion/">opinion</a><a class="page-link" href="/philosophy">Philosophy</a><a class="page-link" href="/philosophy/">Philosophy</a><a class="page-link" href="/technical">technical</a><a class="page-link" href="/technical/">technical</a><a class="page-link" href="/feed.xml"></a></div> -->
+        <div class="trigger">
+          <a class="page-link" href="/philosophy">Triết học</a>
+          <a class="page-link" href="/art">Văn, thơ, nhạc</a>
+          <a class="page-link" href="/opinion">Góc nhìn cá nhân</a>
+          <a class="page-link" href="/technical">IT</a>
+          <a class="page-link" href="/finance">Finance</a>
+          <a class="page-link" href="/about">Về tôi</a>
+        </div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">63. [System Design] 03. Data Model: Relational Model versus Document Model</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2023-12-12T00:02:00+00:00" itemprop="datePublished">Dec 12, 2023
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>Data model là 1 đặc tả về cách mà database tổ chức dữ liệu. Bài này sẽ tập chung nói về 2 kiểu data model: Relational Model (mô hình dữ liệu quan hệ) và Document model. Theo tôi hiểu, Relational model thường gắn liền với SQL. Còn NoSQL bao gồm nhiều kiểu khác nhau như key-value, document, graph, time series, column-oriented, …</p>
+
+<h2 id="1-sql-relational-model-là-gì">1. SQL: Relational Model là gì?</h2>
+<p>Relational model sẽ tổ chức dữ liệu thành từng bảng (Table in SQL), mỗi bảng gồm nhiều dòng không có thứ tự. Một dòng tương tới với 1 sample/record data. Mỗi dòng sẽ nhiều fields và số fields tương ứng với số cột trong bảng. Thích hợp cho những dữ liệu có cấu trúc (structured data).</p>
+
+<p>Relational model có lịch sử 1960-1970 và vẫn còn được dùng rộng rãi hiện nay. Chúng thường được dùng cho các transaction processing (banking, sales, airline reservation, stock,…) và batch process (payroll, invoices, reporting) [1]. Theo tôi, những ứng dụng nào cần tính chất ACID (Atomicity, Consistency, Isolation, Durability ) thì sử dụng SQL là hợp lý.</p>
+
+<p>Một số SQL server phổ biến, có thể kể đến như Oracle, MySQL, Postgres, MS SQL server.</p>
+
+<h2 id="2-những-hạn-chế-của-relational-model">2. Những hạn chế của Relational Model?</h2>
+<p>Tuy nhiên, Relational Model cũng đối mặt với nhiều giới hạn khi lượng người dùng internet tăng lên. Ngoài vấn đề về phí bản quyền, việc fixed data schema, SQL còn đối diện với những khó khăn quan trọng sau: [1][2]</p>
+<h3 id="agility-and-programmability-12">Agility and Programmability [1][2]:</h3>
+<p>Lập trình hướng đối tượng (OOP) rất phố biến hiện nay, tuy nhiên, nếu data lưu dưới dạng relational table, cần thiết phải có 1 layer giữa application code và database để mapping dữ liệu. Tình trạng này gọi là Object-Relational mapping hay impedance mismatch.</p>
+
+<p>Object-Relational mapping (ORM) framework như Hibernate có thể gỉam đi lượng boilerplate code (note: 1 dạng template code, dùng để map từ row sang object) cần phải viết, nhưg chúng không để nào xoá nhoà đi sự khác biệt về bản chất giưa Object và Relation</p>
+
+<h3 id="flexibility-tính-linh-hoạt-2">Flexibility (Tính linh hoạt) [2]</h3>
+<p>Theo lý thuyết, relational model cực kỳ linh hoạt và có thể mô hình bất kỳ dạng dữ liệu nào. Tuy nhiên, trong thực thế, vì quá quen thuộc với relational model, việc thiết kế sẽ tập trung vào dữ liệu dạng bảng, thay vì tập trung vào data storage schema (mô hình lưu trữ dữ liệu) thoả mãn yêu cầu nghiệp vụ (business requirements). Và không phải tất cả thông tin có thể dễ dàng chuyển đổi thành dạng dữ liệu dạng bảng</p>
+
+<p>Hơn nữa, việc chuẩn hoá dữ liệu (data normalization [3]) sẽ tạo ra nhiều narrow tables (???). Hệ quả là hầu hết queries đều yêu cầu lệnh join giữa các bảng. Điều này thường chậm và sử dụng nhiều tài nguyên.</p>
+
+<p>Trong sách [1] có ví dụ về Linkedin Profile. Ngoài những thông tin duy nhất cho 1 user như user_id, name, những thông tin khác có thể ở dạng số nhiều như education, contact info, job positions (làm nhiều việc 1 lúc). Để có thể lấy đầy đủ các thông tin này, ta cần phải join tất cả các bảng liên quan như userProfile, education, contact, jobPositions, …</p>
+
+<h3 id="performance-and-scalability-2">Performance and Scalability [2]</h3>
+<p>Khi lượng tải tăng, SQL server thường scale up bằng việc tăng thêm resources như RAM, CPU, disk. Tuy nhiên, tới 1 điểm nào đó, việc scale up không còn khả thi nữa, buộc ta phải scale out (tức horizontal scale) bằng việc chia data (partitioning data) thành nhiều database nhỏ hơn và mỗi database này được chạy ở 1 máy khác nhau. Data có thể partition theo row hoặc column. Khi có yêu cầu query dữ liệu, query sẽ được route tới partition thích hợp. Cách làm này được gọi là <strong>sharding</strong>. Một số nhà phát triên SQL server cung cấp giải pháp sharding nhưng kèm với licensing costs. Ta cũng có thể thực hiện manual sharding.</p>
+
+<p>Tuy nhiên, việc sharding này ảnh hưởng nghiêm trọng tới query performance. Trường hợp cần join data, và data nằm trên các parition khác nhau hoặc máy khác nhau, điều này có nghĩa cần thực hiện di chuyển dữ liệu qua mạng để có thể thực hiện phép join. Hoặc 1 transaction cần update dữ liệu nằm ở nhiều parition khác nhau, điều này ảnh hưởng tới response time của ứng dụng và throughput mạng.</p>
+
+<p>Vì đảm bảo tính ACID, SQL server có những cơ chế phức tạp. Và nó có thể ảnh hưởng tới performance.</p>
+
+<h2 id="3-sự-ra-đời-của-nosql">3. Sự ra đời của NoSQL</h2>
+<p>Khi việc scale SQL server không đáp ứng kịp với lượng load tăng, các tổ chức lớn quyết định tạo ra giải pháp cho riêng họ. Và từ đó, NoSQL ra đời. NoSQL (viết tắt của Not only SQL) chỉ tập các database không tuân theo chuẩn SQL. NoSQL bao gồm nhiều kiểu khác nhau như key-value, document, graph, time series, column-oriented, …</p>
+
+<p>Theo [1], một số động lực chính thúc đẩy sự ra đời của NoSQL gồm:</p>
+<ul>
+  <li>Việc dễ dàng scale và có khả năng scale mạnh hơn SQL</li>
+  <li>Khả năng xử lý lượng dữ liệu lớn và lượng ghi lớn</li>
+  <li>Open-source, để giảm chi phí licensing</li>
+  <li>Những operation đặc biệt mà không được hỗ trợ bởi SQL, cho những use case đặc biệt</li>
+  <li>Dynamic data model</li>
+</ul>
+
+<h3 id="4-document-model">4. Document model</h3>
+<p>Document là tập hợp của key và value. Mỗi value có thể là primative type hoặc là list hoặc là child document. Một document sẽ bao gồm toàn bộ data liên quan tới entity, không cần phải join như Relational model.</p>
+
+<p>Trở lại ví dụ về LinkedIn profile, ta có thể thiết kế 1 userProfile JSON, trong đó bao gồm list education object, list position object, … Như vậy, khi cần lấy thông tin profile, chỉ cần 1 câu query, không cần phải join dữ liệu. Đặc tính này gọi là <em>data locality</em>, tức là những thông tin liên quan đề nằm ở 1 chỗ, và 1 query là đủ [1]</p>
+
+<p>Document model hỗ trợ tốt cho one-to-many relationship. Ví dụ 1 user có nhiều job, nhiều bằng cấp, nhiều địa chỉ.</p>
+
+<h3 id="5-relational-vs-document-model">5. Relational vs Document model</h3>
+<p>Theo [1], những lập luận chính thiên hướng về Document model là vì schema flexibility, performance tốt hơn vì data locality, và với một số ứng dụng, data structure “gần gũi” với business requirements hơn.</p>
+
+<p>Tuy nhiên, với document model, ta không thể truy suất trực tiếp với nested document, mà phải đi theo từng cấp. Với những document mà nested level không cao, điều này hoàn toàn ổn.</p>
+
+<p>Document model có thể/hoặc không support join operation. Tuy nhiên điều này không là vấn đề lớn.</p>
+
+<p>Theo tôi, vì 1 document chứa tất thông tin cần thiết, không cần thực hiện join, nên nếu parition dữ liệu thành nhiều phần, khi thực hiện query, sẽ không gặp phải vấn đề di chuyển dữ liệu như bên SQL.</p>
+
+<p><strong>Referenes:</strong></p>
+<ol>
+  <li><a href="https://www.amazon.com/Designing-Data-Intensive-Applications-Reliable-Maintainable/dp/1449373321">Book: Designing Data-Intensive Applications</a></li>
+  <li><a href="https://learn.microsoft.com/en-us/previous-versions/msp-n-p/dn313285(v=pandp.10)">Chap 1: Data Storage for Modern High-Performance Business Applications</a></li>
+  <li><a href="https://learn.microsoft.com/en-us/office/troubleshoot/access/database-normalization-description">Description of the database normalization basics</a></li>
+</ol>
+
+  </div><a class="u-url" href="/technical/63-data-model-relational-document" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Contact</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Minh Nhật&#39;s blog</li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p></p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

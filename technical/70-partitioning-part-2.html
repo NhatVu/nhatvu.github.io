@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>[System Design] 10. Partitioning: Rebalancing Partitions and Request Routing | Minh Nhật’s blog</title>
+<meta name="generator" content="Jekyll v3.10.0" />
+<meta property="og:title" content="[System Design] 10. Partitioning: Rebalancing Partitions and Request Routing" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Bài này sẽ nói đến 2 chương còn lại của phần Partitioning: Rebalancing partitions và Request Routing" />
+<meta property="og:description" content="Bài này sẽ nói đến 2 chương còn lại của phần Partitioning: Rebalancing partitions và Request Routing" />
+<link rel="canonical" href="/technical/70-partitioning-part-2" />
+<meta property="og:url" content="/technical/70-partitioning-part-2" />
+<meta property="og:site_name" content="Minh Nhật’s blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2024-01-13T00:02:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="[System Design] 10. Partitioning: Rebalancing Partitions and Request Routing" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2024-01-13T00:02:00+00:00","datePublished":"2024-01-13T00:02:00+00:00","description":"Bài này sẽ nói đến 2 chương còn lại của phần Partitioning: Rebalancing partitions và Request Routing","headline":"[System Design] 10. Partitioning: Rebalancing Partitions and Request Routing","mainEntityOfPage":{"@type":"WebPage","@id":"/technical/70-partitioning-part-2"},"url":"/technical/70-partitioning-part-2"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="Minh Nhật&apos;s blog" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Minh Nhật&#39;s blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <!-- <div class="trigger"><a class="page-link" href="/404.html"></a><a class="page-link" href="/about/">Về tôi</a><a class="page-link" href="/art">art</a><a class="page-link" href="/finance">Finance</a><a class="page-link" href="/"></a><a class="page-link" href="/assets/main.css"></a><a class="page-link" href="/opinion">opinion</a><a class="page-link" href="/philosophy">Philosophy</a><a class="page-link" href="/technical">technical</a><a class="page-link" href="/art">art</a><a class="page-link" href="/art/">art</a><a class="page-link" href="/finance">Finance</a><a class="page-link" href="/finance/">Finance</a><a class="page-link" href="/"></a><a class="page-link" href="/"></a><a class="page-link" href="/page1/"></a><a class="page-link" href="/page2/"></a><a class="page-link" href="/page3/"></a><a class="page-link" href="/page4/"></a><a class="page-link" href="/opinion">opinion</a><a class="page-link" href="/opinion/">opinion</a><a class="page-link" href="/philosophy">Philosophy</a><a class="page-link" href="/philosophy/">Philosophy</a><a class="page-link" href="/technical">technical</a><a class="page-link" href="/technical/">technical</a><a class="page-link" href="/feed.xml"></a></div> -->
+        <div class="trigger">
+          <a class="page-link" href="/philosophy">Triết học</a>
+          <a class="page-link" href="/art">Văn, thơ, nhạc</a>
+          <a class="page-link" href="/opinion">Góc nhìn cá nhân</a>
+          <a class="page-link" href="/technical">IT</a>
+          <a class="page-link" href="/finance">Finance</a>
+          <a class="page-link" href="/about">Về tôi</a>
+        </div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">70. [System Design] 10. Partitioning: Rebalancing Partitions and Request Routing</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2024-01-13T00:02:00+00:00" itemprop="datePublished">Jan 13, 2024
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>Bài này sẽ nói đến 2 chương còn lại của phần Partitioning: Rebalancing partitions và Request Routing</p>
+
+<h2 id="rebalancing-partitions">Rebalancing Partitions</h2>
+<p>Theo thời gian, có một số thứ thay đổi với database:</p>
+<ul>
+  <li>The query throughput increase, do đó cần phải scale database. Có thể bằng cách thêm RAM, CPU</li>
+  <li>Datasize increase, cần phải thêm RAM, Disk</li>
+  <li>Machine fail</li>
+</ul>
+
+<p>Những sự thay đổi này đòi hỏi data và request di chuyển từ node này sang node khác. Quá trình này gọi là <em>rebalancing</em>.</p>
+
+<p>Bất kể phương pháp parition nào được sử dụng, rebalancing thường đòi hỏi đáp ứng một số yêu cầu tối thiểu sau:</p>
+<ul>
+  <li>Sau khi rebalancing, the load (data storage, read and write request) phải được phân phối đều giữa các node</li>
+  <li>Trong khi rebalancing đang xảy ra, database phải tiếp tục hoạt động bình thường, tiếp tục chấp nhận read và write request</li>
+  <li>Lượng data cần di chuyển giữa các node là tối thiểu. Nó làm cho việc rebalancing nhanh hơn, giảm tải cho network và disk I/O</li>
+</ul>
+
+<p>Có nhiều cách để assign parition vào node. Ta sẽ tham khảo một số cách phổ biến</p>
+
+<h3 id="hash-mod-n-ko-nên-dùng">Hash mod n (ko nên dùng)</h3>
+<p>Khi thực hiện parition bởi hash key, sẽ tốt hơn khi chia hash key thành nhiều range khác nhau, và gán ranges tương ứng với parition. Ví dụ, partition 0 chứa 0 &lt;= hash(key) &lt; b0, parition 1 chứa b0 &lt;= hash(key) &lt; b1, …</p>
+
+<p>Có thể bạn sẽ hỏi tại sao không sử dụng mod (% operator trong Java)? Giả sử ta có 10 node, xác định key thuộc về node nào bằng cách: node = hash(key) % 10.</p>
+
+<p>Vấn đề chính với phương pháp này, là khi số lượng node thay đổi (có thể là thêm hoặc giảm), thì hầu hết dữ liệu sẽ phải di chuyển từ node này sang node khác. Ví dụ, nếu hash(key) = 123456. Nếu ban đầu ta có 10 nodes, ta có 123456 % 10 = 6 ==&gt; assign vào node 6. Nếu ta tăng node lên 11, ta có 123456 % 11 = 3 ==&gt; assign vào node 3. Nếu ta có 12 node, thì sẽ assign vào node 0 (123456 % 12 = 0).</p>
+
+<p>Do đó, phương pháp “hash % n” rất tốn kém.</p>
+
+<h3 id="fixed-number-of-partitions">Fixed number of partitions</h3>
+<p>Để xử lý vấn đề này, có 1 phương pháp đơn giản, ta sẽ gia tăng số lượng parition nhiều hơn so với số lượng node, khi đó, 1 node có thể có nhiều parition. Nếu ta có 10 nodes, thì có thể có 1000 parition.</p>
+
+<p>Khi số lượng node thay đổi, ta chỉ cần di chuyển một số parition sao cho dữ liệu được phần phối đều. Xem hình 6-6. Ở hình này, khi thêm node 4, p4 ở node 0, p9 ở node 1, p14 ở node 2, p19 ở node 3 sẽ di chuyển sang node 4.</p>
+
+<p><img src="/assets/images/2024/70-fixed-number-partition.png" alt="Alt text" /></p>
+
+<p>Với phương pháp này, số lượng parition không đổi. Key assign vào parition không đổi. Cái thay đổi chính là việc assign partition vào node. Việc thay đổi này không xảy ra ngay lập tức - bởi vì cần thời gian để transfer một lượng lớn data sang node khác. Trong quá trình chuyển đổi, read/write vẫn được diễn ra trên parition ở node cũ.</p>
+
+<p>Chọn số lượng partition là một việc khó. Với phương pháp này, số lượng partition được chọn từ lúc ban đầu và không thay đổi theo thời gian. Tuy nhiên, theo thời gian, data sẽ gia tăng và làm cho kích thước parition bị phình, ảnh hưởng tới performance. Nhưng nếu chọn số lượng parition quá nhiều, sẽ gây những overhead không cần thiết, cũng ảnh hưởng tới performance. Ngoài ra, một số hệ điều hành cũng giới hạn số lượng file tối đa có thể chứa trong 1 folder (https://stackoverflow.com/questions/466521/how-many-files-can-i-put-in-a-directory)</p>
+
+<h3 id="dynamic-partition">Dynamic Partition</h3>
+<p>Một số database như HBase sử dụng phương pháp key range-partitioned với dynamic partition. Khi kích thước của parition vượt quá một ngưỡng nào đó (với HBase là 10GB) thì parition này sẽ tự động chia tách thành 2 partition. Nếu có nhiều dữ liệu bị delete và size nhỏ hơn kích thước nào đó, nó sẽ merged partition với nhau.</p>
+
+<p>Điểm lợi của phương pháp này là số lượng parition sẽ thay đổi dựa theo kích thước của dữ liệu.</p>
+
+<p>Dynamic partition không những phù hợp với key range-partitioned data, mà cũng phù hợp với hash-partitioned data. MongoDB hỗ trợ cả key-range và hash paritioning.</p>
+
+<p>Phương pháp dynamic partitioning, số lượng partition tỉ lệ với kích thước của dataset. Việc split và merge partion giữ cho size của partition không quá lớn cũng không quá nhỏ.</p>
+
+<h3 id="partitioning-proportionally-to-nodes">Partitioning proportionally to nodes</h3>
+<p>(Partition tỉ lệ thuật với node)</p>
+
+<p>Cassandra sử dụng 1 phương pháp khác, làm cho số lượng partition tỉ lệ với số lượng node. Có một số đặc tính như sau:</p>
+<ul>
+  <li>Số lượng parition/node là cố định</li>
+  <li>Nếu số lượng node không thay đổi, size của parition sẽ tăng nếu dataset size tăng</li>
+  <li>Khi gia tăng số lượng node, partition size sẽ giảm xuống. Database sẽ chọn ngẫu nhiên 1 số lượng parition, chia tách thành những parition mới và di chuyển một nửa parition mới ngày sang node mới. Đôi khi, việc này cũng gây ra unfair split. Cassandra 3.0 đề xuất thuật toán để tránh việc unfair split này</li>
+</ul>
+
+<h3 id="operations-automatic-or-manual-rebalancing">Operations: Automatic or Manual Rebalancing</h3>
+
+<p>Fully Automatic thì thuận tiện những sẽ có những hành vi không đoán trước được. Hơn nữa, việc rebalancing yêu cầu data di chuyển nhiều giữa các node nên nếu không cẩn thận, sẽ gây vị quá tải network.</p>
+
+<p>Nguy hiểm hơn, nếu automatic rebalancing kết hợp với automatic fail detection. Giả sử nếu mạng bị nghẽn hoặc 1 node bị overhead dẫn đến node phản hồi chậm/rất chậm. Những node khác sẽ nghĩ overhead node đã dead và sẽ di chuyển load sang những node khác. Nó làm cho những node khác có thể bị overhead và gây ra phản ứng dây chuyền.</p>
+
+<p>Do đó, sẽ tốt hơn nếu con người/chúng ta kiểm soát việc rebalancing này, kết hợp giữa manual và automation</p>
+
+<h2 id="request-routing">Request Routing</h2>
+<p>Tới giờ, data được chia thành nhiều parition, nằm ở nhiều node khác nhau. Làm sao khi query, ta xác được được node và partition chứa key đó?</p>
+
+<p>Ở high level, ta có thể có một số cách sau:</p>
+<ul>
+  <li>Cho phép client connect tới bất kỳ node nào. Nếu node đó chứa data thì return ngay. Nếu không, node sẽ forward request tới node thích hợp, nhận phản hồi và trả phản hồi này về cho client</li>
+  <li>Gửi tất cả request tới routing layer. Routing layer này sẽ xác định route request tới node thích hợp, nó hoạt động như 1 load balancer.</li>
+  <li>Cách này yêu cầu client phải biết key thuộc về node nào và request trực tiếp tới node này.</li>
+</ul>
+
+<p><img src="/assets/images/2024/70-routing.png" alt="Alt text" /></p>
+
+<p>Một số distributed data system dựa vào coordinate service bên thứ 3 như ZooKeeper. ZooKeepr sẽ duy trì (maintain) mapping giữa node và partition. Routing layer sẽ sử dụng thông tin này. Khi có bất kỳ thay đổi nào về parition, node, mapping … ZooKeeper sẽ gửi thông báo với Routing Layer để nó có thông tin mapping mới nhất</p>
+
+<p><img src="/assets/images/2024/70-zookeeper.png" alt="Alt text" /></p>
+
+<p><strong>Referenes:</strong></p>
+<ol>
+  <li><a href="https://www.amazon.com/Designing-Data-Intensive-Applications-Reliable-Maintainable/dp/1449373321">Book: Designing Data-Intensive Applications</a></li>
+</ol>
+
+  </div><a class="u-url" href="/technical/70-partitioning-part-2" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Contact</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Minh Nhật&#39;s blog</li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p></p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

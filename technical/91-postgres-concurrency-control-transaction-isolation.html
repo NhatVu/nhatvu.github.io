@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>PostgreSQL Concurrency control: Transaction Isolation | Minh Nhật’s blog</title>
+<meta name="generator" content="Jekyll v3.10.0" />
+<meta property="og:title" content="PostgreSQL Concurrency control: Transaction Isolation" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Theo chuẩn của SQL, transaction isolation gồm 4 dạng: Serializable &gt; Repeatable read &gt; Read committed &gt; Read uncommitted. Tuy nhiên, mỗi loại database sẽ hỗ trợ các dạng isolation khác nhau. Riêng PostgreSQL không hỗ trợ Read uncommited." />
+<meta property="og:description" content="Theo chuẩn của SQL, transaction isolation gồm 4 dạng: Serializable &gt; Repeatable read &gt; Read committed &gt; Read uncommitted. Tuy nhiên, mỗi loại database sẽ hỗ trợ các dạng isolation khác nhau. Riêng PostgreSQL không hỗ trợ Read uncommited." />
+<link rel="canonical" href="/technical/91-postgres-concurrency-control-transaction-isolation" />
+<meta property="og:url" content="/technical/91-postgres-concurrency-control-transaction-isolation" />
+<meta property="og:site_name" content="Minh Nhật’s blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2025-03-09T00:02:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="PostgreSQL Concurrency control: Transaction Isolation" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2025-03-09T00:02:00+00:00","datePublished":"2025-03-09T00:02:00+00:00","description":"Theo chuẩn của SQL, transaction isolation gồm 4 dạng: Serializable &gt; Repeatable read &gt; Read committed &gt; Read uncommitted. Tuy nhiên, mỗi loại database sẽ hỗ trợ các dạng isolation khác nhau. Riêng PostgreSQL không hỗ trợ Read uncommited.","headline":"PostgreSQL Concurrency control: Transaction Isolation","mainEntityOfPage":{"@type":"WebPage","@id":"/technical/91-postgres-concurrency-control-transaction-isolation"},"url":"/technical/91-postgres-concurrency-control-transaction-isolation"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="Minh Nhật&apos;s blog" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Minh Nhật&#39;s blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <!-- <div class="trigger"><a class="page-link" href="/404.html"></a><a class="page-link" href="/about/">Về tôi</a><a class="page-link" href="/art">art</a><a class="page-link" href="/finance">Finance</a><a class="page-link" href="/"></a><a class="page-link" href="/assets/main.css"></a><a class="page-link" href="/opinion">opinion</a><a class="page-link" href="/philosophy">Philosophy</a><a class="page-link" href="/technical">technical</a><a class="page-link" href="/art">art</a><a class="page-link" href="/art/">art</a><a class="page-link" href="/finance">Finance</a><a class="page-link" href="/finance/">Finance</a><a class="page-link" href="/"></a><a class="page-link" href="/"></a><a class="page-link" href="/page1/"></a><a class="page-link" href="/page2/"></a><a class="page-link" href="/page3/"></a><a class="page-link" href="/page4/"></a><a class="page-link" href="/opinion">opinion</a><a class="page-link" href="/opinion/">opinion</a><a class="page-link" href="/philosophy">Philosophy</a><a class="page-link" href="/philosophy/">Philosophy</a><a class="page-link" href="/technical">technical</a><a class="page-link" href="/technical/">technical</a><a class="page-link" href="/feed.xml"></a></div> -->
+        <div class="trigger">
+          <a class="page-link" href="/philosophy">Triết học</a>
+          <a class="page-link" href="/art">Văn, thơ, nhạc</a>
+          <a class="page-link" href="/opinion">Góc nhìn cá nhân</a>
+          <a class="page-link" href="/technical">IT</a>
+          <a class="page-link" href="/finance">Finance</a>
+          <a class="page-link" href="/about">Về tôi</a>
+        </div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">91.  PostgreSQL Concurrency control: Transaction Isolation</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2025-03-09T00:02:00+00:00" itemprop="datePublished">Mar 9, 2025
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>Theo chuẩn của SQL, transaction isolation gồm 4 dạng: Serializable &gt; Repeatable read &gt; Read committed &gt; Read uncommitted. Tuy nhiên, mỗi loại database sẽ hỗ trợ các dạng isolation khác nhau. Riêng PostgreSQL không hỗ trợ Read uncommited.</p>
+
+<h3 id="transaction-isolation">Transaction Isolation</h3>
+
+<p>Serializable isolation là nghiêm ngặt nhất, các transaction phải thực hiện tuần tự, không được phép thực hiện đồng thời (no concurrent transaction).</p>
+
+<p>3 loại isolation còn lại được định nghĩa theo read phenomena, là kết quả của việc nhiều transaction được thực thi đồng thời.</p>
+
+<p>Các read phenomena là:</p>
+<ul>
+  <li>dirty read: trên cùng 1 data (row), transaction A có thể đọc dữ liệu được ghi bởi transaction B khi B chưa commit.</li>
+  <li>nonrepeatable read: trên cùng 1 data (row) transaction re-read dữ liệu nó đã đọc trước đó và phát hiện rằng, dữ liệu đã bị thay đổi bởi transaction khác.</li>
+  <li>phantom read: với câu query trả về 1 tập dữ liệu, 1 transaction thi re-execute câu query, phát hiện rằng tập dữ liệu trả về bị thay đổi (thêm dòng, hoặc xoá dòng) bởi các transaction khác.</li>
+  <li>serialization anomaly: The result of successfully committing a group of transactions is inconsistent with all possible orderings of running those transactions one at a time.</li>
+</ul>
+
+<p><img src="/assets/images/2025/89_transaction_isolation_level.png" alt="alt text" /></p>
+
+<p>Quan trọng: sequence type (đựoc khai báo bởi serial) khi có thay đổi, sẽ ngay lập tức visible với transaction và không thể rollback, kể cả khi transaction không thành công.</p>
+
+<h3 id="read-committed-isolation-level">Read Committed Isolation Level</h3>
+<p>Read Committed is the default isolation level in PostgreSQL. When a transaction uses this isolation level, a SELECT query (without a FOR UPDATE/SHARE clause) sees only data committed before the query began.</p>
+
+<p>Note that two successive SELECT commands can see different data, even though they are within a single transaction, if other transactions commit changes after the first SELECT starts and before the second SELECT starts.</p>
+
+<p>UPDATE, DELETE, SELECT FOR UPDATE, and SELECT FOR SHARE commands behave the same as SELECT in terms of searching for target rows: they will only find target rows that were committed as of the command start time. However, such a target row might have <strong>already</strong> been updated (or deleted or locked) by another concurrent transaction by the time it is found. In this case, the would-be updater will wait for the first updating transaction to commit or roll back (if it is still in progress).</p>
+<ul>
+  <li>If the first updater rolls back, then its effects are negated and the second updater can proceed with updating the originally found row.</li>
+  <li>If the first updater commits, the second updater will ignore the row if the first updater deleted it, otherwise it will attempt to <strong>apply its operation to the updated version of the row</strong>. The search condition of the command (the WHERE clause) is re-evaluated to see if the updated version of the row still matches the search condition. If so, the second updater proceeds with its operation using the updated version of the row</li>
+</ul>
+
+<p>More complex usage can produce undesirable results in Read Committed mode. For example, consider a DELETE command operating on data that is being both added and removed from its restriction criteria by another command, e.g., assume website is a two-row table with website.hits equaling 9 and 10:</p>
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">BEGIN</span><span class="p">;</span>
+<span class="k">UPDATE</span> <span class="n">website</span> <span class="k">SET</span> <span class="n">hits</span> <span class="o">=</span> <span class="n">hits</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span>
+<span class="c1">-- run from another session:  DELETE FROM website WHERE hits = 10;</span>
+<span class="k">COMMIT</span><span class="p">;</span>
+</code></pre></div></div>
+<p>The DELETE will have no effect even though there is a website.hits = 10 row before and after the UPDATE. This occurs because the pre-update row value 9 is skipped (Note: not the targeted row for DELETE sql), and when the UPDATE completes and DELETE obtains a lock, the new row value is no longer 10 but 11, which no longer matches the criteria.</p>
+
+<p>The partial transaction isolation provided by Read Committed mode is adequate for many applications, and this mode is fast and simple to use; however, it is not sufficient for all cases. Applications that do complex queries and updates might require a more rigorously consistent view of the database than Read Committed mode provides.</p>
+
+<h3 id="repeatable-read-isolation-level">Repeatable Read Isolation Level</h3>
+<p>The Repeatable Read isolation level only sees data committed before the transaction began; it never sees either uncommitted data or changes committed by concurrent transactions during the transaction’s execution. (However, each query does see the effects of previous updates executed within its own transaction, even though they are not yet committed.)</p>
+
+<p>This level is different from Read Committed in that a query in a repeatable read transaction sees a snapshot as of the start of the first non-transaction-control statement in the transaction, not as of the start of the current statement within the transaction. Thus, successive SELECT commands within a single transaction see the same data, i.e., they do not see changes made by other transactions that committed after their own transaction started.</p>
+
+<p>Applications using this level must be prepared to retry transactions due to serialization failures.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ERROR:  could not serialize access due to concurrent update
+</code></pre></div></div>
+
+<p>A repeatable read transaction cannot modify or lock rows changed by other transactions after the repeatable read transaction began.</p>
+
+<p>When an application receives this error message, it should abort the current transaction and retry the whole transaction from the beginning. The second time through, the transaction will see the previously-committed change as part of its initial view of the database, so there is no logical conflict in using the new version of the row as the starting point for the new transaction’s update.</p>
+
+<h3 id="serializable-isolation-level">Serializable Isolation Level</h3>
+<p>The Serializable isolation level provides the strictest transaction isolation. This level emulates serial transaction execution for all committed transactions; as if transactions had been executed one after another, serially, rather than concurrently.</p>
+
+<p>However, like the Repeatable Read level, applications using this level must be prepared to retry transactions due to serialization failures</p>
+
+<p>Other parts, will come back later, as I don’t understand at the moment.</p>
+
+<h3 id="references">References</h3>
+<ol>
+  <li><a href="https://www.postgresql.org/docs/16/transaction-iso.html">13.2. Transaction Isolation</a></li>
+</ol>
+
+  </div><a class="u-url" href="/technical/91-postgres-concurrency-control-transaction-isolation" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Contact</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Minh Nhật&#39;s blog</li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p></p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

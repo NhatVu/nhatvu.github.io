@@ -1,0 +1,836 @@
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.10.0">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" /><updated>2025-08-10T20:42:34+00:00</updated><id>/feed.xml</id><title type="html">Minh Nhật’s blog</title><entry><title type="html">96. [POC] - Key-value cache using Postgres</title><link href="/technical/96-poc-key-value-cache-with-postgres" rel="alternate" type="text/html" title="96. [POC] - Key-value cache using Postgres" /><published>2025-08-09T08:02:00+00:00</published><updated>2025-08-09T08:02:00+00:00</updated><id>/technical/96-poc-key-value-cache-with-postgres</id><content type="html" xml:base="/technical/96-poc-key-value-cache-with-postgres"><![CDATA[<p>Sometines, we can’t use Redis or Memcached for caching pupose. One reason is license problem and that technology hasn’t approved to be used inside your company. Instead, we need to design a solution that use existing infrastructure like PostgreSQL database.</p>
+
+<p>Note: Using ChatGPT to plan the idea</p>
+
+<h2 id="core-features">Core features</h2>
+
+<p>We need to design a caching solution that satisfy these constrains:</p>
+
+<ul>
+  <li>Using Postgres</li>
+  <li>Support TimeToLive or Expired time</li>
+  <li>Support Least Recent Used (LRU) behaviour. We can active refresh cache that frequently used and/optional delete old cached</li>
+  <li>Support unique refresh for key if the application running on multiple instances.</li>
+  <li>Using background refresh job to simplify the app logic</li>
+</ul>
+
+<h2 id="design-and-important-sql-queries">Design and important SQL queries</h2>
+
+<h3 id="table">Table</h3>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">cache_entries</span> <span class="p">(</span>
+    <span class="k">key</span> <span class="nb">TEXT</span> <span class="k">PRIMARY</span> <span class="k">KEY</span><span class="p">,</span>
+    <span class="n">value</span> <span class="n">JSONB</span><span class="p">,</span>
+    <span class="n">expires_at</span> <span class="nb">TIMESTAMP</span><span class="p">,</span>       <span class="c1">-- When value is considered expired</span>
+    <span class="n">last_accessed_at</span> <span class="nb">TIMESTAMP</span><span class="p">,</span> <span class="c1">-- timestamp every time the key is read from cache. Support LRU</span>
+    <span class="n">refresh_started_at</span> <span class="nb">TIMESTAMP</span><span class="p">,</span>     <span class="c1">-- When value was last recomputed</span>
+    <span class="n">is_refreshing</span> <span class="nb">BOOLEAN</span><span class="p">,</span>       <span class="c1">-- Used to prevent duplicate refresh</span>
+    <span class="n">updated_at</span> <span class="nb">TIMESTAMP</span>
+<span class="p">);</span>
+
+</code></pre></div></div>
+
+<h3 id="logics">Logics</h3>
+
+<p><strong>User Request (can have multiple applicaitons) →</strong></p>
+<ul>
+  <li>Check cache_entries →
+    <ul>
+      <li>if fresh → use</li>
+      <li>if expired → use (optional), refresh (optional)</li>
+      <li>if missing → compute, insert to cache</li>
+      <li>when a key is used, always record the last_accessed_at. Using batch update, remove duplicated key to reduce database stress.</li>
+    </ul>
+  </li>
+</ul>
+
+<p><strong>Batch Worker (can have multiple workers) →</strong></p>
+<ul>
+  <li>every X min →
+    <ul>
+      <li>find near-expired keys →</li>
+      <li>acquire lock (UPDATE with conditions) →</li>
+      <li>compute →</li>
+      <li>update value, release lock</li>
+    </ul>
+  </li>
+</ul>
+
+<p><strong>Cleanup Job →</strong></p>
+<ul>
+  <li>delete old unused keys</li>
+</ul>
+
+<h3 id="sql-queries-for-batch-refresh-key">SQL queries for batch refresh key</h3>
+
+<p>a. Select key to refresh</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="k">key</span> <span class="k">FROM</span> <span class="n">cache_entries</span>
+<span class="k">WHERE</span> <span class="n">expires_at</span> <span class="o">&lt;=</span> <span class="n">now</span><span class="p">()</span>
+  <span class="k">AND</span> <span class="n">last_accessed_at</span> <span class="o">&gt;=</span> <span class="n">now</span><span class="p">()</span> <span class="o">-</span> <span class="n">interval</span> <span class="s1">'7 days'</span> <span class="c1">-- used in last 7 days</span>
+  <span class="k">AND</span> <span class="p">(</span><span class="n">is_refreshing</span> <span class="o">=</span> <span class="k">false</span> <span class="k">OR</span> <span class="n">refresh_started_at</span> <span class="o">&lt;</span> <span class="n">now</span><span class="p">()</span> <span class="o">-</span> <span class="n">interval</span> <span class="s1">'5 minutes'</span><span class="p">)</span> <span class="c1">-- is not refreshing by other service or stuck at least 5 mintues (in case app refresh during refresh or network failure)</span>
+<span class="k">ORDER</span> <span class="k">BY</span> <span class="n">expires_at</span> <span class="k">ASC</span>
+<span class="k">LIMIT</span> <span class="mi">50</span><span class="p">;</span>
+</code></pre></div></div>
+
+<ul>
+  <li>This ensures you don’t waste resources refreshing stale/inactive data.</li>
+  <li>If refresh a key fail, make sure that key can be refresh again. For safety reason.</li>
+</ul>
+
+<p>b. Acquiring refresh lock</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">UPDATE</span> <span class="n">cache_entries</span>
+<span class="k">SET</span> <span class="n">is_refreshing</span> <span class="o">=</span> <span class="k">true</span><span class="p">,</span>
+    <span class="n">refresh_started_at</span> <span class="o">=</span> <span class="n">now</span><span class="p">()</span>
+<span class="k">WHERE</span> <span class="k">key</span> <span class="o">=</span> <span class="o">?</span> <span class="k">AND</span> <span class="p">(</span><span class="n">is_refreshing</span> <span class="o">=</span> <span class="k">false</span> <span class="k">OR</span> <span class="n">refresh_started_at</span> <span class="o">&lt;</span> <span class="n">now</span><span class="p">()</span> <span class="o">-</span> <span class="n">interval</span> <span class="s1">'5 minutes'</span><span class="p">)</span>
+</code></pre></div></div>
+
+<ul>
+  <li>Only one app instance should refresh the key. Use an atomic update query to acquire the lock</li>
+  <li>The condition ensures you can reclaim the lock if it’s stuck older than 5 minutes (tunable)</li>
+  <li>This returns 1 row affected only if the lock was acquired.</li>
+</ul>
+
+<p>c. Release lock after refresh</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">UPDATE</span> <span class="n">cache_entries</span>
+<span class="k">SET</span> <span class="n">is_refreshing</span> <span class="o">=</span> <span class="k">false</span><span class="p">,</span>
+    <span class="n">refresh_started_at</span> <span class="o">=</span> <span class="k">NULL</span><span class="p">,</span> <span class="c1">-- must be null</span>
+    <span class="n">value</span> <span class="o">=</span> <span class="o">?</span><span class="p">,</span>                <span class="c1">-- optional: update with new value</span>
+    <span class="n">expires_at</span> <span class="o">=</span> <span class="o">?</span>           <span class="c1">-- optional: update expiration time</span>
+
+<span class="k">WHERE</span> <span class="k">key</span> <span class="o">=</span> <span class="o">?</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>d. LRU-style cleanup</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">DELETE</span> <span class="k">FROM</span> <span class="n">cache_entries</span>
+<span class="k">WHERE</span> <span class="n">last_accessed_at</span> <span class="o">&lt;</span> <span class="n">now</span><span class="p">()</span> <span class="o">-</span> <span class="n">interval</span> <span class="s1">'7 days'</span>
+</code></pre></div></div>
+
+<p>e. Update last access</p>
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">UPDATE</span> <span class="n">cache_entries</span>
+<span class="k">SET</span> <span class="n">last_accessed_at</span> <span class="o">=</span> <span class="n">now</span><span class="p">()</span>
+<span class="k">WHERE</span> <span class="k">key</span> <span class="o">=</span> <span class="o">?</span><span class="p">;</span>
+</code></pre></div></div>
+
+<h3 id="sample-code">Sample code</h3>
+<p>https://github.com/NhatVu/proof-of-concept/tree/main/postgres-key-value-cache</p>]]></content><author><name></name></author><category term="technical" /><summary type="html"><![CDATA[Sometines, we can’t use Redis or Memcached for caching pupose. One reason is license problem and that technology hasn’t approved to be used inside your company. Instead, we need to design a solution that use existing infrastructure like PostgreSQL database.]]></summary></entry><entry><title type="html">95. A quick note about the performance of Java Mapping Framework (Baeldung)</title><link href="/technical/95-performance-of-java-mapping-frameworks" rel="alternate" type="text/html" title="95. A quick note about the performance of Java Mapping Framework (Baeldung)" /><published>2025-08-03T08:02:00+00:00</published><updated>2025-08-03T08:02:00+00:00</updated><id>/technical/95-performance-of-java-mapping-frameworks</id><content type="html" xml:base="/technical/95-performance-of-java-mapping-frameworks"><![CDATA[<p>According to [1], Creating large Java applications composed of multiple layers require using multiple models such as persistence model, domain model or so-called DTOs. Using multiple models for different application layers will require us to provide a way of mapping between beans.</p>
+
+<p>Doing this manually can quickly create much boilerplate code and consume a lot of time. Luckily for us, there are multiple object mapping frameworks for Java.[1]</p>
+
+<p>This article just take a quick note on the performance of Java Mapping frameworks, include MapStruct, ModelMapper, JMapper.</p>
+
+<h3 id="benmarks">Benmarks</h3>
+
+<p>The average running time per operation (in ms), the less is better:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Framework Name</th>
+      <th>Average Running Time (ms per operation)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>MapStruct</td>
+      <td>10⁻⁴</td>
+    </tr>
+    <tr>
+      <td>JMapper</td>
+      <td>10⁻⁴</td>
+    </tr>
+    <tr>
+      <td>Orika</td>
+      <td>0.007</td>
+    </tr>
+    <tr>
+      <td>ModelMapper</td>
+      <td>0.137</td>
+    </tr>
+    <tr>
+      <td>Dozer</td>
+      <td>0.145</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Throughput benmarks: the benchmark returns the number of operations per second (the more is better)</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Framework Name</th>
+      <th>Throughput (operations per ms)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>JMapper</td>
+      <td>3205</td>
+    </tr>
+    <tr>
+      <td>MapStruct</td>
+      <td>3467</td>
+    </tr>
+    <tr>
+      <td>Orika</td>
+      <td>121</td>
+    </tr>
+    <tr>
+      <td>ModelMapper</td>
+      <td>7</td>
+    </tr>
+    <tr>
+      <td>Dozer</td>
+      <td>6.342</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Personally, I only had a chance to work with MapStruct and ModelMapper. Not working with other mapping framework.</p>
+
+<h3 id="conclusion">Conclusion:</h3>
+
+<ul>
+  <li>MapStruct is far faster than ModelMapper</li>
+  <li>MapStruct use compile-time code generation. The generation code is nearly the same way we write the convertion code manually.</li>
+  <li>ModelMapper use reflection, less performance.</li>
+  <li>MapStruct is more explicit when define mapping. ModelMapping provide more “intelligent” mapping option, but it can be hard to debug and understand. I’m not prefer it</li>
+  <li>Both support nested object mapping</li>
+</ul>
+
+<h3 id="references">References</h3>
+
+<ol>
+  <li><a href="https://www.baeldung.com/java-performance-mapping-frameworks">Performance of Java Mapping frameworks</a></li>
+</ol>]]></content><author><name></name></author><category term="technical" /><summary type="html"><![CDATA[According to [1], Creating large Java applications composed of multiple layers require using multiple models such as persistence model, domain model or so-called DTOs. Using multiple models for different application layers will require us to provide a way of mapping between beans.]]></summary></entry><entry><title type="html">94. Spring Framework: Resource</title><link href="/technical/94-spring-framework-resource" rel="alternate" type="text/html" title="94. Spring Framework: Resource" /><published>2025-04-05T08:02:00+00:00</published><updated>2025-04-05T08:02:00+00:00</updated><id>/technical/94-spring-framework-resource</id><content type="html" xml:base="/technical/94-spring-framework-resource"><![CDATA[<ul>
+  <li><a href="#1-java-class-loader-1">1. Java Class loader [1]</a>
+    <ul>
+      <li><a href="#11-jar-hell">1.1. JAR hell</a></li>
+      <li><a href="#12-classpath-env-variable">1.2. CLASSPATH env variable</a></li>
+      <li><a href="#13-using-classloader-to-load-resource">1.3. Using ClassLoader to load resource</a></li>
+    </ul>
+  </li>
+  <li><a href="#2-maven-project-structure">2. Maven project structure</a></li>
+  <li><a href="#3-spring-framework-resource-2">3. Spring Framework: Resource [2]</a>
+    <ul>
+      <li><a href="#31-using-prefix">3.1. Using prefix</a></li>
+    </ul>
+  </li>
+  <li><a href="#4-references">4. References</a></li>
+</ul>
+
+<p>This article talks about how to read resources (file) in Spring Boot applicaiton. Giving 2 ways to read resource and the different between them: Using ClassLoader (core Java) and using ResourceLoader (core Spring)</p>
+
+<p>Note: using ChatGPT + copy some contents from reference source.</p>
+
+<h3 id="1-java-class-loader-1">1. Java Class loader [1]</h3>
+<p>The Java class loader, part of the Java Runtime Environment, dynamically loads Java classes into the Java Virtual Machine. Usually classes are only loaded on demand. The virtual machine will only load the class files required for executing the program.</p>
+
+<p>This loading is typically done “on demand”, in that it does not occur until the class is called by the program. A class with a given name can only be loaded once by a given class loader.</p>
+
+<p>When the JVM is started, three class loaders are used:</p>
+
+<ul>
+  <li>Bootstrap class loader: The bootstrap class loader loads the core Java libraries located in the <JAVA_HOME>/jre/lib (or <JAVA_HOME>/jmods&gt; for Java 9 and above) directory. This class loader, which is part of the core JVM, is written in native code. The bootstrap class loader is not associated with any ClassLoader object, for instance, StringBuilder.class.getClassLoader() returns null.</JAVA_HOME></JAVA_HOME></li>
+  <li>Extensions class loader: loads the code in the extensions directories (<JAVA_HOME>/jre/lib/ext,[5] or any other directory specified by the java.ext.dirs system property).</JAVA_HOME></li>
+  <li>System class loader: The system class loader loads code found on <strong>java.class.path</strong> env variable, which maps to the <strong>CLASSPATH</strong> environment variable.</li>
+</ul>
+
+<h4 id="11-jar-hell">1.1. JAR hell</h4>
+<p>JAR hell used to describe all the various ways in which the classloading process can end up not working. JAR hell can occur are:</p>
+
+<ul>
+  <li>Accidental presence of two different versions of a library installed on a system. This will not be considered an error by the system. Rather, <strong>the system will load classes from one or the other library</strong>. Adding the new library to the list of available libraries instead of replacing it may result in the application still behaving as though the old library is in use, which it may well be.</li>
+  <li>Multiple libraries or applications require different versions of library <strong>foo</strong>. If versions of library <strong>foo</strong> use the same class names, there is no way to load the versions of library <strong>foo</strong> with the same class loader.</li>
+</ul>
+
+<h4 id="12-classpath-env-variable">1.2. CLASSPATH env variable</h4>
+<p>Classpath is a parameter in the Java Virtual Machine or the Java compiler that <strong>specifies the location of user-defined classes, packages, and resources (if using Maven project style)</strong>. The parameter may be set either on the command-line, or through an environment variable.</p>
+
+<p>Setting the Classpath via the Command Line</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">--</span> Window based machine
+java <span class="nt">-classpath</span> /path/to/class/files MyProgram
+
+<span class="nt">--</span> Linux
+java <span class="nt">-cp</span> /path/to/class/files MyProgram
+
+</code></pre></div></div>
+
+<h4 id="13-using-classloader-to-load-resource">1.3. Using ClassLoader to load resource</h4>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="nc">List</span><span class="o">&lt;</span><span class="nc">String</span><span class="o">&gt;</span> <span class="nf">readFileWithClassLoader</span><span class="o">(</span><span class="nc">String</span> <span class="n">filePath</span><span class="o">)</span> <span class="kd">throws</span> <span class="nc">IOException</span> <span class="o">{</span>
+        <span class="nc">List</span><span class="o">&lt;</span><span class="nc">String</span><span class="o">&gt;</span> <span class="n">res</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">ArrayList</span><span class="o">&lt;&gt;();</span>
+        <span class="c1">// return ClassLoader that use by resourceLoeader. It's jdk.internal.loader.ClassLoaders$AppClassLoader</span>
+        <span class="nc">ClassLoader</span> <span class="n">classLoader</span> <span class="o">=</span> <span class="n">resourceLoader</span><span class="o">.</span><span class="na">getClassLoader</span><span class="o">();</span>
+        <span class="k">if</span><span class="o">(</span><span class="n">classLoader</span> <span class="o">==</span> <span class="kc">null</span><span class="o">){</span>
+            <span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"classloader is not exist"</span><span class="o">);</span>
+            <span class="k">throw</span> <span class="k">new</span> <span class="nf">NullPointerException</span><span class="o">(</span><span class="s">"classloader is not exist"</span><span class="o">);</span>
+        <span class="o">}</span>
+        <span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"classLoader: "</span> <span class="o">+</span> <span class="n">classLoader</span><span class="o">.</span><span class="na">getClass</span><span class="o">().</span><span class="na">getName</span><span class="o">());</span>
+        <span class="k">try</span> <span class="o">(</span><span class="nc">BufferedReader</span> <span class="n">bufferedReader</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">BufferedReader</span><span class="o">(</span><span class="k">new</span> <span class="nc">InputStreamReader</span><span class="o">(</span><span class="n">classLoader</span><span class="o">.</span><span class="na">getResourceAsStream</span><span class="o">(</span><span class="n">filePath</span><span class="o">)))){</span>
+            <span class="nc">String</span> <span class="n">line</span><span class="o">;</span>
+            <span class="k">while</span> <span class="o">((</span><span class="n">line</span> <span class="o">=</span> <span class="n">bufferedReader</span><span class="o">.</span><span class="na">readLine</span><span class="o">())</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+                <span class="n">res</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">line</span><span class="o">);</span>
+            <span class="o">}</span>
+        <span class="o">}</span>
+        <span class="k">return</span> <span class="n">res</span><span class="o">;</span>
+    <span class="o">}</span>
+</code></pre></div></div>
+
+<h3 id="2-maven-project-structure">2. Maven project structure</h3>
+
+<p>Classpath Locations:</p>
+
+<p><strong>Source Code:</strong></p>
+
+<ul>
+  <li>src/main/java: Contains the main application’s source code. All .class files generated during compilation are included in the classpath.</li>
+  <li>src/test/java: Includes test classes, which are added to the classpath during testing.</li>
+</ul>
+
+<p><strong>Resources:</strong></p>
+<ul>
+  <li>src/main/resources: Non-code resources for the application (e.g., application.properties, XML files) are included in the classpath automatically.</li>
+  <li>src/test/resources: Resources specifically for testing are added to the classpath when running tests.</li>
+</ul>
+
+<p><strong>Compiled Code:</strong></p>
+<ul>
+  <li>target/classes: After compiling your application, the .class files are stored here. Maven ensures this directory is part of the classpath.</li>
+  <li>target/test-classes: After compiling test code, the generated .class files are stored here, included during test execution.</li>
+</ul>
+
+<p><strong>Dependencies:</strong>
+Maven automatically downloads and manages dependencies specified in the pom.xml file. These JAR files are stored in the local repository (~/.m2/repository) and included in the classpath during builds.</p>
+
+<p><img src="/assets/images/2025/95_maven_project_structure_output.png" alt="Maven_project_structure_output" /></p>
+
+<p>As above image, our classpath is <strong>target/classes</strong>, and folder input inside <strong>src/main/resources</strong> folder is placed under <strong>target/classes</strong></p>
+
+<h3 id="3-spring-framework-resource-2">3. Spring Framework: Resource [2]</h3>
+<p>For more detail on Spring Framework Resource, read at [2].</p>
+
+<p>The <em>ResourceLoader</em> interface is meant to be implemented by objects that can return (that is, load) <em>Resource</em> instances.</p>
+
+<p>All application contexts implement the ResourceLoader interface. Therefore, <em>all application contexts may be used to obtain Resource instances</em>.</p>
+
+<p>When you call getResource() on a specific application context, and the location path specified doesn’t have a specific prefix, you get back a Resource type that is appropriate to that particular application context. For example, <em>FileSystemXmlApplicationContext</em> instance, it would return a FileSystemResource. For a <em>WebApplicationContext</em>, it would return a <em>ServletContextResource</em> (this is the case for web development, using <em>spring-boot-starter-web</em>). It would similarly return appropriate objects for each context.</p>
+
+<p>As a result, you can load resources in a fashion appropriate to the particular application context.</p>
+
+<h4 id="31-using-prefix">3.1. Using prefix</h4>
+<p>On the other hand, you may also force <em>ClassPathResource</em> to be used, regardless of the application context type, by specifying the special <strong>classpath:</strong> prefix. Similarly, you can force a UrlResource to be used by specifying any of the standard java.net.URL prefixes like file and https</p>
+
+<p><img src="/assets/images/2025/95_resource_prefix.png" alt="Resource_prefix" /></p>
+
+<p>When you don’t specify any prefix, Resource implementation class will depend on ApplicationContext.</p>
+
+<p>Personally, I prefer this approach, as it gives us more information explicitly.</p>
+
+<h3 id="4-references">4. References</h3>
+<ol>
+  <li><a href="https://en.wikipedia.org/wiki/Java_class_loader">Java Class Loader</a></li>
+  <li><a href="https://docs.spring.io/spring-framework/reference/core/resources.html">Spring Framework: Resource</a></li>
+</ol>]]></content><author><name></name></author><category term="technical" /><summary type="html"><![CDATA[1. Java Class loader [1] 1.1. JAR hell 1.2. CLASSPATH env variable 1.3. Using ClassLoader to load resource 2. Maven project structure 3. Spring Framework: Resource [2] 3.1. Using prefix 4. References]]></summary></entry><entry><title type="html">93. JWTs are dangerous for user session - Redis blog</title><link href="/technical/93-JWTs-are-dangerous-for-session" rel="alternate" type="text/html" title="93. JWTs are dangerous for user session - Redis blog" /><published>2025-04-01T08:02:00+00:00</published><updated>2025-04-01T08:02:00+00:00</updated><id>/technical/93-JWTs-are-dangerous-for-session</id><content type="html" xml:base="/technical/93-JWTs-are-dangerous-for-session"><![CDATA[<ul>
+  <li><a href="#1-traditonal-approach">1. Traditonal approach</a></li>
+  <li><a href="#2-jwt-and-its-problems">2. JWT and its problems</a></li>
+  <li><a href="#3-why-is-jwt-dangerous-for-user-authentication">3. Why is JWT dangerous for user authentication?</a>
+    <ul>
+      <li><a href="#31-logout-doesnt-really-log-you-out">3.1. Logout doesn’t really log you out!</a></li>
+      <li><a href="#32-blocking-users-doesnt-immediately-block-them">3.2. Blocking users doesn’t immediately block them.</a></li>
+      <li><a href="#33-could-have-stale-data">3.3. Could have stale data</a></li>
+      <li><a href="#34-length-of-the-token">3.4. Length of the token</a></li>
+      <li><a href="#35-revoked-token-database">3.5. Revoked token database</a></li>
+    </ul>
+  </li>
+  <li><a href="#4-where-can-i-use-it">4. Where can I use it?</a></li>
+  <li><a href="#5-references">5. References</a></li>
+</ul>
+
+<p>For more details, please refer to the original blog at [1]. This article only summaries the main idea of why JWT are dangerous for user session.</p>
+
+<h3 id="1-traditonal-approach">1. Traditonal approach</h3>
+
+<p><img src="/assets/images/2025/93-traditional-approach.png" alt="alt text" /></p>
+
+<p>The main problems with the traditional approach is slow and center session database. Every request needs to talk with database that will slow down the overall response time. When multiple services interact with session database, it will become a bottleneck and single point of failure (I think)</p>
+
+<p>There are two ways to solve this problem:</p>
+<ul>
+  <li>Option 1: Somehow eliminate database lookup for users completely (i.e. eliminate step four).</li>
+  <li>Option 2: Make the extra database lookup much faster so that the additional hop won’t matter.</li>
+</ul>
+
+<p>With Optional 2, we can use fast database like Redis.</p>
+
+<p>With Option 1, we will come with JWT solution.</p>
+
+<h3 id="2-jwt-and-its-problems">2. JWT and its problems</h3>
+<p>JWT is self-contain token, stateless and don’t need to connect to sever to verify. More details on JWT, you can find on internet.</p>
+
+<p>For common vulnerablities of JWT, check at [2]</p>
+<ul>
+  <li>None hashing algorithm: when alg:”none” is valid</li>
+  <li>Token Sidejacking: when a token has been intercepted/stolen by an attacker and they use it to gain access to the system using targeted user identity.</li>
+  <li>No Built-In Token Revocation by the User: This problem is inherent to JWT because a token only becomes invalid when it expires. The user has no built-in feature to explicitly revoke the validity of a token. This means that if it is stolen, a user cannot revoke the token itself thereby blocking the attacker.</li>
+  <li>Weak Token Secret: sign algorithm depends entirely on secret value. Hacker can crack the secret using tools such as John the Ripper or Hashcat.</li>
+  <li>Token Information Disclosure: information in payload portion normally do base64 encode, not encrypted. Can easy be decode and expose information.</li>
+</ul>
+
+<h3 id="3-why-is-jwt-dangerous-for-user-authentication">3. Why is JWT dangerous for user authentication?</h3>
+
+<p>The biggest problem with JWT is the token revoke problem. Since it continues to work until it expires, the server has no easy way to revoke it.</p>
+
+<p>Below are some use cases that’d make this dangerous.</p>
+
+<h4 id="31-logout-doesnt-really-log-you-out">3.1. Logout doesn’t really log you out!</h4>
+<p>Because JWT is self-contained and will continue to work until it expires. So if someone gets access to that token during that time, they can continue to access it until it expires.</p>
+
+<h4 id="32-blocking-users-doesnt-immediately-block-them">3.2. Blocking users doesn’t immediately block them.</h4>
+<p>Imagine you are a moderator of Twitter. And as a moderator, you want to quickly block someone from abusing the system. You can’t, again for the same reason. Even after you block, the user will continue to have access to the server until the token expires.</p>
+
+<h4 id="33-could-have-stale-data">3.3. Could have stale data</h4>
+<p>Imagine the user is an admin and got demoted to a regular user with fewer permissions. Again this won’t take effect immediately and the user will continue to be an admin until the token expires.</p>
+
+<h4 id="34-length-of-the-token">3.4. Length of the token</h4>
+<p>In many complex real-world apps, you may need to store a ton of different information. And storing it in the JWT tokens could exceed the allowed URL length or cookie lengths causing problems. Also, you are now potentially sending a large volume of data on every request.</p>
+
+<h4 id="35-revoked-token-database">3.5. Revoked token database</h4>
+<p>One popular solution is to store a list of “revoked tokens” in a database and check it for every call. And if the token is part of that revoked list, then block the user from taking the next action. But then now you are making that extra call to the DB to check if the token is revoked and so deceives the purpose of JWT altogether.</p>
+
+<h3 id="4-where-can-i-use-it">4. Where can I use it?</h3>
+<p>There are scenarios where you are doing server-to-server (or microservice-to-microservice) communication in the backend and one service could generate a JWT token to send it to a different service for authorization purposes. And other narrow places, such as reset password, where you can send a JWT token as a one-time short-lived token to verify the user’s email.</p>
+
+<h3 id="5-references">5. References</h3>
+<ol>
+  <li><a href="https://redis.io/blog/json-web-tokens-jwt-are-dangerous-for-user-sessions/">JSON Web Tokens (JWT) are Dangerous for User Sessions—Here’s a Solution</a></li>
+  <li><a href="https://cheatsheetseries.owasp.org/cheatsheets/JSON_Web_Token_for_Java_Cheat_Sheet.html">JSON Web Token Cheat Sheet for Java</a></li>
+</ol>]]></content><author><name></name></author><category term="technical" /><summary type="html"><![CDATA[1. Traditonal approach 2. JWT and its problems 3. Why is JWT dangerous for user authentication? 3.1. Logout doesn’t really log you out! 3.2. Blocking users doesn’t immediately block them. 3.3. Could have stale data 3.4. Length of the token 3.5. Revoked token database 4. Where can I use it? 5. References]]></summary></entry><entry><title type="html">92. Mixing Spring JPA and Spring JDBC error: Row was updated or deleted by another transaction (or unsaved-value mapping was incorrect)</title><link href="/technical/92-mixing-spring-jpa-sping-jdbc-transaction-error" rel="alternate" type="text/html" title="92. Mixing Spring JPA and Spring JDBC error: Row was updated or deleted by another transaction (or unsaved-value mapping was incorrect)" /><published>2025-03-28T00:02:00+00:00</published><updated>2025-03-28T00:02:00+00:00</updated><id>/technical/92-mixing-spring-jpa-sping-jdbc-transaction-error</id><content type="html" xml:base="/technical/92-mixing-spring-jpa-sping-jdbc-transaction-error"><![CDATA[<p>Gần đây, tôi gặp 1 trường hợp lỗi rất thú vị khi 1 project sử dụng 2 công nghệ khác nhau cho persistent layer là Spring JPA và Spring JDBC.</p>
+
+<p>Về tổng quan, Spring JDBC sẽ handle ở low level, sử dụng trực tiếp JDBC driver nhưng sẽ được viết lại các method để tránh boilerplate code. Spring JPA là 1 đặc tả ORM của Spring, và mặc định sử dụng Hibernate ORM. Với Spring JPA, Hibernate sẽ quyết định khi nào câu lệnh được gửi tới database. Do đó, khi gọi JPA.save(), ta sẽ không biết khi nào câu lệnh SQL insert/update sẽ được gửi tới database.</p>
+
+<h2 id="tình-huống">Tình huống</h2>
+<p>Tình huống tôi gặp, khái quát như sau. Giả sử có 1 danh sách list<Student>, gồm student A, B, và C. Và các học sinh này đã có tồn tại trong database</Student></p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">jpa</span><span class="o">.</span><span class="na">saveAll</span><span class="o">(</span><span class="n">list</span><span class="o">);</span>
+<span class="n">jdbc</span><span class="o">.</span><span class="na">delete</span><span class="o">(</span><span class="n">học</span> <span class="n">sinh</span> <span class="no">C</span><span class="o">)</span>
+</code></pre></div></div>
+<p>Sau khi kết thúc hàm, tới lúc commit transaction, chương trình báo lỗi: <span style="background:yellow"><em>Row was updated or deleted by another transaction (or unsaved-value mapping was incorrect)</em> </span></p>
+
+<p>Tôi sẽ liệt kê các giả định đã đặt ra và cách kiểm chứng chúng.</p>
+
+<h2 id="giả-định-1-spring-jpa-và-spring-jdbc-không-cùng-share-chung-1-transaction">Giả định 1: Spring JPA và Spring JDBC không cùng share chung 1 transaction</h2>
+
+<p>Giả định này dựa trên error message: “Row was updated or deleted by another transaction”.</p>
+
+<p>Tuy nhiên, sau khi checking DataSourceConfig, và nội bộ Spring JDBC code, có thể kết luận rằng, Spring JPA và Spring JDBC trong trường hợp tôi gặp phải, cùng sử dụng 1 active connection và cùng 1 transaction (xem thêm hàm <code class="language-plaintext highlighter-rouge">org.springframework.jdbc.datasource.DataSourceUtils.getConnection()</code>)</p>
+
+<p>Để kiểm tra lại, có thể kiểm tra bảng <code class="language-plaintext highlighter-rouge">SELECT * FROM pg_stat_activity</code> của postgres, có thể thấy, khi thực hiện câu lệnh jpa và jdbc, chúng đều sử dụng chung 1 connection.</p>
+
+<h3 id="giả-định-2-mixing-between-jpa-and-jdbc">Giả định 2: Mixing between JPA and JDBC.</h3>
+
+<p>Sau khi hỏi Copilot, nghiêng về giả định việc sử dụng chung giữa JPA và JDBC. Để chứng thực, tôi chỉnh application.properties by, cho in các câu lệnh SQL mà Hibernate sẽ thực thi.</p>
+
+<p>Sau khi kiểm tra log, phát hiện thứ tự thực hiện câu lệnh là:</p>
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">select</span> <span class="o">*</span> <span class="k">from</span> <span class="p">....</span>  <span class="c1">-- from JPA </span>
+<span class="k">delete</span> <span class="n">A</span> <span class="c1">-- from JDBC </span>
+<span class="k">Update</span> <span class="n">A</span> <span class="c1">-- from JPA </span>
+</code></pre></div></div>
+
+<p>Từ thứ tự thực hiện này, có thể nghiêng về lỗi : <em>unsaved-value mapping was incorrect</em></p>
+
+<p>Để khắc việc việc này, ta có thể thêm hàm jpa.flush(). Gặp hàm này, hibernate sẽ ngay lập tức gửi câu SQL tới database, như thế, ta có thể đảm bảo câu lệnh sql được thực hiện theo mong muốn của ta. Khi đó, thứ tự sql sẽ là:</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">jpa</span><span class="o">.</span><span class="na">saveAll</span><span class="o">(</span><span class="n">list</span><span class="o">)</span>
+<span class="n">jpa</span><span class="o">.</span><span class="na">flush</span><span class="o">()</span>
+<span class="n">jdbc</span><span class="o">.</span><span class="na">delete</span><span class="o">(</span><span class="no">A</span><span class="o">)</span>
+</code></pre></div></div>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">select</span> <span class="o">*</span> <span class="k">from</span> <span class="p">....</span>  <span class="c1">-- from JPA </span>
+<span class="k">Update</span> <span class="n">A</span> <span class="c1">-- from JPA </span>
+<span class="k">delete</span> <span class="n">A</span> <span class="c1">-- from JDBC </span>
+</code></pre></div></div>
+
+<p>Với việc thêm jpa.flush(), đã fix được lỗi trên.</p>
+
+<h3 id="kết-luận">Kết luận</h3>
+<p>Ta không nên kết hợp giữa 2 công nghệ khác nhau khi chúng cùng 1 mục đích, vì có thể tạo nên những lỗi “kỳ lạ”.</p>
+
+<p>Mặc đù ORM rất tiện cho nhiều trường hợp nhưng mình không phải là fan của ORM framework =))))</p>]]></content><author><name></name></author><category term="technical" /><summary type="html"><![CDATA[Gần đây, tôi gặp 1 trường hợp lỗi rất thú vị khi 1 project sử dụng 2 công nghệ khác nhau cho persistent layer là Spring JPA và Spring JDBC.]]></summary></entry><entry><title type="html">91. PostgreSQL Concurrency control: Transaction Isolation</title><link href="/technical/91-postgres-concurrency-control-transaction-isolation" rel="alternate" type="text/html" title="91. PostgreSQL Concurrency control: Transaction Isolation" /><published>2025-03-09T00:02:00+00:00</published><updated>2025-03-09T00:02:00+00:00</updated><id>/technical/91-postgres-concurrency-control-transaction-isolation</id><content type="html" xml:base="/technical/91-postgres-concurrency-control-transaction-isolation"><![CDATA[<p>Theo chuẩn của SQL, transaction isolation gồm 4 dạng: Serializable &gt; Repeatable read &gt; Read committed &gt; Read uncommitted. Tuy nhiên, mỗi loại database sẽ hỗ trợ các dạng isolation khác nhau. Riêng PostgreSQL không hỗ trợ Read uncommited.</p>
+
+<h3 id="transaction-isolation">Transaction Isolation</h3>
+
+<p>Serializable isolation là nghiêm ngặt nhất, các transaction phải thực hiện tuần tự, không được phép thực hiện đồng thời (no concurrent transaction).</p>
+
+<p>3 loại isolation còn lại được định nghĩa theo read phenomena, là kết quả của việc nhiều transaction được thực thi đồng thời.</p>
+
+<p>Các read phenomena là:</p>
+<ul>
+  <li>dirty read: trên cùng 1 data (row), transaction A có thể đọc dữ liệu được ghi bởi transaction B khi B chưa commit.</li>
+  <li>nonrepeatable read: trên cùng 1 data (row) transaction re-read dữ liệu nó đã đọc trước đó và phát hiện rằng, dữ liệu đã bị thay đổi bởi transaction khác.</li>
+  <li>phantom read: với câu query trả về 1 tập dữ liệu, 1 transaction thi re-execute câu query, phát hiện rằng tập dữ liệu trả về bị thay đổi (thêm dòng, hoặc xoá dòng) bởi các transaction khác.</li>
+  <li>serialization anomaly: The result of successfully committing a group of transactions is inconsistent with all possible orderings of running those transactions one at a time.</li>
+</ul>
+
+<p><img src="/assets/images/2025/89_transaction_isolation_level.png" alt="alt text" /></p>
+
+<p>Quan trọng: sequence type (đựoc khai báo bởi serial) khi có thay đổi, sẽ ngay lập tức visible với transaction và không thể rollback, kể cả khi transaction không thành công.</p>
+
+<h3 id="read-committed-isolation-level">Read Committed Isolation Level</h3>
+<p>Read Committed is the default isolation level in PostgreSQL. When a transaction uses this isolation level, a SELECT query (without a FOR UPDATE/SHARE clause) sees only data committed before the query began.</p>
+
+<p>Note that two successive SELECT commands can see different data, even though they are within a single transaction, if other transactions commit changes after the first SELECT starts and before the second SELECT starts.</p>
+
+<p>UPDATE, DELETE, SELECT FOR UPDATE, and SELECT FOR SHARE commands behave the same as SELECT in terms of searching for target rows: they will only find target rows that were committed as of the command start time. However, such a target row might have <strong>already</strong> been updated (or deleted or locked) by another concurrent transaction by the time it is found. In this case, the would-be updater will wait for the first updating transaction to commit or roll back (if it is still in progress).</p>
+<ul>
+  <li>If the first updater rolls back, then its effects are negated and the second updater can proceed with updating the originally found row.</li>
+  <li>If the first updater commits, the second updater will ignore the row if the first updater deleted it, otherwise it will attempt to <strong>apply its operation to the updated version of the row</strong>. The search condition of the command (the WHERE clause) is re-evaluated to see if the updated version of the row still matches the search condition. If so, the second updater proceeds with its operation using the updated version of the row</li>
+</ul>
+
+<p>More complex usage can produce undesirable results in Read Committed mode. For example, consider a DELETE command operating on data that is being both added and removed from its restriction criteria by another command, e.g., assume website is a two-row table with website.hits equaling 9 and 10:</p>
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">BEGIN</span><span class="p">;</span>
+<span class="k">UPDATE</span> <span class="n">website</span> <span class="k">SET</span> <span class="n">hits</span> <span class="o">=</span> <span class="n">hits</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span>
+<span class="c1">-- run from another session:  DELETE FROM website WHERE hits = 10;</span>
+<span class="k">COMMIT</span><span class="p">;</span>
+</code></pre></div></div>
+<p>The DELETE will have no effect even though there is a website.hits = 10 row before and after the UPDATE. This occurs because the pre-update row value 9 is skipped (Note: not the targeted row for DELETE sql), and when the UPDATE completes and DELETE obtains a lock, the new row value is no longer 10 but 11, which no longer matches the criteria.</p>
+
+<p>The partial transaction isolation provided by Read Committed mode is adequate for many applications, and this mode is fast and simple to use; however, it is not sufficient for all cases. Applications that do complex queries and updates might require a more rigorously consistent view of the database than Read Committed mode provides.</p>
+
+<h3 id="repeatable-read-isolation-level">Repeatable Read Isolation Level</h3>
+<p>The Repeatable Read isolation level only sees data committed before the transaction began; it never sees either uncommitted data or changes committed by concurrent transactions during the transaction’s execution. (However, each query does see the effects of previous updates executed within its own transaction, even though they are not yet committed.)</p>
+
+<p>This level is different from Read Committed in that a query in a repeatable read transaction sees a snapshot as of the start of the first non-transaction-control statement in the transaction, not as of the start of the current statement within the transaction. Thus, successive SELECT commands within a single transaction see the same data, i.e., they do not see changes made by other transactions that committed after their own transaction started.</p>
+
+<p>Applications using this level must be prepared to retry transactions due to serialization failures.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ERROR:  could not serialize access due to concurrent update
+</code></pre></div></div>
+
+<p>A repeatable read transaction cannot modify or lock rows changed by other transactions after the repeatable read transaction began.</p>
+
+<p>When an application receives this error message, it should abort the current transaction and retry the whole transaction from the beginning. The second time through, the transaction will see the previously-committed change as part of its initial view of the database, so there is no logical conflict in using the new version of the row as the starting point for the new transaction’s update.</p>
+
+<h3 id="serializable-isolation-level">Serializable Isolation Level</h3>
+<p>The Serializable isolation level provides the strictest transaction isolation. This level emulates serial transaction execution for all committed transactions; as if transactions had been executed one after another, serially, rather than concurrently.</p>
+
+<p>However, like the Repeatable Read level, applications using this level must be prepared to retry transactions due to serialization failures</p>
+
+<p>Other parts, will come back later, as I don’t understand at the moment.</p>
+
+<h3 id="references">References</h3>
+<ol>
+  <li><a href="https://www.postgresql.org/docs/16/transaction-iso.html">13.2. Transaction Isolation</a></li>
+</ol>]]></content><author><name></name></author><category term="technical" /><summary type="html"><![CDATA[Theo chuẩn của SQL, transaction isolation gồm 4 dạng: Serializable &gt; Repeatable read &gt; Read committed &gt; Read uncommitted. Tuy nhiên, mỗi loại database sẽ hỗ trợ các dạng isolation khác nhau. Riêng PostgreSQL không hỗ trợ Read uncommited.]]></summary></entry><entry><title type="html">90. PostgreSQL: Partition</title><link href="/technical/90-postgres-partition" rel="alternate" type="text/html" title="90. PostgreSQL: Partition" /><published>2025-02-19T00:02:00+00:00</published><updated>2025-02-19T00:02:00+00:00</updated><id>/technical/90-postgres-partition</id><content type="html" xml:base="/technical/90-postgres-partition"><![CDATA[<ul>
+  <li><a href="#1-overview">1. Overview</a></li>
+  <li><a href="#2-declarative-partitioning">2. Declarative Partitioning</a></li>
+  <li><a href="#3-limitation">3. Limitation</a></li>
+  <li><a href="#4-best-practices">4. Best practices</a></li>
+  <li><a href="#5-references">5. References</a></li>
+</ul>
+
+<p>SUMMARY: This article discusses table partitions, the benefits of using them to increase performance, and the types of partitions that can be used in PostgreSQL. A lot of content are copied from Postgres documentation, for personal reference only.</p>
+
+<h3 id="1-overview">1. Overview</h3>
+<p>Partitioning refers to splitting what is logically one large table into smaller physical pieces. Partitioning can provide several benefits:</p>
+<ul>
+  <li>Query performance can be improved dramatically in certain situations, particularly when most of the heavily accessed rows of the table are in a single partition or a small number of partitions</li>
+  <li>When queries or updates access a large percentage of a single partition, performance can be improved by using a sequential scan of that partition instead of using an index, which would require random-access reads scattered across the whole table.</li>
+  <li>Bulk loads and deletes can be accomplished by adding or removing partitions. These commands also entirely avoid the VACUUM overhead caused by a bulk DELETE.</li>
+  <li>Seldom-used data can be migrated to cheaper and slower storage media.</li>
+</ul>
+
+<p>These benefits will normally be worthwhile only when a table would otherwise be very large. The exact point at which a table will benefit from partitioning depends on the application, although a rule of thumb is that the size of the table should exceed the physical memory of the database server.</p>
+
+<p>PostgreSQL offers built-in support for the following forms of partitioning:</p>
+<ul>
+  <li>Range Partitioning: Each range’s bounds are understood as being inclusive at the lower end and exclusive at the upper end. For example, if one partition’s range is from 1 to 10, and the next one’s range is from 10 to 20, then value 10 belongs to the second partition not the first.</li>
+  <li>List Partitioning: The table is partitioned by explicitly listing which key value(s) appear in each partition.</li>
+  <li>Hash Partitioning: The table is partitioned by specifying a modulus and a remainder for each partition</li>
+</ul>
+
+<h3 id="2-declarative-partitioning">2. Declarative Partitioning</h3>
+<p>The table that is divided is referred to as a <em>partitioned table</em>.</p>
+
+<p>The partitioned table itself is a “virtual” table having no storage of its own. Instead, the storage belongs to partitions and followed the partition bounds.</p>
+
+<p>All rows inserted into a partitioned table will be routed to the appropriate one of the partitions based on the values of the partition key column(s).</p>
+
+<p>Updating the partition key of a row will cause it to be moved into a different partition if it no longer satisfies the partition bounds of its original partition.</p>
+
+<p>Inserting data into the parent table that does not map to one of the existing partitions will cause an error; an appropriate partition must be added manually.</p>
+
+<p>It is not possible to turn a regular table into a partitioned table or vice versa. However, it is possible to add an existing regular or partitioned table as a partition of a partitioned table, or remove a partition from a partitioned table turning it into a standalone table; this can simplify and speed up many maintenance processes. See ALTER TABLE to learn more about the ATTACH PARTITION and DETACH PARTITION sub-commands.</p>
+
+<p>If an index is created on parent table, this automatically creates a matching index on each partition, and any partitions you create or attach later will also have such an index.</p>
+
+<p>Make sure Partition pruning is on, by checking <code class="language-plaintext highlighter-rouge">SHOW enable_partition_pruning -- on by default</code>.</p>
+
+<p>More example, checking link [1] and [2].</p>
+<h3 id="3-limitation">3. Limitation</h3>
+<ul>
+  <li>To create a unique or primary key constraint on a partitioned table, the partition keys must not include any expressions or function calls and the constraint’s columns must include all of the partition key columns.</li>
+  <li>Partitions cannot have columns that are not present in the parent. Tables may be added as a partition with ALTER TABLE … ATTACH PARTITION only if their columns exactly match the parent.</li>
+</ul>
+
+<h3 id="4-best-practices">4. Best practices</h3>
+<ul>
+  <li>One of the most critical design decisions will be the column or columns by which you partition your data. Often the best choice will be to partition by the column or set of columns which most commonly appear in WHERE clauses of queries being executed on the partitioned table. Removal of unwanted data is also a factor to consider when planning your partitioning strategy. An entire partition can be detached fairly quickly, so it may be beneficial to design the partition strategy in such a way that all data to be removed at once is located in a single partition.</li>
+  <li>Choosing the target number of partitions that the table should be divided into is also a critical decision to make. Not having enough partitions may mean that indexes remain too large and that data locality remains poor which could result in low cache hit ratios. However, Too many partitions can mean longer query planning times and higher memory consumption during both query planning and execution. When choosing how to partition your table, it’s also important to consider what changes may occur in the future</li>
+  <li>It is important to consider the overhead of partitioning during query planning and execution. The query planner is generally able to handle partition hierarchies with up to a few thousand partitions fairly well, provided that typical queries allow the query planner to prune all but a small number of partitions. Another reason to be concerned about having a large number of partitions is that the server’s memory consumption may grow significantly over time, especially if many sessions touch large numbers of partitions. That’s because each partition requires its metadata to be loaded into the local memory of each session that touches it.</li>
+</ul>
+
+<h3 id="5-references">5. References</h3>
+<ol>
+  <li><a href="https://www.postgresql.org/docs/16/ddl-partitioning.html">5.12. Table Partitioning</a></li>
+  <li><a href="https://www.enterprisedb.com/postgres-tutorials/how-use-table-partitioning-scale-postgresql">How to use table partitioning to scale PostgreSQL</a></li>
+</ol>]]></content><author><name></name></author><category term="technical" /><summary type="html"><![CDATA[1. Overview 2. Declarative Partitioning 3. Limitation 4. Best practices 5. References]]></summary></entry><entry><title type="html">89. PostgreSQL: Recursive query</title><link href="/technical/89-postgres-recursive-query" rel="alternate" type="text/html" title="89. PostgreSQL: Recursive query" /><published>2025-02-14T00:02:00+00:00</published><updated>2025-02-14T00:02:00+00:00</updated><id>/technical/89-postgres-recursive-query</id><content type="html" xml:base="/technical/89-postgres-recursive-query"><![CDATA[<ul>
+  <li><a href="#1-cú-pháp-recursive-query">1. Cú pháp recursive query</a></li>
+  <li><a href="#2-ví-dụ">2. Ví dụ</a></li>
+  <li><a href="#3-references">3. References</a></li>
+</ul>
+
+<p>PostgresSQL cung cấp cú pháp <code class="language-plaintext highlighter-rouge">WITH RECURSIVE</code> cho phép thực hiện đệ quy trong câu lệnh SQL. Điều này cực kỳ hữu ích khi thao tác với hierarchy data structure như tree, graph.</p>
+
+<h3 id="1-cú-pháp-recursive-query">1. Cú pháp recursive query</h3>
+<p>Theo [1], cú pháp của câu lệnh được định nghĩa như sau</p>
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">WITH</span> <span class="k">RECURSIVE</span> <span class="n">cte_name</span> <span class="p">(</span><span class="n">column1</span><span class="p">,</span> <span class="n">column2</span><span class="p">,</span> <span class="p">...)</span>
+<span class="k">AS</span><span class="p">(</span>
+    <span class="c1">-- anchor member</span>
+    <span class="k">SELECT</span> <span class="n">select_list</span> <span class="k">FROM</span> <span class="n">table1</span> <span class="k">WHERE</span> <span class="n">condition</span>
+
+    <span class="k">UNION</span> <span class="p">[</span><span class="k">ALL</span><span class="p">]</span>
+
+    <span class="c1">-- recursive term</span>
+    <span class="k">SELECT</span> <span class="n">select_list</span> <span class="k">FROM</span> <span class="n">cte_name</span> <span class="k">WHERE</span> <span class="n">recursive_condition</span>
+<span class="p">)</span>
+<span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="n">cte_name</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>Based on [1], In this syntax:</p>
+
+<ul>
+  <li>cte_name: Specify the name of the CTE. You can reference this CTE name in the subsequent parts of the query.</li>
+  <li>column1, column2, … Specify the columns selected in both the anchor and recursive members. These columns define the CTE’s structure.</li>
+  <li>Anchor member: Responsible for forming the base result set of the CTE structure.</li>
+  <li>Recursive member: Refer to the CTE name itself. It combines with the anchor member using the UNION or UNION ALL operator.</li>
+  <li>recursive_condition: Is a condition used in the recursive member that determines how the recursion stops.</li>
+</ul>
+
+<p>PostgreSQL executes a recursive CTE in the following sequence:</p>
+
+<ul>
+  <li>First, execute the anchor member to create the base result set (R0).</li>
+  <li>Second, execute the recursive member with Ri as an input to return the result set Ri+1 as the output.</li>
+  <li>Third, repeat step 2 until an empty set is returned. (termination check)</li>
+  <li>Finally, return the final result set that is a UNION or UNION ALL of the result sets R0, R1, … Rn.</li>
+</ul>
+
+<p>Tuy nhiên, lưu ý về cycle loop và depth level traversal khi chạy câu query.</p>
+
+<h3 id="2-ví-dụ">2. Ví dụ</h3>
+<p>Dựa vào ví dụ ở [2], ta sẽ viết câu SQL ngăn chặn cycle loop, cũng như thông tin về depth_level</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="nv">"graph"</span> <span class="p">(</span><span class="nv">"id"</span> <span class="nb">integer</span><span class="p">,</span> <span class="nv">"parent_id"</span> <span class="nb">integer</span><span class="p">);</span>
+
+<span class="k">INSERT</span> <span class="k">INTO</span> <span class="nv">"graph"</span> <span class="k">VALUES</span>
+<span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="k">null</span><span class="p">),</span> <span class="c1">-- root element</span>
+<span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+<span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+<span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> 
+<span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> 
+<span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">);</span> <span class="c1">-- endless loop</span>
+</code></pre></div></div>
+
+<p>Mô hình graph</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>1 --+--&gt; 2
+    |
+    +--&gt; 3 --&gt; 4 --&gt; 5 --+
+         ^               |
+         |               |
+         +---------------+
+</code></pre></div></div>
+
+<p>Câu query, có chỉnh sửa</p>
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">WITH</span> <span class="k">RECURSIVE</span> <span class="n">cte</span><span class="p">(</span><span class="n">id</span><span class="p">,</span> <span class="n">parent_id</span><span class="p">,</span> <span class="n">depth</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span> <span class="k">AS</span> <span class="p">(</span>
+  <span class="k">SELECT</span> <span class="n">id</span><span class="p">,</span>
+         <span class="n">parent_id</span><span class="p">,</span>
+         <span class="mi">0</span><span class="p">,</span>
+         <span class="n">array_remove</span><span class="p">(</span><span class="n">ARRAY</span><span class="p">[</span><span class="n">parent_id</span><span class="p">,</span> <span class="n">id</span><span class="p">],</span> <span class="k">null</span><span class="p">)</span> <span class="k">as</span> <span class="nv">"path"</span>
+  <span class="k">FROM</span> <span class="n">graph</span>
+  <span class="k">WHERE</span> <span class="n">parent_id</span> <span class="o">=</span> <span class="mi">1</span>
+
+  <span class="k">UNION</span> <span class="k">ALL</span>
+
+  <span class="k">SELECT</span> <span class="n">graph</span><span class="p">.</span><span class="n">id</span><span class="p">,</span>
+         <span class="n">graph</span><span class="p">.</span><span class="n">parent_id</span><span class="p">,</span>
+         <span class="n">cte</span><span class="p">.</span><span class="n">depth</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+         <span class="n">cte</span><span class="p">.</span><span class="n">path</span> <span class="o">||</span> <span class="n">graph</span><span class="p">.</span><span class="n">id</span>
+  <span class="k">FROM</span> <span class="n">graph</span>
+    <span class="k">INNER</span> <span class="k">JOIN</span> <span class="n">cte</span>
+    <span class="k">ON</span> <span class="n">graph</span><span class="p">.</span><span class="n">parent_id</span> <span class="o">=</span> <span class="n">cte</span><span class="p">.</span><span class="n">id</span>
+    <span class="k">AND</span> <span class="n">graph</span><span class="p">.</span><span class="n">id</span> <span class="o">&lt;&gt;</span> <span class="k">all</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="k">AND</span> <span class="n">cte</span><span class="p">.</span><span class="n">depth</span> <span class="o">&lt;</span> <span class="mi">8</span> <span class="c1">-- default limit depth level</span>
+<span class="p">)</span>
+<span class="k">SELECT</span> <span class="o">*</span>
+<span class="k">FROM</span> <span class="n">cte</span>
+</code></pre></div></div>
+
+<p>Note:</p>
+<ul>
+  <li>Anything compare with null will return null. Because our parent_id can be null as first, to let algorithm run correctly, we need to remove the null value at anchor phase by using <code class="language-plaintext highlighter-rouge">array_remove</code> function</li>
+</ul>
+
+<p>Sample output when searching with parent is = 1</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>id|parent_id|depth|path     |
+--+---------+-----+---------+
+ 2|        1|    0|{1,2}    |
+ 3|        1|    0|{1,3}    |
+ 4|        3|    1|{1,3,4}  |
+ 5|        4|    2|{1,3,4,5}|
+</code></pre></div></div>
+
+<h3 id="3-references">3. References</h3>
+<ol>
+  <li><a href="https://neon.tech/postgresql/postgresql-tutorial/postgresql-recursive-query">PostgreSQL Recursive Query</a></li>
+  <li><a href="https://stackoverflow.com/questions/51025607/prevent-infinite-loop-in-recursive-query-in-postgresql">Prevent infinite loop in recursive query in Postgresql</a></li>
+</ol>]]></content><author><name></name></author><category term="technical" /><summary type="html"><![CDATA[1. Cú pháp recursive query 2. Ví dụ 3. References]]></summary></entry><entry><title type="html">88. PostgreSQL: Materialized View and Refresh Permission</title><link href="/technical/88-postgres-materialzed-view-and-refresh-permission" rel="alternate" type="text/html" title="88. PostgreSQL: Materialized View and Refresh Permission" /><published>2025-02-05T00:02:00+00:00</published><updated>2025-02-05T00:02:00+00:00</updated><id>/technical/88-postgres-materialzed-view-and-refresh-permission</id><content type="html" xml:base="/technical/88-postgres-materialzed-view-and-refresh-permission"><![CDATA[<ul>
+  <li><a href="#1-materialized-view-matview-là-gì">1. Materialized View (MatView) là gì?</a></li>
+  <li><a href="#2-refresh-matview">2. Refresh MatView?</a></li>
+  <li><a href="#3-vấn-đề-permission-khi-refresh">3. Vấn đề permission khi refresh</a></li>
+  <li><a href="#4-references">4. References</a></li>
+</ul>
+
+<h3 id="1-materialized-view-matview-là-gì">1. Materialized View (MatView) là gì?</h3>
+
+<p>MatView là 1 bảng ảo được tạo bởi câu SELECT query, và lưu trữ lại kết quả vào hard disk. Khác với View, View không lưu trữ kết quả ở đĩa cứng.</p>
+
+<p>Vì kết quả đã được tính toán sẵn, nên khi có câu lệnh query vào MatView, nó sẽ không tính toán lại. Điều này giúp câu lệnh nhanh hơn.</p>
+
+<p>Tuy nhiên, nó gặp phải 3 khó khăn chính [1]</p>
+<ul>
+  <li>Làm hệ thống trở nên phức tạp hơn, gia tăng độ phức tạp khi maintenance.</li>
+  <li>Dữ liệu trên view không up-to-date. Với Postgres, cần phải refresh định kì và thủ công.</li>
+  <li>Postgres chỉ hỗ trợ Full-refresh, tính toán lại toàn bộ view nên quá trình này tiêu tốn nhiều tài nguyên.</li>
+</ul>
+
+<h3 id="2-refresh-matview">2. Refresh MatView?</h3>
+
+<p>Giả sử ta có view name: mymatview. Để refresh MatView, ta có thể dùng câu lệnh:</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">REFRESH</span> <span class="n">MATERIALIZED</span> <span class="k">VIEW</span> <span class="n">mymatview</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>Tuy nhiên, câu lệnh trên sẽ block mymatview, các concurrent user khác sẽ không thể truy cập khi view đang refresh. Điều này là không thể chấp nhận nếu matview phục vụ real-time user</p>
+
+<p>Để khắc phục điều này, ta có thể thêm keyword CONCURRENTLY</p>
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">REFRESH</span> <span class="n">MATERIALIZED</span> <span class="k">VIEW</span> <span class="n">CONCURRENTLY</span> <span class="n">mymatview</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>Thêm CONCURRENTLY sẽ khiến việc refresh view chậm hơn. Tuy nhiên, các concurrent user khác có thể sử dụng view khi view đang refresh. Muốn sử dụng CONCURRENTLY, buộc phải tạo 1 unique index cho view. Nếu không, sẽ báo lỗi. [4]</p>
+
+<h3 id="3-vấn-đề-permission-khi-refresh">3. Vấn đề permission khi refresh</h3>
+<p>Một lưu ý rất quan trọng, theo [4], “To execute this command you must be the owner of the materialized view”. Tức là, để chạy lệnh refresh, user thực thi câu lệnh phải là owner của MatView.</p>
+
+<p>Tuy nhiên, sẽ có trường hợp ta quản lý schema, table và view bằng Flyway. Ta dùng flyway_user để tạo table, matview. Sau khi tạo xong, sẽ lock flyway_user lại. Lúc này, owner của matview là flyway_user nhưng nó đã bị lock. Làm sao để ta thực hiện scheduler refresh?</p>
+
+<p>Giả sử user ta dùng cho webApp là my_user. Nếu sử dụng my_user để refresh, sẽ báo lỗi <code class="language-plaintext highlighter-rouge">ERROR:  must be owner of materialized view test_mv</code></p>
+
+<p>[2] cho ta 1 lựa chọn hợp lý. Ta sử dụng role membership để xử lý chuyện này.</p>
+
+<ul>
+  <li>Bước 1: tạo 1 role có tên <code class="language-plaintext highlighter-rouge">owner_mat_view</code>. Cần đảm bảo role mới tạo có quyền đọc tất cả các bảng trong câu lệnh tạo view.</li>
+  <li>Bước 2: Đổi owner của view về role owner_mat_view. <code class="language-plaintext highlighter-rouge">ALTER MATERIALIZED VIEW test_mv OWNER TO owner_mat_view;</code></li>
+  <li>Bước 3: Gán quyền của role owner_mat_view cho user my_user <code class="language-plaintext highlighter-rouge">GRANT owner_mat_view TO my_user;</code> Lúc này, my_user sẽ kế thừa toàn bộ quyền của owner_mat_view.</li>
+  <li>Bước 4: Đổi role sang my_view. <code class="language-plaintext highlighter-rouge">SET ROLE my_user;</code></li>
+  <li>Bước 5: Thực hiện refresh với user my_user. <code class="language-plaintext highlighter-rouge">REFRESH MATERIALIZED VIEW test_mv;</code> ==&gt; thành công</li>
+</ul>
+
+<h3 id="4-references">4. References</h3>
+<ol>
+  <li><a href="https://aws.amazon.com/what-is/materialized-view/">What is a Materialized View?</a></li>
+  <li><a href="https://blog.rustprooflabs.com/2021/07/postgres-permission-mat-view">Postgres Permissions and Materialized Views</a></li>
+  <li><a href="https://www.postgresql.org/docs/current/rules-materializedviews.html">39.3. Materialized Views</a></li>
+  <li><a href="https://www.postgresql.org/docs/16/sql-refreshmaterializedview.html">REFRESH MATERIALIZED VIEW</a></li>
+</ol>]]></content><author><name></name></author><category term="technical" /><summary type="html"><![CDATA[1. Materialized View (MatView) là gì? 2. Refresh MatView? 3. Vấn đề permission khi refresh 4. References]]></summary></entry><entry><title type="html">87. [Kinh Dịch] Quẻ 6: Thiên Thuỷ Tụng</title><link href="/philosophy/87-kinh-dich-que-6-thien-thuy-tung" rel="alternate" type="text/html" title="87. [Kinh Dịch] Quẻ 6: Thiên Thuỷ Tụng" /><published>2025-01-24T00:02:00+00:00</published><updated>2025-01-24T00:02:00+00:00</updated><id>/philosophy/87-kinh-dich-que-6-thien-thuy-tung</id><content type="html" xml:base="/philosophy/87-kinh-dich-que-6-thien-thuy-tung"><![CDATA[<p>Tượng quẻ Tụng</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>_____    
+_____    
+_____    
+__ __    
+_____    
+__ __    
+</code></pre></div></div>
+
+<h3 id="thoán-từ">Thoán từ:</h3>
+<p>Tụng: Hữu phu, trất, dịch. Trung cát, chung hung.
+Lợi kiến đại nhân, bất lợi thiệp đại xuyên.</p>
+
+<p>Dịch: Kiện cáo vì mình tin thực mà bị oan ức (trất), sinh ra lo sợ (dịch). Nếu giữ đạo trung (note: đạo trung dung) (biện bạch được rồi thì thôi) thì tốt lành, nếu kiện cho đến cùng thì xấu.(note: chung trong chung cuộc, nghĩa là cuối cùng, tới tận cùng) Tìm được bậc đại nhân (công minh) mà nghe theo thì chỉ có lợi, nếu không thì như lội qua sông lớn (nguy), không có lợi. [2]</p>
+
+<p>Quẻ này là trường hợp một người có lòng tin thực (hữu phu) mà bị oan ức, vu hãm, không có người xét rõ cho, cho nên lo sợ, phải đi kiện. Nếu người đó giữ đạo trung như hào 2 (đắc trung), nghĩa là minh oan được rồi thì thôi, thì sẽ tốt, nếu cứ đeo đuổi cho tới cùng, quyết thắng, không chịu thôi, thì sẽ xấu. [2]</p>
+
+<p>Quẻ khuyên người đó nên đi tìm bậc đại nhân công minh (tức hào 5 - ứng với hào 2, vừa trung ,chính, vừa ở ngôi cao), mà nghe lời người đó thì có lợi; nếu không thì là tự mình tìm sự nguy hại, như lội qua sông lớn. [2]</p>
+
+<h3 id="hào-1">Hào 1</h3>
+<p>Sơ lục: Bất vinh sở sự, tiểu hữu ngôn, chung cát.</p>
+
+<p>Dịch: Hào 1 âm: đừng kéo dài (vụ kiện) làm gì, tuy bị trách một chút, nhưng sau được tốt [2]</p>
+
+<p>Giảng: Hào 1, âm nhu ở dưới, được hào 4 cương kiện ở trên ứng viện, tức là có chỗ dựa; nhưng đừng nên ỷ thế sinh sự kéo dài vụ kiện; có bị trách một chút thì cũng thôi, kết quả được biện minh, thế là tốt [2]</p>
+
+<p>Phàm các hào trong quẻ Tụng, hào ứng với nhau là cùng đứng một phe, như hào Tứ tiếp Sơ, thì Tứ là người đứng ra biện hộ cho Sơ. Có điều nên nhớ, là phải một Âm một Dương mới tiếp nhau được, bằng Dương ngộ Dương đó là không tiếp nhau, lại là tương địch là khác [3]</p>
+
+<h3 id="hào-2">Hào 2</h3>
+<p>Cửu nhị: Bất khắc tụng, qui nhi bô. Kì ấp nhân tam bách hộ, vô sảnh.</p>
+
+<p>Dịch: Hào 2, dương : không nên kiện, lui về mà tránh đi, ấp mình chỉ có ba trăm nóc nhà thôi (ý nói địa vị mình thấp, thế mình nhỏ), như vậy thì không bị họa. [2]</p>
+
+<p>Hai hào 2 và 5 đều là dương cả, cho nên coi là địch nhau, đứng vào hai phe ở trong quẻ tụng (kiện cáo) [2]. Nhị thấy mình là phận dưới, không sao địch nổi với Ngũ, nên tránh đi là hay (qui nhi bô). Bởi vậy, Cửu Nhị sáng suốt, nhượng bộ, không tranh với Cửu Ngũ, dù sao Cửu Ngũ đang ở thế thượng (thượng Kiền) còn mình ở thế hạ phong (hạ Khảm). [3]</p>
+
+<h3 id="hào-3">Hào 3</h3>
+<p>Lục tam: Thực cựu đức, trinh lệ, <br />
+Chung cát; hoặc tòng vương sự, vô thành.</p>
+
+<p>Dịch: Hào 3 âm, Cứ (yên ổn) hưởng cái đức (ân trạch) cũ của mình (Chu Hi hiểu là giữ cái nếp cũ), ăn ở cho chính đáng mà thường để lòng lo sợ thì kết quả sẽ tốt; nếu phải đi theo làm với người trên (chữ vương ở đây trở người trên, không nhất định là vua), thì cũng đừng mong thành công. [2]</p>
+
+<p>Hào 6 là dương cương lại là bề trên (ngôi cao), nên có khi lôi kéo 3 theo nó; trong trường hợp đó, 3 nên an phận thủ thường, cứ phục tùng 6, đừng mong thành công (chẳng hạn 6 muốn đứng ra kiện, kéo 3 theo thì 3 chỉ nên giúp 6 lấy lệ thôi, đừng ham lập công) [2]</p>
+
+<h3 id="hào-4">Hào 4</h3>
+<p>Cửu tứ: Bất khắc tụng, phục tức mệnh, du, an trinh cát.</p>
+
+<p>Dịch: Hào 4, dương : không thể kiện cáo được, trở lại theo thiên mệnh (lẽ chính
+đáng), đổi ý đi, ở yên theo điều chính thì tốt. [2]</p>
+
+<p>Hào Cửu tứ tuy là người cương táo, giỏi giang, nhưng lại bất trung, bất chính, nên chính là
+hạng người ưa sinh sự. Nhưng muốn sinh sự, mà không sinh sự được với ai. Ngũ ở trên, thời là người quá quyền thế. Lục tam ở cạnh, thì lại là người khéo cư xử. Sơ Lục ở dưới, ứng với mình, cũng như là những người bề dưới mình, và cũng không dám tranh tụng với mình. Vì vậy Tứ bỏ ý định kiện tụng, mà vui lòng ăn ở theo đúng nghĩa lý. Như vậy mới hay [1]</p>
+
+<h3 id="hào-5">Hào 5</h3>
+<p>Cửu ngũ: Tụng, nguyên cát.</p>
+
+<p>Dịch: Hào 5 dương : xử kiện hay đi kiện, đều rất tốt.[2]</p>
+
+<p>Giảng : Hào 5 này ở ngôi chí tôn, cương mà minh, trung và chính. Nếu là người xử
+kiện thì là bậc có đức, có tài (như Bao Công); nếu là người đi kiện thì gặp đựơc quan tòa
+có đức, có tài. Không gì tốt bằng.[2]</p>
+
+<h3 id="hào-6">Hào 6</h3>
+<p>Thượng cửu: hoặc tích chi bàn đái, chung triêu, tam sỉ chi.</p>
+
+<p>Dịch: hào trên cùng, dương : (kiện ) may mà được cái đai lớn (của quan chức) thì
+trong một buổi sáng sẽ bị cướp ba lần. [2] (Note: không hiểu ý nghĩa câu dịch lắm)</p>
+
+<p>Giảng: Hào dương này ở trên cùng quẻ Tụng là kẻ rất thích kiện, kiện tới cùng. Nó
+ở ngôi 6 là bất chính, cho nên dù có may ra được kiện, thì chẳng bao lâu cũng sẽ mất hết [2]</p>
+
+<h3 id="kết-luận">Kết luận</h3>
+<p>Quẻ tụng này ý nghĩa các hào rất nhất trí, sáng sủa. Trước sau chỉ là răn người ta đừng ham tranh nhau kiện cáo: hào 3 không kiện với ai, tốt; hào 2 muốn kiện mà sau thôi không kiện, cũng tốt; hào 1 bị kiện thì nên nhường nhịn một chút, rốt cuộc sẽ tốt, duy có hào 6 bằng kiện tới cùng thì dù có thắng, cũng hóa xấu. Còn hào 5 diễn cái ý: có một Tòa án công minh thì phục cho dân biết bao. [2]</p>
+
+<h3 id="references">References</h3>
+<ol>
+  <li>Dịch Kinh đại toàn - Nhân Tử Nguyễn Văn Thọ &amp; Huyền Linh Yến Lê</li>
+  <li>Kinh Dịch, đạo của người quân tử - Nguyễn Hiến Lê</li>
+  <li>Dịch Kinh tưởng giải (Di cảo) - Thu Giang Nguyễn Duy Cần</li>
+</ol>]]></content><author><name></name></author><category term="philosophy" /><summary type="html"><![CDATA[Tượng quẻ Tụng]]></summary></entry></feed>

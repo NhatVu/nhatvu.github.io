@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Flyway - Data migration tool | Minh Nhật’s blog</title>
+<meta name="generator" content="Jekyll v3.10.0" />
+<meta property="og:title" content="Flyway - Data migration tool" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Tại sao nên sử dụng Flyway Trong quá trình phát triển phần mềm, tới 1 giai đoạn nào đó, ta cần phải thay đổi data schema như thêm field, thêm bảng, xóa cột, …. Mặc dù việc này diễn ra không thường xuyên nhưng nếu có mismatch giữa database schema và code, application có thể bị sai hoặc crash. Thêm nữa, với việc phát triển nhiều feature song song với nhau, dev, test, live trên nhiều môi trường, ta cần biết chính xác mỗi môi trường đang sử dụng database schema nào. Từ đó, database migration tool ngày càng trở nên thông dụng hơn. Và Flyway là 1 trong những tool được sử dụng rộng rãi nhất." />
+<meta property="og:description" content="Tại sao nên sử dụng Flyway Trong quá trình phát triển phần mềm, tới 1 giai đoạn nào đó, ta cần phải thay đổi data schema như thêm field, thêm bảng, xóa cột, …. Mặc dù việc này diễn ra không thường xuyên nhưng nếu có mismatch giữa database schema và code, application có thể bị sai hoặc crash. Thêm nữa, với việc phát triển nhiều feature song song với nhau, dev, test, live trên nhiều môi trường, ta cần biết chính xác mỗi môi trường đang sử dụng database schema nào. Từ đó, database migration tool ngày càng trở nên thông dụng hơn. Và Flyway là 1 trong những tool được sử dụng rộng rãi nhất." />
+<link rel="canonical" href="/technical/47-Flyway-data-migration-tool" />
+<meta property="og:url" content="/technical/47-Flyway-data-migration-tool" />
+<meta property="og:site_name" content="Minh Nhật’s blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2023-06-17T00:01:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Flyway - Data migration tool" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2023-06-17T00:01:00+00:00","datePublished":"2023-06-17T00:01:00+00:00","description":"Tại sao nên sử dụng Flyway Trong quá trình phát triển phần mềm, tới 1 giai đoạn nào đó, ta cần phải thay đổi data schema như thêm field, thêm bảng, xóa cột, …. Mặc dù việc này diễn ra không thường xuyên nhưng nếu có mismatch giữa database schema và code, application có thể bị sai hoặc crash. Thêm nữa, với việc phát triển nhiều feature song song với nhau, dev, test, live trên nhiều môi trường, ta cần biết chính xác mỗi môi trường đang sử dụng database schema nào. Từ đó, database migration tool ngày càng trở nên thông dụng hơn. Và Flyway là 1 trong những tool được sử dụng rộng rãi nhất.","headline":"Flyway - Data migration tool","mainEntityOfPage":{"@type":"WebPage","@id":"/technical/47-Flyway-data-migration-tool"},"url":"/technical/47-Flyway-data-migration-tool"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="Minh Nhật&apos;s blog" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Minh Nhật&#39;s blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <!-- <div class="trigger"><a class="page-link" href="/404.html"></a><a class="page-link" href="/about/">Về tôi</a><a class="page-link" href="/art">art</a><a class="page-link" href="/finance">Finance</a><a class="page-link" href="/"></a><a class="page-link" href="/assets/main.css"></a><a class="page-link" href="/opinion">opinion</a><a class="page-link" href="/philosophy">Philosophy</a><a class="page-link" href="/technical">technical</a><a class="page-link" href="/art">art</a><a class="page-link" href="/art/">art</a><a class="page-link" href="/finance">Finance</a><a class="page-link" href="/finance/">Finance</a><a class="page-link" href="/"></a><a class="page-link" href="/"></a><a class="page-link" href="/page1/"></a><a class="page-link" href="/page2/"></a><a class="page-link" href="/page3/"></a><a class="page-link" href="/page4/"></a><a class="page-link" href="/opinion">opinion</a><a class="page-link" href="/opinion/">opinion</a><a class="page-link" href="/philosophy">Philosophy</a><a class="page-link" href="/philosophy/">Philosophy</a><a class="page-link" href="/technical">technical</a><a class="page-link" href="/technical/">technical</a><a class="page-link" href="/feed.xml"></a></div> -->
+        <div class="trigger">
+          <a class="page-link" href="/philosophy">Triết học</a>
+          <a class="page-link" href="/art">Văn, thơ, nhạc</a>
+          <a class="page-link" href="/opinion">Góc nhìn cá nhân</a>
+          <a class="page-link" href="/technical">IT</a>
+          <a class="page-link" href="/finance">Finance</a>
+          <a class="page-link" href="/about">Về tôi</a>
+        </div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">47. Flyway - Data migration tool</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2023-06-17T00:01:00+00:00" itemprop="datePublished">Jun 17, 2023
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h3 id="tại-sao-nên-sử-dụng-flyway">Tại sao nên sử dụng Flyway</h3>
+<p>Trong quá trình phát triển phần mềm, tới 1 giai đoạn nào đó, ta cần phải thay đổi data schema như thêm field, thêm bảng, xóa cột, …. Mặc dù việc này diễn ra không thường xuyên nhưng nếu có mismatch giữa database schema và code, application có thể bị sai hoặc crash. Thêm nữa, với việc phát triển nhiều feature song song với nhau, dev, test, live trên nhiều môi trường, ta cần biết chính xác mỗi môi trường đang sử dụng database schema nào. Từ đó, database migration tool ngày càng trở nên thông dụng hơn. Và Flyway là 1 trong những tool được sử dụng rộng rãi nhất.</p>
+
+<p>Nếu ta thay đổi database schema thủ công, rất khó hoặc không thể trả lời các câu hỏi sau [1]:</p>
+<ul>
+  <li>What state is the database in on this machine?</li>
+  <li>Has this script already been applied or not?</li>
+  <li>Has the quick fix in production been applied in test afterwards?</li>
+  <li>How do you set up a new database instance?</li>
+</ul>
+
+<p>Với việc dùng Flyway, ta có thể kiểm soát version của database schema. Ta có thể [1]:</p>
+<ul>
+  <li>Recreate a database from scratch</li>
+  <li>Make it clear at all times what state a database is in</li>
+  <li>Migrate in a deterministic way from your current version of the database to a newer one</li>
+</ul>
+
+<p>Tóm lại, Flyway được xem như là single source of truth of schema.</p>
+
+<h3 id="flyway-hoạt-động-như-thế-nào">Flyway hoạt động như thế nào?</h3>
+<p>Với Flyway, mọi hành động làm thay đổi db schema được gọi là migration. Migration có thể là versioned (theo phiên bản) hoặc repeatable. Ở bài này, tôi chỉ nói về versioned mà thôi.</p>
+
+<p>Flyway sẽ dùng 1 bảng tên <strong>flyway_schema_history</strong> để theo dõi việc migration. Với Versioned migration, ta sẽ có 3 thông tin là version, description và checksum. Mỗi version là duy nhất, description mô tả file script làm gì và checksum dùng để detect accident change cho file script.</p>
+
+<p>Với Versioned, mỗi file script chỉ được apply 1 lần. Thông tin này sẽ được lưu vào bảng flyway_schema_history. Lần tiếp theo chạy migration, flyway sẽ kiểm tra bảng này, và chạy những script có version lớn hơn version lớn nhất trong bảng.</p>
+
+<p>Với default config, Flyway sẽ đọc file từ folder <strong>classpath:db/migration</strong>. Versioned migration sẽ có file format là V<VERSION>__<NAME>.sql với VERSION là underscore-seperated version (vd 1 hoặc 2_1 hoặc 2_1_5). Lưu ý, cách giữa VERSION và NAME là double-underscore.</NAME></VERSION></p>
+
+<h3 id="config-flyway-trong-spring-boot">Config Flyway trong Spring Boot</h3>
+<p>Tham khảo code tại: https://github.com/NhatVu/SpringBootDemo/commit/ca8ff5493795c48fca4d61b4184dde4075aed200</p>
+
+<p>Các bước thông thường là thêm flyway-core vào pom.xml file. Tiếp theo kiểm tra config trong file application.properties, với prefix spring.flyway</p>
+
+<p>Chi tiết hơn, xem tại mục 18.9.5. Use a Higher-level Database Migration Tool, link: https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#howto.data-initialization.migration-tool.flyway</p>
+
+<h3 id="một-số-lỗi-khi-dùng-flyway">Một số lỗi khi dùng Flyway</h3>
+<h4 id="1-checksum-mismatch">1. Checksum mismatch</h4>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>FlywayException: Validate failed. Migration Checksum mismatch for migration 2
+-&gt; Applied to database : 1499248173
+-&gt; Resolved locally    : -1729781252
+</code></pre></div></div>
+
+<p>Lỗi này do việc thay đổi file sql, dẫn đến checksum thay đổi. Cách đơn giản nhất là cập nhật lại checksum mới có record có file bị thay đổi.</p>
+
+<h4 id="2-file-với-version-mới-không-migration">2. File với version mới không migration</h4>
+<p>Việc này thường xảy ra khi merged code từ nhiều feature branch. Flyway chỉ kiểm tra version number, không check toàn bộ file. Phải đảm bảo version ta cần chạy chưa được thực thi bao giờ.</p>
+
+<p><strong>Referene:</strong></p>
+<ol>
+  <li><a href="https://documentation.red-gate.com/fd/why-database-migrations-184127574.html">Why database migrations</a></li>
+  <li><a href="https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#howto.data-initialization.migration-tool.flyway">18.9.5. Use a Higher-level Database Migration Tool</a></li>
+</ol>
+
+  </div><a class="u-url" href="/technical/47-Flyway-data-migration-tool" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Contact</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Minh Nhật&#39;s blog</li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p></p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

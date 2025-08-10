@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>[System Design] 06. Replication: phương pháp Master - Slave. Phần 2 | Minh Nhật’s blog</title>
+<meta name="generator" content="Jekyll v3.10.0" />
+<meta property="og:title" content="[System Design] 06. Replication: phương pháp Master - Slave. Phần 2" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Implementation of Replication logs Có nhiều cách để thực hiện replicaiton log. Ta sẽ xem xét một số cách thông dụng nhất: Statement-based replication Trường hợp đơn giản nhất, leader/master sẽ log tất cả write request statement và gửi nó tới follower/slave. Với relational database, statement cính là INSERT, UPDATE, DELETE query." />
+<meta property="og:description" content="Implementation of Replication logs Có nhiều cách để thực hiện replicaiton log. Ta sẽ xem xét một số cách thông dụng nhất: Statement-based replication Trường hợp đơn giản nhất, leader/master sẽ log tất cả write request statement và gửi nó tới follower/slave. Với relational database, statement cính là INSERT, UPDATE, DELETE query." />
+<link rel="canonical" href="/technical/66-replication-master-slave-part-2" />
+<meta property="og:url" content="/technical/66-replication-master-slave-part-2" />
+<meta property="og:site_name" content="Minh Nhật’s blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2023-12-27T00:02:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="[System Design] 06. Replication: phương pháp Master - Slave. Phần 2" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2023-12-27T00:02:00+00:00","datePublished":"2023-12-27T00:02:00+00:00","description":"Implementation of Replication logs Có nhiều cách để thực hiện replicaiton log. Ta sẽ xem xét một số cách thông dụng nhất: Statement-based replication Trường hợp đơn giản nhất, leader/master sẽ log tất cả write request statement và gửi nó tới follower/slave. Với relational database, statement cính là INSERT, UPDATE, DELETE query.","headline":"[System Design] 06. Replication: phương pháp Master - Slave. Phần 2","mainEntityOfPage":{"@type":"WebPage","@id":"/technical/66-replication-master-slave-part-2"},"url":"/technical/66-replication-master-slave-part-2"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="Minh Nhật&apos;s blog" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Minh Nhật&#39;s blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <!-- <div class="trigger"><a class="page-link" href="/404.html"></a><a class="page-link" href="/about/">Về tôi</a><a class="page-link" href="/art">art</a><a class="page-link" href="/finance">Finance</a><a class="page-link" href="/"></a><a class="page-link" href="/assets/main.css"></a><a class="page-link" href="/opinion">opinion</a><a class="page-link" href="/philosophy">Philosophy</a><a class="page-link" href="/technical">technical</a><a class="page-link" href="/art">art</a><a class="page-link" href="/art/">art</a><a class="page-link" href="/finance">Finance</a><a class="page-link" href="/finance/">Finance</a><a class="page-link" href="/"></a><a class="page-link" href="/"></a><a class="page-link" href="/page1/"></a><a class="page-link" href="/page2/"></a><a class="page-link" href="/page3/"></a><a class="page-link" href="/page4/"></a><a class="page-link" href="/opinion">opinion</a><a class="page-link" href="/opinion/">opinion</a><a class="page-link" href="/philosophy">Philosophy</a><a class="page-link" href="/philosophy/">Philosophy</a><a class="page-link" href="/technical">technical</a><a class="page-link" href="/technical/">technical</a><a class="page-link" href="/feed.xml"></a></div> -->
+        <div class="trigger">
+          <a class="page-link" href="/philosophy">Triết học</a>
+          <a class="page-link" href="/art">Văn, thơ, nhạc</a>
+          <a class="page-link" href="/opinion">Góc nhìn cá nhân</a>
+          <a class="page-link" href="/technical">IT</a>
+          <a class="page-link" href="/finance">Finance</a>
+          <a class="page-link" href="/about">Về tôi</a>
+        </div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">66. [System Design] 06. Replication: phương pháp  Master - Slave. Phần 2</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2023-12-27T00:02:00+00:00" itemprop="datePublished">Dec 27, 2023
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h2 id="implementation-of-replication-logs">Implementation of Replication logs</h2>
+<p>Có nhiều cách để thực hiện replicaiton log. Ta sẽ xem xét một số cách thông dụng nhất:</p>
+<h3 id="statement-based-replication">Statement-based replication</h3>
+<p>Trường hợp đơn giản nhất, leader/master sẽ log tất cả write request statement và gửi nó tới follower/slave. Với relational database, statement cính là INSERT, UPDATE, DELETE query.</p>
+
+<p>Mặc dù nghe hợp lý nhưng cách này gặp những khó khăn sau khiến việc replication không thực hiện được</p>
+<ul>
+  <li>Statement chứa nondeterministic function (function trả về kết quả khác nhau sau mỗi lần gọi) như now(), rand(), … Do đó, giá trị trong mỗi replica sẽ khác nhau</li>
+  <li>Statement use dụng auto-increasing column hoặc nó dựa vào 1 dữ liệu khác trong database (ví dụ UPDATE .. WHERE &lt;condition&gt;), chúng phải được thực thi đúng thứ tự. Điều này giới hạn khả năng concurently executing transaction</li>
+  <li>Side effects (ví dụ triggers, stored procedure, user-defined function,…)</li>
+</ul>
+
+<p>Những hạn chế trên đều có thể khắc phục, tuy nhiên, vì có quá nhiều edge cases, những phương pháp replication khác được ưa chuộng hơn.</p>
+
+<h3 id="write-ahead-log-wal-shipping">Write-ahead log (WAL) shipping</h3>
+<p>Log chỉ có 1 mode là append-log (thêm vào cuối file). Content là sequence of bytes chứa thông tin cần ghi vào database. Leader/Master sẽ gửi log này tới slave.</p>
+
+<p>Điểm bất lợi nhất của phương pháp này là log lưu ở dạng low-level data (byte, disk block, ..) và nó bị closely coupled (gắn chặt với) với storage engine. Nếu database thay đổi storage format (vd như khi nâng cấp version), thường sẽ không thể xử lý log 1 cách đúng đắn.</p>
+
+<p>Điều này quan trọng trong việc vận hành. Nếu replication protocol cho phép follower dùng phiên bản phần mềm mới hơn leader, ta có thể thực hiện upgrade với zero-downtime bằng cách upgrade follower trước và thực hiện falilover cho leader node. Nếu replication protocol không cho phép version missmatch, upgrade đòi hỏi downtime.</p>
+
+<p>Hơn nữa, logical log có thể parse dễ dàng bởi các ứng dụng bên thứ 3. Có thể dùng cho data warehouse, custom index, …</p>
+
+<h3 id="logical-row-based-log-replication">Logical (row-based) log replication</h3>
+<p>Logical log là 1 cách để tránh bị “closely coupled” vào storage engine, dễ dàng hơn trong việc giữ đặc tính backward compatible, giúp cho phép leader và follower chạy với nhiều phiên bản database khác nhau</p>
+
+<p>Logical log trong relational database thường sẽ gồm 1 chuỗi records, mô tả các thao tác write của database, gồm:</p>
+<ul>
+  <li>Với insert row, log gồm tất cả giá trị mới của column</li>
+  <li>Với delete row, log gồm thông tin đủ để thực hiện delete. Nếu có primary key, thì dùng primary key. Nếu không có, thì log toàn bộ giá trị của row</li>
+  <li>Với update row, log chứa thông tin đủ để uniquely identify (định dạng duy nhất) row, và những giá trị mới của các column cần update. Theo tôi hiểu, nếu câu lệnh UPDATE yêu cầu update 100 rows, thì row-based log sẽ log giá trị của 100 row. Nhưng statement log sẽ chỉ log mỗi câu query mà thôi.</li>
+</ul>
+
+<h2 id="problems-with-replicaiton-lag">Problems with Replicaiton Lag</h2>
+<p>Replicaiton lag: sự chậm trễ (delay) giữa data ghi trên leader và sự xuất hiện của data đó trên follower.</p>
+
+<p>Thường thì replication lag diễn ra trong nhỏ hơn 1s, hoặc 1 phút nếu có vấn đề về mạng. Tuy nhiên, khi giá trị này quá lớn, sẽ gây ra những vấn đề cho ứng dụng. Ở đây ta sẽ liệt kê 3 ví dụ cho vấn đề này, cũng như một số phương án xử lý.</p>
+
+<h3 id="reading-your-own-writes">Reading your own writes</h3>
+<p>Rất nhiều application cho phép user submit data và view data sau khi submit. Data có thể là comment, customer detail, … Khi new đata được submitted, nó buộc phải gửi tới leader, nhưng khi user read/view data, nó có thể đọc ở follower. Với asynchronous replication, new data chưa kịp replication tới toàn bộ follower node, nhưng user lại đọc ở node chưa được replicate –&gt; user nghĩ rằng dữ liệu họ submit đã bị mất hoặc submit không thành công —&gt; user không vui</p>
+
+<p>Với trường hợp này, chúng ta cần read-after-write consistency, còn được gọi là read-your-own-writes consistency. Nó bảo đảm rằng khi reload page, user sẽ thấy những gì họ đã submit. Tuy nhiên, với những user khác, không đảm bảo sẽ đọc được data mới nhất.</p>
+
+<p>Vậy làm sao thể implement read-after-write consistency với mô hình leader-follower replication? Có một số kỹ thuật như sau:</p>
+<ul>
+  <li>Nếu dữ liệu mà user có thể thay đổi, đọc ở leader. Những dữ liệu khác, đọc ở follower. Điều này yêu cầu phải có cách để biết dữ liệu nào thay đổi, dữ liệu nào không. Ví dụ với user profile, luôn luôn đọc leader nếu user A request user profile của user A. Nếu user A request user profile của những user khác, đọc follower. Sẽ cần biết chính xác phần data nào đọc ở leader, phần data nào đọc ở follower. Theo tôi cách này khá phức tạp.</li>
+  <li>Nếu hầu hết data đều có thể edit được thì phương pháp trên không hiệu quả, bởi mọi request sẽ read ở leader. Trong trường hợp này, những tiêu chuẩn khác được sử dụng để kiểm tra xem nên đọc ở đâu. Ví dụ, bạn có thể theo dõi last time update, đọc ở leader nếu vừa được update trong 1 phút. Cần chú ý tới trường hợp user sử dụng nhiều devices. Nếu user nhập data trong 1 device và xem ở nhiều device khác, user cũng nên thấy được thông tin mới nhất.</li>
+  <li>Ngoài ra còn có cách liên quan tới logical time, tôi vẫn chưa hiểu.</li>
+</ul>
+
+<h3 id="monotoic-reads">Monotoic Reads</h3>
+<p>Monotoic read là 1 dạng consistency, không nghiêm ngặt bằng strong consistency nhưng nghiêm ngặt hơn eventual consistency (eventual consistency &lt; monotoic read &lt; storng consistency). Nó đảm nếu 1 user gọi nhiều read operation, sẽ không thấy giá trị cũ sau khi đã thấy được giá trị mới.</p>
+
+<p>Ở đây, sách dùng thuật ngữ “time doesn’t go backward”. Nếu vẽ trục thời gian sẽ dễ hình dung hơn. Giả dụ giá trị cũ ở time t1, giá trị mới ở time t2, và t1 &lt; t2. Thì sau khi thấy giá trị ở t2 một lần, ta không thể thấy giá trị ở t1 nữa. Monotoic read sẽ đảm bảo điều này.</p>
+
+<p>Một cách để đạt được điều này là đảm bảo rằng 1 user luôn đọc cùng 1 replica. Có thể chọn replica bằng cách hash userId. Nếu replica failed, tự động reroute tới replica khác.</p>
+
+<p>Nếu một vài userId là hot key, được truy suất nhiều và lại nằm trên cùng 1 replica, sẽ gây quá tải cho server. Nên giải quyết ntn? Cần tìm hiểu sâu hơn về Monotoic read này.</p>
+
+<h3 id="consistent-prefix-reads">Consistent Prefix Reads</h3>
+<p>Consistent prefix reads đảm bảo rằng nếu 1 chuỗi write request xảy ra theo 1 trình tự cho trước, bất kỳ ai đọc những những thông tin này cũng sẽ thấy chúng xuất hiện theo đúng trình tự.</p>
+
+<p>Ví dụ: <br />
+request 1. User A: write A. Ví dụ longer lag, maybe 10s <br />
+request 2. User B: write B. Write ngay lập tức.</p>
+
+<p>Giả sử có 1 bên thứ 3 sẽ nhận thông báo nếu write thành công. Vì replicaiton lag, bên thứ 3 sẽ nhận message từ request 2 trước, và sau đó là request 1.</p>
+
+<p>Đây là vấn đề thường xuyên xuất hiện trong sharded database, sẽ nói chi tiêt hơn ở chapter 6.</p>
+
+<h2 id="solution-for-replicaiton-lag">Solution for Replicaiton lag</h2>
+<p>Khi làm việc với hệ thống có đặc tính eventually consistent system, cần phải nghĩ cẩn thận vệ cách hành xử của ứng dụng nếu replication lag tăng tới vài phút hoặc vài giờ. Nếu câu trả lời là “no problem”, ta không cần quan tâm vấn đề này nữa. Nhưng nếu câu trả lời là gây ra trải nghiệm người dùng tệ, ta cần phải design 1 system với stronger consistency, ví dụ như read-after-write. Đặc biệt, giả dụ rằng replication là sync, trong khi thực tế là async, chính là nguyên nhân gây nên nhiều lỗi</p>
+
+<p>Như đã thảo luận ở trên, ta có thể cung cấp gỉai pháp đảm bảo stronger consistency, nhưng lại thực hiện ở application level hơn là ở database level - giả dụ như read leader thay vì follow trong vài trường hợp. Điều này thì phức tạp và có thể dễ dẫn đến lỗi sai.</p>
+
+<p><strong>Remain question</strong></p>
+<ol>
+  <li>Với row-based replication, xử lý concurrent write request như thế nào? Tìm hiểu sâu hơn với Postgres</li>
+  <li>Đọc sâu hơn về read-after-write consistency</li>
+  <li>Đọc sâu hơn về monotoic read.</li>
+</ol>
+
+<p><strong>Referenes:</strong></p>
+<ol>
+  <li><a href="https://www.amazon.com/Designing-Data-Intensive-Applications-Reliable-Maintainable/dp/1449373321">Book: Designing Data-Intensive Applications</a></li>
+</ol>
+
+  </div><a class="u-url" href="/technical/66-replication-master-slave-part-2" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Contact</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Minh Nhật&#39;s blog</li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p></p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

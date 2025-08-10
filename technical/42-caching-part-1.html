@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Caching part 1 | Minh Nhật’s blog</title>
+<meta name="generator" content="Jekyll v3.10.0" />
+<meta property="og:title" content="Caching part 1" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Caching là một kỹ thuật được sử dụng rộng rãi nhằm giảm latency, tăng performance cho hệ thống. Caching xuất hiện ở khắp nơi, từ CPU, OS đến CDN, DNS, web browser. Ở trong chuỗi bài này, tôi chỉ đề cập đến caching trong web application." />
+<meta property="og:description" content="Caching là một kỹ thuật được sử dụng rộng rãi nhằm giảm latency, tăng performance cho hệ thống. Caching xuất hiện ở khắp nơi, từ CPU, OS đến CDN, DNS, web browser. Ở trong chuỗi bài này, tôi chỉ đề cập đến caching trong web application." />
+<link rel="canonical" href="/technical/42-caching-part-1" />
+<meta property="og:url" content="/technical/42-caching-part-1" />
+<meta property="og:site_name" content="Minh Nhật’s blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2023-05-15T00:01:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Caching part 1" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2023-05-15T00:01:00+00:00","datePublished":"2023-05-15T00:01:00+00:00","description":"Caching là một kỹ thuật được sử dụng rộng rãi nhằm giảm latency, tăng performance cho hệ thống. Caching xuất hiện ở khắp nơi, từ CPU, OS đến CDN, DNS, web browser. Ở trong chuỗi bài này, tôi chỉ đề cập đến caching trong web application.","headline":"Caching part 1","mainEntityOfPage":{"@type":"WebPage","@id":"/technical/42-caching-part-1"},"url":"/technical/42-caching-part-1"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="Minh Nhật&apos;s blog" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Minh Nhật&#39;s blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <!-- <div class="trigger"><a class="page-link" href="/404.html"></a><a class="page-link" href="/about/">Về tôi</a><a class="page-link" href="/art">art</a><a class="page-link" href="/finance">Finance</a><a class="page-link" href="/"></a><a class="page-link" href="/assets/main.css"></a><a class="page-link" href="/opinion">opinion</a><a class="page-link" href="/philosophy">Philosophy</a><a class="page-link" href="/technical">technical</a><a class="page-link" href="/art">art</a><a class="page-link" href="/art/">art</a><a class="page-link" href="/finance">Finance</a><a class="page-link" href="/finance/">Finance</a><a class="page-link" href="/"></a><a class="page-link" href="/"></a><a class="page-link" href="/page1/"></a><a class="page-link" href="/page2/"></a><a class="page-link" href="/page3/"></a><a class="page-link" href="/page4/"></a><a class="page-link" href="/opinion">opinion</a><a class="page-link" href="/opinion/">opinion</a><a class="page-link" href="/philosophy">Philosophy</a><a class="page-link" href="/philosophy/">Philosophy</a><a class="page-link" href="/technical">technical</a><a class="page-link" href="/technical/">technical</a><a class="page-link" href="/feed.xml"></a></div> -->
+        <div class="trigger">
+          <a class="page-link" href="/philosophy">Triết học</a>
+          <a class="page-link" href="/art">Văn, thơ, nhạc</a>
+          <a class="page-link" href="/opinion">Góc nhìn cá nhân</a>
+          <a class="page-link" href="/technical">IT</a>
+          <a class="page-link" href="/finance">Finance</a>
+          <a class="page-link" href="/about">Về tôi</a>
+        </div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">42. Caching part 1</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2023-05-15T00:01:00+00:00" itemprop="datePublished">May 15, 2023
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>Caching là một kỹ thuật được sử dụng rộng rãi nhằm giảm latency, tăng performance cho hệ thống. Caching xuất hiện ở khắp nơi, từ CPU, OS đến CDN, DNS, web browser. Ở trong chuỗi bài này, tôi chỉ đề cập đến caching trong web application.</p>
+
+<p>Mục lúc nội dung của series này dựa trên sườn của bài blog “A Crash Course in Caching - Part 1” - ByteByteGo [1]. Tôi dư tính sẽ viết 3 bài cho series này, với nội dung như bên dưới.</p>
+
+<p><strong>Caching phần 1. (bài này)</strong></p>
+<ol>
+  <li>Caching là gì?
+    <ul>
+      <li>in memory storage</li>
+      <li>cache hit &amp; miss. cache hit ratio</li>
+    </ul>
+  </li>
+  <li>Cache được dùng ở đâu?
+    <ul>
+      <li>memcached, redis</li>
+    </ul>
+  </li>
+  <li>In-process and remote cache</li>
+</ol>
+
+<p><a href="/technical/44-caching-part-2"><strong>Caching phần 2</strong></a></p>
+<ol>
+  <li>Distribted cache
+    <ul>
+      <li>modulus sharding</li>
+      <li>range-based sharding</li>
+      <li>consistent hashing</li>
+    </ul>
+  </li>
+  <li>cache replacement and invalidation
+    <ul>
+      <li>Cache replacement: LRU, LFU</li>
+      <li>Cache invalidation: TTL,invalidation event</li>
+    </ul>
+  </li>
+</ol>
+
+<p><a href="/technical/49-caching-part-3"><strong>Caching phần 3</strong></a></p>
+<ol>
+  <li>cache strategies
+    <ul>
+      <li>cache aside</li>
+      <li>read through</li>
+      <li>write around</li>
+      <li>write through</li>
+      <li>write back</li>
+      <li>which strategies do people prefer? Pros and Cons của mỗi loại</li>
+    </ul>
+  </li>
+  <li>caching challenges
+    <ul>
+      <li>thundering herd/cache breakdown</li>
+      <li>cache penetration</li>
+      <li>cache avalanche</li>
+      <li>big key</li>
+      <li>hot key</li>
+      <li>data consistency</li>
+    </ul>
+  </li>
+  <li>monitoring and alerts</li>
+</ol>
+
+<p>Nào, cùng bắt đầu bài đầu tiên trong series.</p>
+
+<h3 id="1-what-is-caching-caching-là-gì-1">1. What is caching? Caching là gì? [1]</h3>
+
+<p>Caching là 1 thành phần sẽ lưu trữ data để phục vụ các request trong tương lai. Thay vì phải truy cập database hoặc một loại các phép tính để có dữ liệu, khi dùng cache, dữ liệu được trả lại ngay lập tức. Điều này giúp giảm latency và cải thiện hiệu năng của hệ thống.</p>
+
+<p>Khi dùng cache, request sẽ tìm kiếm trên cache trước, nếu có thì trả về. Nếu không có, sẽ gọi database.</p>
+
+<p>Vậy cache và storage khác nhau như thế nào? Cache sẽ lưu trữ trong thời gian ngắn và thường chỉ lưu một phần dữ liệu hay được truy cập mà thôi. Cache thường sẽ được lưu trên RAM để đảm bảo tốc độ. Storage sẽ lưu trên đĩa cứng, lưu toàn bộ dữ liệu và được thế kế để lưu trữ dài hạn.</p>
+
+<p>Nếu dữ liệu cần truy cập tồn tại trên cache, ta gọi đó là cache hit. Nếu dữ liệu không có trên cache, ta gọi là cache miss. Hiệu quả của cache thường được đo bằng tỉ lệ cache hit ratio = cache hit / (cache hit + cache miss). Tỉ lệ càng lớn, cache càng hiệu quả. Nếu tỉ lệ này nhỏ, theo tôi là nhỏ hơn 20% thì cache không hiệu quả, bởi nó phải gọi storage liên tục. Cache không có ý nghĩa. Lúc này, cần xem lại việc chọn key hoặc business logic có cho phép cache hay không.</p>
+
+<h2 id="2-cache-được-dùng-ở-đâu-1">2. Cache được dùng ở đâu? [1]</h2>
+<p>Với CPU, ta có cache Layer L1, L2, L3. Với OS, ta có page cache, rồi disk cache. Với browswer, ta có browser cache. Ngoài ra còn có cache những static file trên CDN, caching trong database, …</p>
+
+<p>Với web application, có 2 cache system hay dùng là Memcached và Redis. Chúng đều là open-source và có hiệu năng cao.</p>
+
+<p>Caching đem lai hiệu quả trong điều kiện dữ liệu không thay đổi thường xuyên, 1 record được truy cập nhiều lần hay cache kết quả của các phép tính toán. Khi dùng cache, hãy chú trọng tỉ lệ cache hit ratio.</p>
+
+<h2 id="3-in-process-and-remote-cache-2">3. In-process and remote cache [2]</h2>
+
+<p>In-process cache nghĩa là cache là 1 thành phần của web application. Được deploy chung với web. Mỗi 1 web instance sẽ có 1 cache riêng biệt. Remote cache là cache được lưu trữ ở 1 remote server như Redis hoặc Memcached. Web service thường phải call tới remote server này</p>
+
+<p>In-memory cache sẽ nhanh hơn Remote cache, do không phải gọi network call. Nó cũng tránh được tình trạng bottlenek khi tải cao hoặc khi mạng bị nghẽn, nhất là khi object cần cache lớn trong các task xử lý video, audio, … Tuy nhiên, In-memory cache sẽ gây duplicate dữ liệu khi deploy web application trên nhiều instance. Cũng gây gánh nặng cho việc invalidate cache cùng lúc trên nhiều instance. Ví dụ: nếu ta cache userProfile với id = 1. UserProfile này có thể nằm trên nhiều instance. Nếu ta update thông tin của profile, ta cần invalide cache trên nhiều instance cùng lúc, để đảm bảo dữ liệu được cập nhật mới nhất. Thêm nữa, bởi vì loại cache này dùng RAM của từng server, nên có 1 giới hạn nhất định và thường sẽ nhỏ hơn remote cache.</p>
+
+<p>Remote cache thích hợp cho microservice hơn là In-memory cache. Nhiều web application instance sẽ truy cập cùng 1 chỗ để lấy data từ cache. Lượng thông tin cache được cũng lớn hơn. Hơn nữa, ta cũng có thể thiết kế loại distributed cache, dùng nhiều Redis hoặc Memcached server dể tạo thành 1 cụm cached, có thể cache hằng trăm GB. Vấn đề này sẽ nói ở phần sau. Bởi vì cached data đều nằm 1 chỗ, nên không có nhiều gánh nặng cho việc invalidate cache.</p>
+
+<p>Referene:</p>
+<ol>
+  <li><a href="https://blog.bytebytego.com/p/a-crash-course-in-caching-part-1">https://blog.bytebytego.com/p/a-crash-course-in-caching-part-1</a></li>
+  <li><a href="https://levelup.gitconnected.com/avoid-using-cache-in-your-application-or-do-it-right-9650214797bc">Avoid Using Cache in Your Application or Do It Right</a></li>
+</ol>
+
+  </div><a class="u-url" href="/technical/42-caching-part-1" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Contact</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Minh Nhật&#39;s blog</li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p></p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

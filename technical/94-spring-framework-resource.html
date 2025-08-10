@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Spring Framework: Resource | Minh Nhật’s blog</title>
+<meta name="generator" content="Jekyll v3.10.0" />
+<meta property="og:title" content="Spring Framework: Resource" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="1. Java Class loader [1] 1.1. JAR hell 1.2. CLASSPATH env variable 1.3. Using ClassLoader to load resource 2. Maven project structure 3. Spring Framework: Resource [2] 3.1. Using prefix 4. References" />
+<meta property="og:description" content="1. Java Class loader [1] 1.1. JAR hell 1.2. CLASSPATH env variable 1.3. Using ClassLoader to load resource 2. Maven project structure 3. Spring Framework: Resource [2] 3.1. Using prefix 4. References" />
+<link rel="canonical" href="/technical/94-spring-framework-resource" />
+<meta property="og:url" content="/technical/94-spring-framework-resource" />
+<meta property="og:site_name" content="Minh Nhật’s blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2025-04-05T08:02:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Spring Framework: Resource" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2025-04-05T08:02:00+00:00","datePublished":"2025-04-05T08:02:00+00:00","description":"1. Java Class loader [1] 1.1. JAR hell 1.2. CLASSPATH env variable 1.3. Using ClassLoader to load resource 2. Maven project structure 3. Spring Framework: Resource [2] 3.1. Using prefix 4. References","headline":"Spring Framework: Resource","mainEntityOfPage":{"@type":"WebPage","@id":"/technical/94-spring-framework-resource"},"url":"/technical/94-spring-framework-resource"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="Minh Nhật&apos;s blog" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Minh Nhật&#39;s blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <!-- <div class="trigger"><a class="page-link" href="/404.html"></a><a class="page-link" href="/about/">Về tôi</a><a class="page-link" href="/art">art</a><a class="page-link" href="/finance">Finance</a><a class="page-link" href="/"></a><a class="page-link" href="/assets/main.css"></a><a class="page-link" href="/opinion">opinion</a><a class="page-link" href="/philosophy">Philosophy</a><a class="page-link" href="/technical">technical</a><a class="page-link" href="/art">art</a><a class="page-link" href="/art/">art</a><a class="page-link" href="/finance">Finance</a><a class="page-link" href="/finance/">Finance</a><a class="page-link" href="/"></a><a class="page-link" href="/"></a><a class="page-link" href="/page1/"></a><a class="page-link" href="/page2/"></a><a class="page-link" href="/page3/"></a><a class="page-link" href="/page4/"></a><a class="page-link" href="/opinion">opinion</a><a class="page-link" href="/opinion/">opinion</a><a class="page-link" href="/philosophy">Philosophy</a><a class="page-link" href="/philosophy/">Philosophy</a><a class="page-link" href="/technical">technical</a><a class="page-link" href="/technical/">technical</a><a class="page-link" href="/feed.xml"></a></div> -->
+        <div class="trigger">
+          <a class="page-link" href="/philosophy">Triết học</a>
+          <a class="page-link" href="/art">Văn, thơ, nhạc</a>
+          <a class="page-link" href="/opinion">Góc nhìn cá nhân</a>
+          <a class="page-link" href="/technical">IT</a>
+          <a class="page-link" href="/finance">Finance</a>
+          <a class="page-link" href="/about">Về tôi</a>
+        </div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">94. Spring Framework: Resource</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2025-04-05T08:02:00+00:00" itemprop="datePublished">Apr 5, 2025
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <ul>
+  <li><a href="#1-java-class-loader-1">1. Java Class loader [1]</a>
+    <ul>
+      <li><a href="#11-jar-hell">1.1. JAR hell</a></li>
+      <li><a href="#12-classpath-env-variable">1.2. CLASSPATH env variable</a></li>
+      <li><a href="#13-using-classloader-to-load-resource">1.3. Using ClassLoader to load resource</a></li>
+    </ul>
+  </li>
+  <li><a href="#2-maven-project-structure">2. Maven project structure</a></li>
+  <li><a href="#3-spring-framework-resource-2">3. Spring Framework: Resource [2]</a>
+    <ul>
+      <li><a href="#31-using-prefix">3.1. Using prefix</a></li>
+    </ul>
+  </li>
+  <li><a href="#4-references">4. References</a></li>
+</ul>
+
+<p>This article talks about how to read resources (file) in Spring Boot applicaiton. Giving 2 ways to read resource and the different between them: Using ClassLoader (core Java) and using ResourceLoader (core Spring)</p>
+
+<p>Note: using ChatGPT + copy some contents from reference source.</p>
+
+<h3 id="1-java-class-loader-1">1. Java Class loader [1]</h3>
+<p>The Java class loader, part of the Java Runtime Environment, dynamically loads Java classes into the Java Virtual Machine. Usually classes are only loaded on demand. The virtual machine will only load the class files required for executing the program.</p>
+
+<p>This loading is typically done “on demand”, in that it does not occur until the class is called by the program. A class with a given name can only be loaded once by a given class loader.</p>
+
+<p>When the JVM is started, three class loaders are used:</p>
+
+<ul>
+  <li>Bootstrap class loader: The bootstrap class loader loads the core Java libraries located in the <JAVA_HOME>/jre/lib (or <JAVA_HOME>/jmods&gt; for Java 9 and above) directory. This class loader, which is part of the core JVM, is written in native code. The bootstrap class loader is not associated with any ClassLoader object, for instance, StringBuilder.class.getClassLoader() returns null.</JAVA_HOME></JAVA_HOME></li>
+  <li>Extensions class loader: loads the code in the extensions directories (<JAVA_HOME>/jre/lib/ext,[5] or any other directory specified by the java.ext.dirs system property).</JAVA_HOME></li>
+  <li>System class loader: The system class loader loads code found on <strong>java.class.path</strong> env variable, which maps to the <strong>CLASSPATH</strong> environment variable.</li>
+</ul>
+
+<h4 id="11-jar-hell">1.1. JAR hell</h4>
+<p>JAR hell used to describe all the various ways in which the classloading process can end up not working. JAR hell can occur are:</p>
+
+<ul>
+  <li>Accidental presence of two different versions of a library installed on a system. This will not be considered an error by the system. Rather, <strong>the system will load classes from one or the other library</strong>. Adding the new library to the list of available libraries instead of replacing it may result in the application still behaving as though the old library is in use, which it may well be.</li>
+  <li>Multiple libraries or applications require different versions of library <strong>foo</strong>. If versions of library <strong>foo</strong> use the same class names, there is no way to load the versions of library <strong>foo</strong> with the same class loader.</li>
+</ul>
+
+<h4 id="12-classpath-env-variable">1.2. CLASSPATH env variable</h4>
+<p>Classpath is a parameter in the Java Virtual Machine or the Java compiler that <strong>specifies the location of user-defined classes, packages, and resources (if using Maven project style)</strong>. The parameter may be set either on the command-line, or through an environment variable.</p>
+
+<p>Setting the Classpath via the Command Line</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">--</span> Window based machine
+java <span class="nt">-classpath</span> /path/to/class/files MyProgram
+
+<span class="nt">--</span> Linux
+java <span class="nt">-cp</span> /path/to/class/files MyProgram
+
+</code></pre></div></div>
+
+<h4 id="13-using-classloader-to-load-resource">1.3. Using ClassLoader to load resource</h4>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="nc">List</span><span class="o">&lt;</span><span class="nc">String</span><span class="o">&gt;</span> <span class="nf">readFileWithClassLoader</span><span class="o">(</span><span class="nc">String</span> <span class="n">filePath</span><span class="o">)</span> <span class="kd">throws</span> <span class="nc">IOException</span> <span class="o">{</span>
+        <span class="nc">List</span><span class="o">&lt;</span><span class="nc">String</span><span class="o">&gt;</span> <span class="n">res</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">ArrayList</span><span class="o">&lt;&gt;();</span>
+        <span class="c1">// return ClassLoader that use by resourceLoeader. It's jdk.internal.loader.ClassLoaders$AppClassLoader</span>
+        <span class="nc">ClassLoader</span> <span class="n">classLoader</span> <span class="o">=</span> <span class="n">resourceLoader</span><span class="o">.</span><span class="na">getClassLoader</span><span class="o">();</span>
+        <span class="k">if</span><span class="o">(</span><span class="n">classLoader</span> <span class="o">==</span> <span class="kc">null</span><span class="o">){</span>
+            <span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"classloader is not exist"</span><span class="o">);</span>
+            <span class="k">throw</span> <span class="k">new</span> <span class="nf">NullPointerException</span><span class="o">(</span><span class="s">"classloader is not exist"</span><span class="o">);</span>
+        <span class="o">}</span>
+        <span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"classLoader: "</span> <span class="o">+</span> <span class="n">classLoader</span><span class="o">.</span><span class="na">getClass</span><span class="o">().</span><span class="na">getName</span><span class="o">());</span>
+        <span class="k">try</span> <span class="o">(</span><span class="nc">BufferedReader</span> <span class="n">bufferedReader</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">BufferedReader</span><span class="o">(</span><span class="k">new</span> <span class="nc">InputStreamReader</span><span class="o">(</span><span class="n">classLoader</span><span class="o">.</span><span class="na">getResourceAsStream</span><span class="o">(</span><span class="n">filePath</span><span class="o">)))){</span>
+            <span class="nc">String</span> <span class="n">line</span><span class="o">;</span>
+            <span class="k">while</span> <span class="o">((</span><span class="n">line</span> <span class="o">=</span> <span class="n">bufferedReader</span><span class="o">.</span><span class="na">readLine</span><span class="o">())</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+                <span class="n">res</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">line</span><span class="o">);</span>
+            <span class="o">}</span>
+        <span class="o">}</span>
+        <span class="k">return</span> <span class="n">res</span><span class="o">;</span>
+    <span class="o">}</span>
+</code></pre></div></div>
+
+<h3 id="2-maven-project-structure">2. Maven project structure</h3>
+
+<p>Classpath Locations:</p>
+
+<p><strong>Source Code:</strong></p>
+
+<ul>
+  <li>src/main/java: Contains the main application’s source code. All .class files generated during compilation are included in the classpath.</li>
+  <li>src/test/java: Includes test classes, which are added to the classpath during testing.</li>
+</ul>
+
+<p><strong>Resources:</strong></p>
+<ul>
+  <li>src/main/resources: Non-code resources for the application (e.g., application.properties, XML files) are included in the classpath automatically.</li>
+  <li>src/test/resources: Resources specifically for testing are added to the classpath when running tests.</li>
+</ul>
+
+<p><strong>Compiled Code:</strong></p>
+<ul>
+  <li>target/classes: After compiling your application, the .class files are stored here. Maven ensures this directory is part of the classpath.</li>
+  <li>target/test-classes: After compiling test code, the generated .class files are stored here, included during test execution.</li>
+</ul>
+
+<p><strong>Dependencies:</strong>
+Maven automatically downloads and manages dependencies specified in the pom.xml file. These JAR files are stored in the local repository (~/.m2/repository) and included in the classpath during builds.</p>
+
+<p><img src="/assets/images/2025/95_maven_project_structure_output.png" alt="Maven_project_structure_output" /></p>
+
+<p>As above image, our classpath is <strong>target/classes</strong>, and folder input inside <strong>src/main/resources</strong> folder is placed under <strong>target/classes</strong></p>
+
+<h3 id="3-spring-framework-resource-2">3. Spring Framework: Resource [2]</h3>
+<p>For more detail on Spring Framework Resource, read at [2].</p>
+
+<p>The <em>ResourceLoader</em> interface is meant to be implemented by objects that can return (that is, load) <em>Resource</em> instances.</p>
+
+<p>All application contexts implement the ResourceLoader interface. Therefore, <em>all application contexts may be used to obtain Resource instances</em>.</p>
+
+<p>When you call getResource() on a specific application context, and the location path specified doesn’t have a specific prefix, you get back a Resource type that is appropriate to that particular application context. For example, <em>FileSystemXmlApplicationContext</em> instance, it would return a FileSystemResource. For a <em>WebApplicationContext</em>, it would return a <em>ServletContextResource</em> (this is the case for web development, using <em>spring-boot-starter-web</em>). It would similarly return appropriate objects for each context.</p>
+
+<p>As a result, you can load resources in a fashion appropriate to the particular application context.</p>
+
+<h4 id="31-using-prefix">3.1. Using prefix</h4>
+<p>On the other hand, you may also force <em>ClassPathResource</em> to be used, regardless of the application context type, by specifying the special <strong>classpath:</strong> prefix. Similarly, you can force a UrlResource to be used by specifying any of the standard java.net.URL prefixes like file and https</p>
+
+<p><img src="/assets/images/2025/95_resource_prefix.png" alt="Resource_prefix" /></p>
+
+<p>When you don’t specify any prefix, Resource implementation class will depend on ApplicationContext.</p>
+
+<p>Personally, I prefer this approach, as it gives us more information explicitly.</p>
+
+<h3 id="4-references">4. References</h3>
+<ol>
+  <li><a href="https://en.wikipedia.org/wiki/Java_class_loader">Java Class Loader</a></li>
+  <li><a href="https://docs.spring.io/spring-framework/reference/core/resources.html">Spring Framework: Resource</a></li>
+</ol>
+
+
+  </div><a class="u-url" href="/technical/94-spring-framework-resource" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Contact</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Minh Nhật&#39;s blog</li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p></p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

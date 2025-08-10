@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>[System Design] 04. Encoding data | Minh Nhật’s blog</title>
+<meta name="generator" content="Jekyll v3.10.0" />
+<meta property="og:title" content="[System Design] 04. Encoding data" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Trong quá trình phát triển phần mềm, đôi khi schema của dữ liệu sẽ bị thay đổi theo thời gian. Các thao tác như thêm field, xoá field, thay đổi kiểu dữ liệu thường sẽ diễn ra và chúng đòi hỏi hệ thống phải thích ứng với những thay đổi này." />
+<meta property="og:description" content="Trong quá trình phát triển phần mềm, đôi khi schema của dữ liệu sẽ bị thay đổi theo thời gian. Các thao tác như thêm field, xoá field, thay đổi kiểu dữ liệu thường sẽ diễn ra và chúng đòi hỏi hệ thống phải thích ứng với những thay đổi này." />
+<link rel="canonical" href="/technical/64-encoding-data" />
+<meta property="og:url" content="/technical/64-encoding-data" />
+<meta property="og:site_name" content="Minh Nhật’s blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2023-12-19T00:02:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="[System Design] 04. Encoding data" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2023-12-19T00:02:00+00:00","datePublished":"2023-12-19T00:02:00+00:00","description":"Trong quá trình phát triển phần mềm, đôi khi schema của dữ liệu sẽ bị thay đổi theo thời gian. Các thao tác như thêm field, xoá field, thay đổi kiểu dữ liệu thường sẽ diễn ra và chúng đòi hỏi hệ thống phải thích ứng với những thay đổi này.","headline":"[System Design] 04. Encoding data","mainEntityOfPage":{"@type":"WebPage","@id":"/technical/64-encoding-data"},"url":"/technical/64-encoding-data"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="Minh Nhật&apos;s blog" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Minh Nhật&#39;s blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <!-- <div class="trigger"><a class="page-link" href="/404.html"></a><a class="page-link" href="/about/">Về tôi</a><a class="page-link" href="/art">art</a><a class="page-link" href="/finance">Finance</a><a class="page-link" href="/"></a><a class="page-link" href="/assets/main.css"></a><a class="page-link" href="/opinion">opinion</a><a class="page-link" href="/philosophy">Philosophy</a><a class="page-link" href="/technical">technical</a><a class="page-link" href="/art">art</a><a class="page-link" href="/art/">art</a><a class="page-link" href="/finance">Finance</a><a class="page-link" href="/finance/">Finance</a><a class="page-link" href="/"></a><a class="page-link" href="/"></a><a class="page-link" href="/page1/"></a><a class="page-link" href="/page2/"></a><a class="page-link" href="/page3/"></a><a class="page-link" href="/page4/"></a><a class="page-link" href="/opinion">opinion</a><a class="page-link" href="/opinion/">opinion</a><a class="page-link" href="/philosophy">Philosophy</a><a class="page-link" href="/philosophy/">Philosophy</a><a class="page-link" href="/technical">technical</a><a class="page-link" href="/technical/">technical</a><a class="page-link" href="/feed.xml"></a></div> -->
+        <div class="trigger">
+          <a class="page-link" href="/philosophy">Triết học</a>
+          <a class="page-link" href="/art">Văn, thơ, nhạc</a>
+          <a class="page-link" href="/opinion">Góc nhìn cá nhân</a>
+          <a class="page-link" href="/technical">IT</a>
+          <a class="page-link" href="/finance">Finance</a>
+          <a class="page-link" href="/about">Về tôi</a>
+        </div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">64. [System Design] 04. Encoding data</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2023-12-19T00:02:00+00:00" itemprop="datePublished">Dec 19, 2023
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>Trong quá trình phát triển phần mềm, đôi khi schema của dữ liệu sẽ bị thay đổi theo thời gian. Các thao tác như thêm field, xoá field, thay đổi kiểu dữ liệu thường sẽ diễn ra và chúng đòi hỏi hệ thống phải thích ứng với những thay đổi này.</p>
+
+<p><strong>Backward compatibility</strong> (tương thích ngược) nghĩa là code mới (newer code) có thể đọc dữ liệu được tạo bởi code cũ (old code). <strong>Forward compatibility</strong> (tương thích tiến tới) nghĩa là code cũ có thể đọc được đata được tạo bởi code mới [1]</p>
+
+<p>Backward compatibility không khó để đạt được, vì developer sẽ biết schema của code cũ. Tuy nhiên, với forward compatibility, code cũ phải đảm bảo ignore những field được thêm vào từ code mới, cũng như thích ứng với những field bị xoá, thay đổi field type. Ta sẽ nói chi tiết hơn ở phần sau</p>
+
+<p>Với application/program, data thường được biểu diễn bởi ít nhất 2 dạng sau:</p>
+<ul>
+  <li>Khi nằm trên memory, data sẽ ở dạng object, list, array, … Những dạng cấu trúc dữ liệu giúp tối ưu việc truy suất và sử dụng bởi CPU (thông thường thông qua pointer)</li>
+  <li>Khi data cần truyền đi giữa các service trên network hoặc lưu trữ lại vào ổ cứng, dữ liệu cần được đưa về dạng về dạng self-contained sequence of byte, không cần dùng pointer.</li>
+</ul>
+
+<p>Chúng ta cần phải chuyển đổi qua lại giữa 2 cách biểu diễn này. Việc chuyển từ in-memory representation sang binary sequence được gọi là encoding (hoặc serialization hoặc marshalling). Ngược lại, chuyển từ binary sequence sang in-memory representation được gọi là decoding (hoặc arsing, deserialization, unmarshalling) [1]</p>
+
+<p>Có nhiều phương pháp cho việc encoding/decoding. Chúng ta sẽ tìm hiểu những dạng phổ biến nhất.</p>
+
+<h3 id="1-language-specific-formats">1. Language-Specific Formats</h3>
+<p>Hầu hết các ngôn ngữ lập trình đều hỗ trợ việc encode in-memory object thành byte sequence. Ví với Java là java.io.Serializable, Python là pickle, … Ngoài ra còn có 3rd thư viện như Kryo cho Java. Dùng các thư viện này thì thuận tiện, và cần ít công sức trong việc decode. Tuy nhiên, có những hạn chế như:</p>
+<ul>
+  <li>Bị “buộc chặt” với ngôn ngữ lập trình cụ thể. Ví dụ nếu encode bằng Java thì phải decode bằng Java. Tuy nhiên, một phần của hệ thống có thể dùng một ngôn ngữ lập trình khác. Ví dụ backend dùng Java, front end dùng Javascript</li>
+  <li>Gây ra vấn đề về bảo mật.</li>
+  <li>Hiệu suất thấp, dùng nhiều CPU, đặc biệt là với Java</li>
+</ul>
+
+<h3 id="2-json-xml-and-binary-variants">2. JSON, XML, and Binary Variants</h3>
+<p>JSON, XML và các dạng encode binary không phụ thuộc vào ngôn ngữ lập trình và được sử dụng rộng rãi trong việc truyền thông tin giữa các hệ thống. XML thường bị phê bình vì phức tạp và dư thừa</p>
+
+<p>XML, JSON, CSV:</p>
+<ul>
+  <li>Human readable</li>
+  <li>Ambiguity (sự mơ hồ/nhập nhằng) về kiểu dữ liệu số. XML và CSV không thể phân biệt kiểu String và Number. JSON có thể phân biệt giữa String và number, tuy nhiên, không thể phân biệt được integer, long hay float. Một kinh nghiệm xương máu là đối với JSON, nếu là kiểu Long thì nên dùng String, vì bộ parse số của Javascript sẽ bị lỗi nếu số Long lớn, dẫn đến Server trả về đúng, nhưng Javasript trên browser parse bị sai</li>
+  <li>XML và JSON hỗ trợ ký tự Unicode, nhưng không hỗ trợ kiểu binary string (ví dụ muốn lưu ảnh, SSH key, …). Để vượt qua hạn chế này, có thể encode binary string dưới dạng Base64.</li>
+</ul>
+
+<p>Binary Encode:</p>
+<ul>
+  <li>Binary encode sẽ tiết kiệm dung lượng hơn là JSON hoặc XML. Tuy nhiên, ta không thể đọc trực tiếp file này, mà cần phải dùng những công cụ chuyên biệt. Có nhiều cách để thực hiện binary encode như thrift, gRPC, …</li>
+</ul>
+
+<h3 id="3-thrift-and-protocol-buffers">3. Thrift and Protocol Buffers</h3>
+<p>Thrift và Protocal Buffers (sau này còn có gRPC) là thư viện hỗ trợ binary encoding, và cùng dựa trên những nguyên lý chung. Thirft và gRPC sẽ định nghĩa đối tượng cần truyền tải, các hàm hỗ trợ, … (Xem kỹ hơn trong sách và tutorial). 
+Ví dụ:</p>
+<pre><code class="language-thrift">struct Person {
+1: required string userName,
+2: optional i64 favoriteNumber, 
+3: optional list&lt;string&gt; interests
+}
+</code></pre>
+<p>Khi dùng Thrift hay gRPC, chúng hỗ trợ các schema và nhiều kiểu dữ liệu đa dạng hơn. Sẽ tránh bị nhập nhằng khi encode/decode.</p>
+
+<p>Những con số 1, 2 bên cạnh userName, favoriteNumber được gọi là <em>field tags</em>. Field tag này phải được giữ nguyên và không được thay đổi khi sử dụng, vì thư viện sẽ dựa vào số này để encode và decode giá trị. Nếu số 1 đang là userName, ta sửa nó thành số 2, thì khi decoding, nó sẽ lấy giá trị số 2 ở data cũ (chính là favoriteNumber) dùng cho số 1 (chính là userName) ==&gt; gây lỗi. Tuy nhiên ta có thể tự do đổi tên, vì thư viện sử dụng field tag</p>
+
+<p>Thirft và gRPC hỗ trợ tốt với việc backward và forward compatibility.</p>
+<ul>
+  <li>Backward compatibility (code mới đọc data cũ): phải đảm bảo rằng những field mới thêm, không được sử dụng required, vì data cũ không có những field này. Nếu dùng required, sẽ gây lỗi. Không được xoá những field có sử dụng required.</li>
+  <li>Forward compatibility (code cũ đọc data mới): Data mới sẽ có thể nhiều hoặc ít field hơn code cũ, những field nào không nhận ra sẽ tự động bị ignore. Nhất thiết vẫn phải đảm bảo có đủ những field được đánh dấu là required.</li>
+  <li>Về việc thay đổi databtype, có thể xảy ra nhưng phải cẩn thận. Ví dụ field từ 32bit lên 64bit. Sẽ có khả năng bị sai số khi code cũ (32 bit) đọc dữ liệu được tạo bởi code mới (64 bit).</li>
+</ul>
+
+<h3 id="4-avro">4. Avro</h3>
+<p>Avro là 1 dạng binary encoding khác với Thrift và gRPC, được Hadoop sử dụng. Avro không sử dụng field tag như Thrift hoặc gRPC. Avro hỗ trợ dynamic generated schema. Cần phải nói thêm, Thrift không thích hợp trong trường hợp của Hadoop.</p>
+
+<p>Một số context sử dụng Avro:</p>
+<ul>
+  <li>File lớn với rất nhiều record. Trong trường hợp của Hadoop, 1 file có thể gồm hàng triệu dòng với cùng Schema.</li>
+  <li>Gửi nhiều records bằng network connection: Vì Avro hỗ trợ việc nén file, nên dung lượng gửi sẽ giảm đi nhiều</li>
+</ul>
+
+<p>Ngoài ra, còn có kiểu dữ liệu né theo cột như parquet. Mình cũng chưa hiểu rõ lắm về 2 dạng này.</p>
+
+<h3 id="5-kết-luận">5. Kết luận</h3>
+<p>Mỗi một kiểu encoding/decoding sẽ được sử dụng tuỳ theo ngữ cảnh. Bài viết tổng hợp những kiểu thông dụng, cho những ngữ cảnh thông dụng.</p>
+<ul>
+  <li>Nếu muốn lưu 1 Java Object (list, map, custom object,…) thì sử dụng buil-in Java.io.Serializable hoặc Kryo</li>
+  <li>Nếu giao tiếp giữa backend và frontend, thì có thể sử dụng JSON</li>
+  <li>Nếu giao tiếp giữa các internal service (còn được gọi là middleware) thì có thể dùng Thrift hoặc gRPC</li>
+  <li>Nếu muốn lưu file, có thể sử dụng JSON, CSV nếu không yêu cầu khắt khe về kiểu dữ liệu, human-readable, và không lớn. Với những file lớn, có hàng triệu record, khắt khe về schema, kiểu dữ liệu và dung lượng, có thể cần nhắc lưu dưới dạng Avro hoặc Parquet</li>
+</ul>
+
+<p><strong>Referenes:</strong></p>
+<ol>
+  <li><a href="https://www.amazon.com/Designing-Data-Intensive-Applications-Reliable-Maintainable/dp/1449373321">Book: Designing Data-Intensive Applications</a></li>
+</ol>
+
+  </div><a class="u-url" href="/technical/64-encoding-data" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Contact</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Minh Nhật&#39;s blog</li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p></p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

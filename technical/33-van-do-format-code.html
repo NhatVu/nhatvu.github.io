@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Vấn đề format code trong team. | Minh Nhật’s blog</title>
+<meta name="generator" content="Jekyll v3.10.0" />
+<meta property="og:title" content="Vấn đề format code trong team." />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="1. Vấn đề Space indentation giữa các IDE hay code style là khác nhau. Sự khác biệt về indentation gây ra khó khăn khi review Pull Request hay sự thay đổi các file không cần thiết khi commit code. Thêm vào đó, mỗi team, mỗi projet có quy định về code style riêng. Một người làm việc với nhiều project, sẽ rất có khó trong việc tuân thủ tất cả chuẩn về coding style. Việc thay đổi code style theo project một cách thủ là không hiệu quả. Hay nói tóm lại là tôi lười khi cứ phải thay đổi liên tục." />
+<meta property="og:description" content="1. Vấn đề Space indentation giữa các IDE hay code style là khác nhau. Sự khác biệt về indentation gây ra khó khăn khi review Pull Request hay sự thay đổi các file không cần thiết khi commit code. Thêm vào đó, mỗi team, mỗi projet có quy định về code style riêng. Một người làm việc với nhiều project, sẽ rất có khó trong việc tuân thủ tất cả chuẩn về coding style. Việc thay đổi code style theo project một cách thủ là không hiệu quả. Hay nói tóm lại là tôi lười khi cứ phải thay đổi liên tục." />
+<link rel="canonical" href="/technical/33-van-do-format-code" />
+<meta property="og:url" content="/technical/33-van-do-format-code" />
+<meta property="og:site_name" content="Minh Nhật’s blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2023-03-05T00:01:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Vấn đề format code trong team." />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2023-03-05T00:01:00+00:00","datePublished":"2023-03-05T00:01:00+00:00","description":"1. Vấn đề Space indentation giữa các IDE hay code style là khác nhau. Sự khác biệt về indentation gây ra khó khăn khi review Pull Request hay sự thay đổi các file không cần thiết khi commit code. Thêm vào đó, mỗi team, mỗi projet có quy định về code style riêng. Một người làm việc với nhiều project, sẽ rất có khó trong việc tuân thủ tất cả chuẩn về coding style. Việc thay đổi code style theo project một cách thủ là không hiệu quả. Hay nói tóm lại là tôi lười khi cứ phải thay đổi liên tục.","headline":"Vấn đề format code trong team.","mainEntityOfPage":{"@type":"WebPage","@id":"/technical/33-van-do-format-code"},"url":"/technical/33-van-do-format-code"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="Minh Nhật&apos;s blog" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Minh Nhật&#39;s blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <!-- <div class="trigger"><a class="page-link" href="/404.html"></a><a class="page-link" href="/about/">Về tôi</a><a class="page-link" href="/art">art</a><a class="page-link" href="/finance">Finance</a><a class="page-link" href="/"></a><a class="page-link" href="/assets/main.css"></a><a class="page-link" href="/opinion">opinion</a><a class="page-link" href="/philosophy">Philosophy</a><a class="page-link" href="/technical">technical</a><a class="page-link" href="/art">art</a><a class="page-link" href="/art/">art</a><a class="page-link" href="/finance">Finance</a><a class="page-link" href="/finance/">Finance</a><a class="page-link" href="/"></a><a class="page-link" href="/"></a><a class="page-link" href="/page1/"></a><a class="page-link" href="/page2/"></a><a class="page-link" href="/page3/"></a><a class="page-link" href="/page4/"></a><a class="page-link" href="/opinion">opinion</a><a class="page-link" href="/opinion/">opinion</a><a class="page-link" href="/philosophy">Philosophy</a><a class="page-link" href="/philosophy/">Philosophy</a><a class="page-link" href="/technical">technical</a><a class="page-link" href="/technical/">technical</a><a class="page-link" href="/feed.xml"></a></div> -->
+        <div class="trigger">
+          <a class="page-link" href="/philosophy">Triết học</a>
+          <a class="page-link" href="/art">Văn, thơ, nhạc</a>
+          <a class="page-link" href="/opinion">Góc nhìn cá nhân</a>
+          <a class="page-link" href="/technical">IT</a>
+          <a class="page-link" href="/finance">Finance</a>
+          <a class="page-link" href="/about">Về tôi</a>
+        </div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">33. Vấn đề format code trong team.</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2023-03-05T00:01:00+00:00" itemprop="datePublished">Mar 5, 2023
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h2 id="1-vấn-đề">1. Vấn đề</h2>
+<p>Space indentation giữa các IDE hay code style là khác nhau. Sự khác biệt về indentation gây ra khó khăn khi review Pull Request hay sự thay đổi các file không cần thiết khi commit code. Thêm vào đó, mỗi team, mỗi projet có quy định về code style riêng. Một người làm việc với nhiều project, sẽ rất có khó trong việc tuân thủ tất cả chuẩn về coding style. Việc thay đổi code style theo project một cách thủ là không hiệu quả. Hay nói tóm lại là tôi lười khi cứ phải thay đổi liên tục.</p>
+
+<h2 id="2-giải-pháp">2. Giải pháp</h2>
+<p>Thay vì phải config coding style trên IDE, ta sẽ dùng các plugin của các công cụ build project như Maven, để nó tự động format code theo 1 dạng quy định sẵn khi commit code.</p>
+
+<p>Ta muốn quá trình format này được diễn ra một cách tự động khi commit code, không cần phải chạy lệnh thủ công. Để làm được điều này, ta có thể dùng git hooks.</p>
+
+<p>Lưu ý rằng, sau khi thay đổi format của file, ta cần phải add lại những file này vào git staging bằng lệnh git add. Để cho dễ dàng, ta sẽ viết một đoạn script, liệt kê những file đã được add vào git staging, format chúng và rồi add lại vào git staging.</p>
+
+<h2 id="3-chi-tiết-thực-hiện">3. Chi tiết thực hiện</h2>
+<h3 id="31-tạo-git-hooks-folder-trong-project">3.1 Tạo git-hooks folder trong project</h3>
+<p>Trong folder này, tạo file pre-commit. (Nhớ cấp quyền execution cho file này). Khi chạy lệnh <code class="language-plaintext highlighter-rouge">mvn clean install</code>, file pre-commit sẽ được copy vào folder <code class="language-plaintext highlighter-rouge">.git/hooks</code> của project. Lúc này, pre-commit mới được thực thi khi ta gõ lệnh <code class="language-plaintext highlighter-rouge">git commit</code>.</p>
+
+<p>Nội dụng file pre-commit</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">#!/bin/sh</span>
+<span class="nv">FILES</span><span class="o">=</span><span class="si">$(</span>git diff <span class="nt">--cached</span> <span class="nt">--name-only</span> <span class="nt">--diff-filter</span><span class="o">=</span>ACMR | <span class="nb">sed</span> <span class="s1">'s| |\\ |g'</span><span class="si">)</span>
+<span class="o">[</span> <span class="nt">-z</span> <span class="s2">"</span><span class="nv">$FILES</span><span class="s2">"</span> <span class="o">]</span> <span class="o">&amp;&amp;</span> <span class="nb">exit </span>0
+
+<span class="c"># Prettify all selected files</span>
+<span class="k">for </span>FILE <span class="k">in</span> <span class="nv">$FILES</span>
+<span class="k">do
+  </span>mvn prettier:write <span class="nt">-Dprettier</span>.inputGlobs<span class="o">=</span><span class="nv">$FILE</span>
+<span class="k">done</span>
+<span class="c"># Add back the modified/prettified files to staging</span>
+<span class="nb">echo</span> <span class="s2">"</span><span class="nv">$FILES</span><span class="s2">"</span> | xargs git add
+
+<span class="nb">exit </span>0
+
+</code></pre></div></div>
+
+<h3 id="32-thêm-plugins-vào-pomxml">3.2 Thêm plugins vào pom.xml</h3>
+<p>Plugin để format java code. Nếu muốn gọi plugin này bằng cmd, gõ <code class="language-plaintext highlighter-rouge">mvn prettier:write</code>. Lệnh này sẽ format toàn bộ file trong project. Xem thêm tại: <a href="https://github.com/HubSpot/prettier-maven-plugin">https://github.com/HubSpot/prettier-maven-plugin</a></p>
+
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;plugin&gt;</span>
+	<span class="nt">&lt;groupId&gt;</span>com.hubspot.maven.plugins<span class="nt">&lt;/groupId&gt;</span>
+	<span class="nt">&lt;artifactId&gt;</span>prettier-maven-plugin<span class="nt">&lt;/artifactId&gt;</span>
+	<span class="nt">&lt;version&gt;</span>0.16<span class="nt">&lt;/version&gt;</span>
+	<span class="nt">&lt;configuration&gt;</span>
+		<span class="nt">&lt;prettierJavaVersion&gt;</span>1.5.0<span class="nt">&lt;/prettierJavaVersion&gt;</span>
+		<span class="nt">&lt;printWidth&gt;</span>90<span class="nt">&lt;/printWidth&gt;</span>
+		<span class="nt">&lt;tabWidth&gt;</span>2<span class="nt">&lt;/tabWidth&gt;</span>
+		<span class="nt">&lt;useTabs&gt;</span>false<span class="nt">&lt;/useTabs&gt;</span>
+		<span class="nt">&lt;ignoreConfigFile&gt;</span>true<span class="nt">&lt;/ignoreConfigFile&gt;</span>
+		<span class="nt">&lt;ignoreEditorConfig&gt;</span>true<span class="nt">&lt;/ignoreEditorConfig&gt;</span>
+	<span class="nt">&lt;/configuration&gt;</span>
+<span class="nt">&lt;/plugin&gt;</span>
+</code></pre></div></div>
+
+<p>Để copy file pre-commit vào .git/hooks, dùng maven-resources-plugin</p>
+
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;plugin&gt;</span>
+	<span class="nt">&lt;artifactId&gt;</span>maven-resources-plugin<span class="nt">&lt;/artifactId&gt;</span>
+	<span class="nt">&lt;version&gt;</span>3.2.0<span class="nt">&lt;/version&gt;</span>
+	<span class="nt">&lt;executions&gt;</span>
+		<span class="nt">&lt;execution&gt;</span>
+			<span class="nt">&lt;id&gt;</span>copy-hooks<span class="nt">&lt;/id&gt;</span>
+			<span class="nt">&lt;phase&gt;</span>validate<span class="nt">&lt;/phase&gt;</span>
+			<span class="nt">&lt;goals&gt;</span>
+				<span class="nt">&lt;goal&gt;</span>copy-resources<span class="nt">&lt;/goal&gt;</span>
+			<span class="nt">&lt;/goals&gt;</span>
+			<span class="nt">&lt;configuration&gt;</span>
+				<span class="nt">&lt;outputDirectory&gt;</span>${basedir}/.git/hooks<span class="nt">&lt;/outputDirectory&gt;</span>
+				<span class="nt">&lt;resources&gt;</span>
+					<span class="nt">&lt;resource&gt;</span>
+						<span class="nt">&lt;directory&gt;</span>git-hooks<span class="nt">&lt;/directory&gt;</span>
+						<span class="nt">&lt;includes&gt;</span>
+							<span class="nt">&lt;include&gt;</span>pre-commit<span class="nt">&lt;/include&gt;</span>
+						<span class="nt">&lt;/includes&gt;</span>
+					<span class="nt">&lt;/resource&gt;</span>
+				<span class="nt">&lt;/resources&gt;</span>
+			<span class="nt">&lt;/configuration&gt;</span>
+		<span class="nt">&lt;/execution&gt;</span>
+	<span class="nt">&lt;/executions&gt;</span>
+<span class="nt">&lt;/plugin&gt;</span>
+</code></pre></div></div>
+
+<p>Về quy tắc gọi plugins, tham khảo thêm tại: <a href="https://maven.apache.org/guides/introduction/introduction-to-plugin-prefix-mapping.html">https://maven.apache.org/guides/introduction/introduction-to-plugin-prefix-mapping.html</a></p>
+
+<h3 id="33-lưu-ý">3.3 Lưu ý</h3>
+<p>Thực thi lệnh <code class="language-plaintext highlighter-rouge">mvn clean install</code> trước để copy file pre-commit vào <code class="language-plaintext highlighter-rouge">.git/hooks</code>. Sau đó, mỗi lần commit, plugins prettier sẽ tự động format code những file đã thay đổi. Điều này giúp thành viên trong team tự do trong việc chọn coding style, giảm bớt 1 quy định trong team. Với tôi, càng ít quy định, làm việc càng khỏe.</p>
+
+<p>Để tiện, tôi chuẩn bị demo tại link: <a href="https://github.com/NhatVu/spring-boot-config">https://github.com/NhatVu/spring-boot-config</a></p>
+
+  </div><a class="u-url" href="/technical/33-van-do-format-code" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Contact</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Minh Nhật&#39;s blog</li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p></p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Mock data generator for PostgreSQL | Minh Nhật’s blog</title>
+<meta name="generator" content="Jekyll v3.10.0" />
+<meta property="og:title" content="Mock data generator for PostgreSQL" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="1. Tạo schema 2. Tạo lorem text 3. Tạo hàm cho mỗi bảng 4. Gọi hàm tạo test data 4.1. Thảo luận 5. Tablesample 6. References" />
+<meta property="og:description" content="1. Tạo schema 2. Tạo lorem text 3. Tạo hàm cho mỗi bảng 4. Gọi hàm tạo test data 4.1. Thảo luận 5. Tablesample 6. References" />
+<link rel="canonical" href="/technical/83-moc-data-generator-for-postgresql" />
+<meta property="og:url" content="/technical/83-moc-data-generator-for-postgresql" />
+<meta property="og:site_name" content="Minh Nhật’s blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2025-01-07T00:02:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Mock data generator for PostgreSQL" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2025-01-07T00:02:00+00:00","datePublished":"2025-01-07T00:02:00+00:00","description":"1. Tạo schema 2. Tạo lorem text 3. Tạo hàm cho mỗi bảng 4. Gọi hàm tạo test data 4.1. Thảo luận 5. Tablesample 6. References","headline":"Mock data generator for PostgreSQL","mainEntityOfPage":{"@type":"WebPage","@id":"/technical/83-moc-data-generator-for-postgresql"},"url":"/technical/83-moc-data-generator-for-postgresql"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="Minh Nhật&apos;s blog" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Minh Nhật&#39;s blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <!-- <div class="trigger"><a class="page-link" href="/404.html"></a><a class="page-link" href="/about/">Về tôi</a><a class="page-link" href="/art">art</a><a class="page-link" href="/finance">Finance</a><a class="page-link" href="/"></a><a class="page-link" href="/assets/main.css"></a><a class="page-link" href="/opinion">opinion</a><a class="page-link" href="/philosophy">Philosophy</a><a class="page-link" href="/technical">technical</a><a class="page-link" href="/art">art</a><a class="page-link" href="/art/">art</a><a class="page-link" href="/finance">Finance</a><a class="page-link" href="/finance/">Finance</a><a class="page-link" href="/"></a><a class="page-link" href="/"></a><a class="page-link" href="/page1/"></a><a class="page-link" href="/page2/"></a><a class="page-link" href="/page3/"></a><a class="page-link" href="/page4/"></a><a class="page-link" href="/opinion">opinion</a><a class="page-link" href="/opinion/">opinion</a><a class="page-link" href="/philosophy">Philosophy</a><a class="page-link" href="/philosophy/">Philosophy</a><a class="page-link" href="/technical">technical</a><a class="page-link" href="/technical/">technical</a><a class="page-link" href="/feed.xml"></a></div> -->
+        <div class="trigger">
+          <a class="page-link" href="/philosophy">Triết học</a>
+          <a class="page-link" href="/art">Văn, thơ, nhạc</a>
+          <a class="page-link" href="/opinion">Góc nhìn cá nhân</a>
+          <a class="page-link" href="/technical">IT</a>
+          <a class="page-link" href="/finance">Finance</a>
+          <a class="page-link" href="/about">Về tôi</a>
+        </div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">83.  Mock data generator for PostgreSQL</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2025-01-07T00:02:00+00:00" itemprop="datePublished">Jan 7, 2025
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <ul>
+  <li><a href="#1-tạo-schema">1. Tạo schema</a></li>
+  <li><a href="#2-tạo-lorem-text">2. Tạo lorem text</a></li>
+  <li><a href="#3-tạo-hàm-cho-mỗi-bảng">3. Tạo hàm cho mỗi bảng</a></li>
+  <li><a href="#4-gọi-hàm-tạo-test-data">4. Gọi hàm tạo test data</a>
+    <ul>
+      <li><a href="#41-thảo-luận">4.1. Thảo luận</a></li>
+    </ul>
+  </li>
+  <li><a href="#5-tablesample">5. Tablesample</a></li>
+  <li><a href="#6-references">6. References</a></li>
+</ul>
+
+<p>Bài viết này dựa trên ý tưởng của bài “Creating PostgreSQL Test Data with SQL, PL/pgSQL, and Python” [1]. Tuy nhiên, tôi cụ thể hoá từng bước và thêm một số câu hỏi cần thảo luận về việc tạo mock data cho PostgreSQL</p>
+
+<p>Trong quá trình phát triển phần mềm, việc tạo mock data giúp việc test phần mềm dễ hơn. Khi gặp sự cố, có thể tạo các dữ liệu tương tự ở PROD và test ở DEV hoặc STAGE. Ta cũng có thể dùng mock data để test performance của ứng dụng, giả sử lượng data do ứng dụng sinh ra trong 5-10 năm tới.</p>
+
+<p>Trên thị trường, có tool hỗ trợ việc này, cả trả phí lẫn miễn phí. Với các tool miễn phí, thường chỉ giới hạn 1 lượng mock data nhất định, khoảng nhỏ hơn 500 rows. Điều này không đủ để thực hiện load test.</p>
+
+<p>Tôi cũng từng viết các ứng dụng tạo mock data bằng Java. Tuy nhiên, việc này tốt rất nhiều thời gian và đôi lúc khá khó khăn. Bài viết ở [1] gợi ý tôi 1 hướng mới trong việc tạo mock khi sử dụng chính các tool cung cấp bởi database. Với stored procedured, hàm  generate_series và hàm random, ta có thể tạo ra nhiều dạng dữ liệu khác nhau.</p>
+
+<p>Bài này tôi sẽ tập trung theo hướng sử dụng PL/pgSQL hơn là SQL.</p>
+
+<h3 id="1-tạo-schema">1. Tạo schema</h3>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="k">CREATE</span> <span class="k">SCHEMA</span> <span class="n">music</span><span class="p">;</span>
+
+<span class="k">SET</span> <span class="n">search_path</span> <span class="o">=</span> <span class="n">music</span><span class="p">,</span> <span class="err">$</span><span class="k">user</span><span class="p">,</span> <span class="k">public</span><span class="p">;</span>
+
+<span class="cm">/*
+ * table schema creation 
+ */</span>
+
+<span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">artists</span> <span class="p">(</span>
+    <span class="n">artist_id</span> <span class="nb">serial</span> <span class="k">PRIMARY</span> <span class="k">KEY</span><span class="p">,</span>
+    <span class="n">name</span> <span class="nb">TEXT</span> <span class="k">NOT</span> <span class="k">NULL</span>
+<span class="p">);</span>
+
+<span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">albums</span> <span class="p">(</span>
+    <span class="n">album_id</span> <span class="nb">serial</span> <span class="k">PRIMARY</span> <span class="k">KEY</span><span class="p">,</span>
+    <span class="n">artist_id</span> <span class="nb">INTEGER</span> <span class="k">REFERENCES</span> <span class="n">artists</span><span class="p">(</span><span class="n">artist_id</span><span class="p">)</span> <span class="k">ON</span> <span class="k">DELETE</span> <span class="k">CASCADE</span><span class="p">,</span>
+    <span class="n">title</span> <span class="nb">TEXT</span> <span class="k">NOT</span> <span class="k">NULL</span><span class="p">,</span>
+    <span class="n">released</span> <span class="nb">DATE</span> <span class="k">NOT</span> <span class="k">NULL</span>
+<span class="p">);</span>
+
+<span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">genres</span> <span class="p">(</span>
+    <span class="n">genre_id</span> <span class="nb">serial</span> <span class="k">PRIMARY</span> <span class="k">KEY</span><span class="p">,</span>
+    <span class="n">name</span> <span class="nb">TEXT</span> <span class="k">NOT</span> <span class="k">NULL</span>
+<span class="p">);</span>
+
+<span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">album_genres</span> <span class="p">(</span>
+    <span class="n">album_id</span> <span class="nb">INTEGER</span> <span class="k">REFERENCES</span> <span class="n">albums</span><span class="p">(</span><span class="n">album_id</span><span class="p">)</span> <span class="k">ON</span> <span class="k">DELETE</span> <span class="k">CASCADE</span><span class="p">,</span>
+    <span class="n">genre_id</span> <span class="nb">INTEGER</span> <span class="k">REFERENCES</span> <span class="n">genres</span><span class="p">(</span><span class="n">genre_id</span><span class="p">)</span> <span class="k">ON</span> <span class="k">DELETE</span> <span class="k">CASCADE</span><span class="p">,</span>
+    <span class="k">PRIMARY</span> <span class="k">KEY</span> <span class="p">(</span><span class="n">album_id</span><span class="p">,</span> <span class="n">genre_id</span><span class="p">)</span>
+<span class="p">);</span>
+</code></pre></div></div>
+
+<h3 id="2-tạo-lorem-text">2. Tạo lorem text</h3>
+<p>Đối với các field dạng text như tên, địa chỉ, title, … random text rất khó nhìn và trông không thực. Ta sẽ tạo 1 bảng chứa các word trong tiếng anh, sau đó, tạo 1 hàm để tạo ngẫu nhiên 1 câu chứa n word. Như vậy, sẽ dễ nhìn hơn rất nhiều</p>
+
+<p><strong>Tạo bảng words và thử chạy random từng word</strong></p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">-- Trong hướng dẫn tạo TEMPORARY table, nhưng tôi tạo luôn permanent table, vì lười phải tạo lại mỗi khi kết thúc session  </span>
+<span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">words</span> <span class="p">(</span><span class="n">word</span> <span class="nb">TEXT</span><span class="p">);</span>
+
+<span class="c1">-- when using docker OR remote server, the file need to be in docker or that remote server. </span>
+<span class="c1">-- So, user can use import function of dbeaver to import data with local file</span>
+<span class="c1">-- Can download top 100k english word at: https://gist.githubusercontent.com/h3xx/1976236/raw/bbabb412261386673eff521dddbe1dc815373b1d/wiki-100k.txt</span>
+<span class="k">COPY</span> <span class="n">words</span> <span class="p">(</span><span class="n">word</span><span class="p">)</span> <span class="k">FROM</span> <span class="s1">'/usr/share/dict/words'</span> <span class="k">WHERE</span> <span class="n">word</span> <span class="k">NOT</span> <span class="k">LIKE</span> <span class="s1">'%</span><span class="se">''</span><span class="s1">%'</span><span class="p">;</span>
+
+<span class="k">select</span> <span class="k">count</span><span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="k">from</span> <span class="n">words</span> <span class="p">;</span>
+
+<span class="c1">-- Randomly order the table and pick the first result</span>
+<span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="n">words</span> <span class="k">ORDER</span> <span class="k">BY</span> <span class="n">random</span><span class="p">()</span> <span class="k">LIMIT</span> <span class="mi">1</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p><strong>Tạo hàm tạo câu với n word ngẫu nhiên</strong></p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cm">/*
+ * Create a function to generate random sentence in plpsql style 
+ */</span>
+<span class="k">CREATE</span> <span class="k">OR</span> <span class="k">REPLACE</span> <span class="k">FUNCTION</span> <span class="n">generate_random_title</span><span class="p">(</span><span class="n">num_words</span> <span class="nb">int</span> <span class="k">default</span> <span class="mi">1</span><span class="p">)</span> 
+<span class="k">RETURNS</span> <span class="nb">text</span> <span class="k">AS</span> <span class="err">$$</span>
+<span class="k">DECLARE</span>
+  <span class="n">words</span> <span class="nb">text</span><span class="p">;</span>
+<span class="k">BEGIN</span>
+  <span class="k">SELECT</span> <span class="n">initcap</span><span class="p">(</span><span class="n">array_to_string</span><span class="p">(</span><span class="n">array</span><span class="p">(</span>
+    <span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="n">words</span> <span class="k">ORDER</span> <span class="k">BY</span> <span class="n">random</span><span class="p">()</span> <span class="k">LIMIT</span> <span class="n">num_words</span>
+  <span class="p">),</span> <span class="s1">' '</span><span class="p">))</span> <span class="k">INTO</span> <span class="n">words</span><span class="p">;</span>
+  <span class="k">RETURN</span> <span class="n">words</span><span class="p">;</span>
+<span class="k">END</span><span class="p">;</span>
+<span class="err">$$</span> <span class="k">LANGUAGE</span> <span class="n">plpgsql</span><span class="p">;</span>
+
+<span class="c1">-- test function</span>
+<span class="k">SELECT</span> <span class="n">generate_random_title</span><span class="p">(</span><span class="n">ceil</span><span class="p">(</span><span class="n">random</span><span class="p">()</span> <span class="o">*</span> <span class="mi">4</span> <span class="o">+</span> <span class="n">_g</span> <span class="o">*</span> <span class="mi">0</span><span class="p">)::</span><span class="nb">int</span><span class="p">)</span>
+<span class="k">FROM</span> <span class="n">generate_series</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span> <span class="k">AS</span> <span class="n">_g</span><span class="p">;</span>
+</code></pre></div></div>
+
+<h3 id="3-tạo-hàm-cho-mỗi-bảng">3. Tạo hàm cho mỗi bảng</h3>
+<p>Trước tiên, xoá data trên toàn bộ bảng theo thứ tự</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">TRUNCATE</span> <span class="n">albums</span><span class="p">,</span> <span class="n">artists</span><span class="p">,</span> <span class="n">genres</span><span class="p">,</span> <span class="n">album_genres</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>Hàm tạo mock data cho từng bảng</p>
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">--- create genres </span>
+<span class="k">CREATE</span> <span class="k">OR</span> <span class="k">REPLACE</span> <span class="k">FUNCTION</span> <span class="n">generate_genres</span><span class="p">(</span><span class="n">genre_options</span> <span class="nb">text</span><span class="p">[]</span> <span class="k">default</span> <span class="n">array</span><span class="p">[</span><span class="s1">'Hip Hop'</span><span class="p">,</span> <span class="s1">'Jazz'</span><span class="p">,</span> <span class="s1">'Rock'</span><span class="p">,</span> <span class="s1">'Electronic'</span><span class="p">])</span> 
+<span class="k">RETURNS</span> <span class="n">void</span> <span class="k">AS</span> <span class="err">$$</span>
+<span class="k">BEGIN</span>
+  <span class="c1">-- Convert each array option into a row and insert them into genres table.</span>
+  <span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">genres</span> <span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="k">SELECT</span> <span class="k">unnest</span><span class="p">(</span><span class="n">genre_options</span><span class="p">);</span>
+<span class="k">END</span><span class="p">;</span>
+<span class="err">$$</span> <span class="k">LANGUAGE</span> <span class="n">plpgsql</span><span class="p">;</span>
+
+<span class="c1">--------------</span>
+
+<span class="c1">-- create artists</span>
+<span class="k">CREATE</span> <span class="k">OR</span> <span class="k">REPLACE</span> <span class="k">FUNCTION</span> <span class="n">generate_artists</span><span class="p">(</span><span class="k">size</span> <span class="nb">int</span> <span class="k">default</span> <span class="mi">10</span><span class="p">)</span> 
+<span class="k">RETURNS</span> <span class="n">void</span> <span class="k">AS</span> <span class="err">$$</span>
+<span class="k">DECLARE</span>
+  <span class="n">artist_name</span> <span class="nb">text</span><span class="p">;</span>
+<span class="k">BEGIN</span>
+  <span class="k">FOR</span> <span class="n">i</span> <span class="k">IN</span> <span class="mi">1</span><span class="p">..</span><span class="k">size</span> <span class="n">LOOP</span>
+    <span class="k">SELECT</span> <span class="n">generate_random_title</span><span class="p">(</span><span class="n">ceil</span><span class="p">(</span><span class="n">random</span><span class="p">()</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)::</span><span class="nb">int</span><span class="p">)</span> <span class="k">INTO</span> <span class="n">artist_name</span><span class="p">;</span>
+    <span class="c1">-- About 50% of the time, add 'DJ ' to the front of the artist's name.</span>
+    <span class="n">IF</span> <span class="n">random</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">.</span><span class="mi">5</span> <span class="k">THEN</span>
+      <span class="n">artist_name</span> <span class="o">=</span> <span class="s1">'DJ '</span> <span class="o">||</span> <span class="n">artist_name</span><span class="p">;</span>
+    <span class="k">END</span> <span class="n">IF</span><span class="p">;</span>
+    <span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">artists</span> <span class="p">(</span><span class="n">name</span><span class="p">)</span>
+    <span class="k">SELECT</span> <span class="n">artist_name</span><span class="p">;</span>
+  <span class="k">END</span> <span class="n">LOOP</span><span class="p">;</span>
+<span class="k">END</span><span class="p">;</span>
+<span class="err">$$</span> <span class="k">LANGUAGE</span> <span class="n">plpgsql</span><span class="p">;</span>
+
+<span class="c1">---------- generate album</span>
+<span class="k">CREATE</span> <span class="k">OR</span> <span class="k">REPLACE</span> <span class="k">FUNCTION</span> <span class="n">generate_albums</span><span class="p">(</span><span class="k">size</span> <span class="nb">int</span> <span class="k">default</span> <span class="mi">10</span><span class="p">)</span> 
+<span class="k">RETURNS</span> <span class="n">void</span> <span class="k">AS</span> <span class="err">$$</span>
+<span class="k">DECLARE</span>
+  <span class="n">artist_name</span> <span class="nb">text</span><span class="p">;</span>
+<span class="k">BEGIN</span>
+  <span class="k">FOR</span> <span class="n">i</span> <span class="k">IN</span> <span class="mi">1</span><span class="p">..</span><span class="k">size</span> <span class="n">LOOP</span>
+    <span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">albums</span> <span class="p">(</span><span class="n">artist_id</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">released</span><span class="p">)</span>
+    <span class="k">VALUES</span> <span class="p">(</span>
+      <span class="p">(</span><span class="k">SELECT</span> <span class="n">artist_id</span> <span class="k">FROM</span> <span class="n">artists</span> <span class="k">ORDER</span> <span class="k">BY</span> <span class="n">random</span><span class="p">()</span> <span class="k">LIMIT</span> <span class="mi">1</span><span class="p">),</span>
+      <span class="p">(</span><span class="k">SELECT</span> <span class="n">generate_random_title</span><span class="p">(</span><span class="n">ceil</span><span class="p">(</span><span class="n">random</span><span class="p">()</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)::</span><span class="nb">int</span><span class="p">)),</span>
+      <span class="p">(</span><span class="n">now</span><span class="p">()</span> <span class="o">-</span> <span class="s1">'5 years'</span><span class="p">::</span><span class="n">interval</span> <span class="o">*</span> <span class="n">random</span><span class="p">())::</span><span class="nb">date</span>
+    <span class="p">);</span>
+  <span class="k">END</span> <span class="n">LOOP</span><span class="p">;</span>
+<span class="k">END</span><span class="p">;</span>
+<span class="err">$$</span> <span class="k">LANGUAGE</span> <span class="n">plpgsql</span><span class="p">;</span>
+
+<span class="c1">--- generate album_genres </span>
+<span class="k">CREATE</span> <span class="k">OR</span> <span class="k">REPLACE</span> <span class="k">FUNCTION</span> <span class="n">generate_albums_genres</span><span class="p">(</span><span class="k">size</span> <span class="nb">int</span> <span class="k">default</span> <span class="mi">10</span><span class="p">)</span> 
+<span class="k">RETURNS</span> <span class="n">void</span> <span class="k">AS</span> <span class="err">$$</span>
+<span class="k">DECLARE</span>
+  <span class="n">dj_album</span> <span class="n">RECORD</span><span class="p">;</span>
+<span class="k">BEGIN</span>
+  <span class="k">FOR</span> <span class="n">i</span> <span class="k">in</span> <span class="mi">1</span><span class="p">..</span><span class="k">size</span> <span class="n">LOOP</span>
+    <span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">album_genres</span> <span class="p">(</span><span class="n">album_id</span><span class="p">,</span> <span class="n">genre_id</span><span class="p">)</span>
+    <span class="k">VALUES</span> <span class="p">(</span>
+      <span class="p">(</span><span class="k">SELECT</span> <span class="n">album_id</span> <span class="k">FROM</span> <span class="n">albums</span> <span class="k">ORDER</span> <span class="k">BY</span> <span class="n">random</span><span class="p">()</span> <span class="k">LIMIT</span> <span class="mi">1</span><span class="p">),</span>
+      <span class="p">(</span><span class="k">SELECT</span> <span class="n">genre_id</span> <span class="k">FROM</span> <span class="n">genres</span> <span class="k">ORDER</span> <span class="k">BY</span> <span class="n">random</span><span class="p">()</span> <span class="k">LIMIT</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="c1">-- If we insert a row that already exists, do nothing (don't raise an error)</span>
+    <span class="k">ON</span> <span class="n">CONFLICT</span> <span class="k">DO</span> <span class="k">NOTHING</span><span class="p">;</span>
+  <span class="k">END</span> <span class="n">LOOP</span><span class="p">;</span>
+ 
+  <span class="c1">-- Ensure all albums by a 'DJ' artist belong to the Electronic genre.</span>
+  <span class="k">FOR</span> <span class="n">dj_album</span> <span class="k">IN</span>
+    <span class="k">SELECT</span> <span class="n">albums</span><span class="p">.</span><span class="o">*</span> <span class="k">FROM</span> <span class="n">albums</span>
+    <span class="k">INNER</span> <span class="k">JOIN</span> <span class="n">artists</span> <span class="k">USING</span> <span class="p">(</span><span class="n">artist_id</span><span class="p">)</span>
+    <span class="k">WHERE</span> <span class="n">artists</span><span class="p">.</span><span class="n">name</span> <span class="k">LIKE</span> <span class="s1">'DJ %'</span>
+  <span class="n">LOOP</span>
+    <span class="n">RAISE</span> <span class="n">NOTICE</span> <span class="s1">'Ensuring DJ album % belongs to Electronic genre!'</span><span class="p">,</span> <span class="n">quote_literal</span><span class="p">(</span><span class="n">dj_album</span><span class="p">.</span><span class="n">title</span><span class="p">);</span>
+    <span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">album_genres</span> <span class="p">(</span><span class="n">album_id</span><span class="p">,</span> <span class="n">genre_id</span><span class="p">)</span>
+    <span class="k">SELECT</span> <span class="n">dj_album</span><span class="p">.</span><span class="n">album_id</span><span class="p">,</span> <span class="p">(</span><span class="k">SELECT</span> <span class="n">genre_id</span> <span class="k">FROM</span> <span class="n">genres</span> <span class="k">WHERE</span> <span class="n">name</span> <span class="o">=</span> <span class="s1">'Electronic'</span><span class="p">)</span>
+    <span class="c1">-- If we insert a row that already exists, do nothing (don't raise an error)</span>
+    <span class="k">ON</span> <span class="n">CONFLICT</span> <span class="k">DO</span> <span class="k">NOTHING</span><span class="p">;</span>
+  <span class="k">END</span> <span class="n">LOOP</span><span class="p">;</span>
+<span class="k">END</span><span class="p">;</span>
+<span class="err">$$</span> <span class="k">LANGUAGE</span> <span class="n">plpgsql</span><span class="p">;</span>
+</code></pre></div></div>
+
+<h3 id="4-gọi-hàm-tạo-test-data">4. Gọi hàm tạo test data</h3>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">-- create genres </span>
+<span class="k">select</span> <span class="o">*</span> <span class="k">from</span> <span class="n">generate_genres</span><span class="p">();</span>
+
+<span class="k">select</span> <span class="o">*</span> <span class="k">from</span> <span class="n">genres</span> <span class="p">;</span>
+
+<span class="c1">-- create 10k artists cost 1m2s</span>
+<span class="k">select</span> <span class="o">*</span> <span class="k">from</span> <span class="n">generate_artists</span><span class="p">(</span><span class="mi">10000</span><span class="p">)</span>
+
+<span class="k">select</span> <span class="k">count</span><span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="k">from</span> <span class="n">artists</span> <span class="p">;</span>
+
+<span class="c1">-- create 50k alumns cost 5m51s</span>
+<span class="k">select</span> <span class="n">generate_albums</span><span class="p">(</span><span class="mi">50000</span><span class="p">);</span>
+
+<span class="k">select</span> <span class="k">count</span><span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="k">from</span> <span class="n">albums</span> <span class="p">;</span>
+
+<span class="c1">-- create 10k albums_genres cost 27s</span>
+<span class="k">select</span> <span class="n">generate_albums_genres</span><span class="p">(</span><span class="mi">10000</span><span class="p">);</span>
+
+<span class="k">select</span> <span class="k">count</span><span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="k">from</span> <span class="n">album_genres</span> <span class="p">;</span>
+</code></pre></div></div>
+
+<h4 id="41-thảo-luận">4.1. Thảo luận</h4>
+<ul>
+  <li>Việc lấy ngẫu nhiên 1 dòng trong bảng chưa tối ưu, hiện tại ta thực hiện <code class="language-plaintext highlighter-rouge">SELECT album_id FROM albums ORDER BY random() LIMIT 1</code>. Việc này cần sort toàn bộ bảng theo <code class="language-plaintext highlighter-rouge">random()</code>. Nếu bảng lớn, việc này tốn nhiều thời gian và memory vì <code class="language-plaintext highlighter-rouge">ORDER BY</code> cần lấy tất cả rows, sau đó mới thực hiện sort. Để hạn chế việc này, ta có thể dùng câu lệnh thay thế <code class="language-plaintext highlighter-rouge">SELECT artist_id FROM artists where artist_id &gt; floor(random() * 10000)  limit 1</code>. Việc thực hiện riêng rẻ thì câu lệnh 2 nhanh hơn cầu lệnh gốc, nhưng khi áp dụng vào việc generate mock data, tôi vẫn chưa thấy sự khác biệt. Một nguyên nhân có thể nghĩ đến là dữ liệu hiện tại vẫn đang nhỏ. Nếu có từ 5m - 10m dòng, có lẽ sẽ thấy sự khác biệt ?</li>
+</ul>
+
+<h3 id="5-tablesample">5. Tablesample</h3>
+<p>Để khắc phục hạn chế của <code class="language-plaintext highlighter-rouge">ORDER BY random() limit 1</code>, Postgres từ phiên bản 9.5 cung cấp <code class="language-plaintext highlighter-rouge">TABLESPACE</code>, cho phép trả về random sample [2]. Khi sử dụng explain, ta thấy <code class="language-plaintext highlighter-rouge">TABLESPACE</code> sử dụng <code class="language-plaintext highlighter-rouge">SAMPLESCAN</code> method, hoàn toàn các so với việc SeqScan hay IndexScan.</p>
+
+<p>Hiện tại, Postgres cung cấp 2 phương pháp sample chính: SYSTEM và BERNOULLI</p>
+<ul>
+  <li>SYSTEM: sử dụng random IO, nhanh hơn BERNOULLI. Thực hiện sample ở block/page level. Nó đọc và trả về page ngẫu nhiên từ disk. Nên đôi khi, giữa 2 lần chạy, kết quả trả về giống nhau. Để hạn chế tình trạng này, ta có thể thêm dòng <code class="language-plaintext highlighter-rouge">ORDER BY random()</code></li>
+  <li>BERNOULLI: sử dụng sequentail IO. Thực hiện ở tuple level, cho kết quả sample distribution tốt hơn SYSTEM. Tuy nhiên, với dữ liệu lớn, sẽ chậm hơn SYSTEM</li>
+</ul>
+
+<p>Ví dụ:</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="n">album_id</span> <span class="k">FROM</span> <span class="n">albums</span> <span class="n">tablesample</span> <span class="k">system</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="k">ORDER</span> <span class="k">BY</span> <span class="n">random</span><span class="p">()</span> 
+
+<span class="c1">--- equivalent query: không đảm bảo số row giống nhau, xấp xỉ mà thôi </span>
+<span class="k">SELECT</span> <span class="n">album_id</span> <span class="k">FROM</span> <span class="n">albums</span>  <span class="k">ORDER</span> <span class="k">BY</span> <span class="n">random</span><span class="p">()</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">.</span><span class="mi">01</span>
+</code></pre></div></div>
+
+<p>SYSTEM và BERNOULLI đều yêu cầu percentage parameter, % return rows. Tuy nhiên, cần lưu ý, câu query trên có thể trả về null. Nếu percentage nhỏ, tỉ lệ trả về null lớn hơn.</p>
+
+<p>Một lưu ý quan trọng là <code class="language-plaintext highlighter-rouge">WHERE</code> clause sẽ được áp dụng sau khi thực hiện sampling. Để hiểu rõ hơn, có thể dùng lệnh explain để xem. Để khắc phục việc này, ta có thể tạo ra 1 temp table, và thực hiện sample trên temp table đó. Tuy nhiên, kỹ thuật này tôi vẫn chưa nghiên cứu kỹ về hệ quả của temp table.</p>
+
+<p>Viết lại hàm <code class="language-plaintext highlighter-rouge">generate_albums_genres</code> có sử dụng sample method</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">CREATE</span> <span class="k">OR</span> <span class="k">REPLACE</span> <span class="k">FUNCTION</span> <span class="n">generate_albums_genres_using_tablesample</span><span class="p">(</span><span class="k">size</span> <span class="nb">int</span> <span class="k">default</span> <span class="mi">10</span><span class="p">)</span> 
+<span class="k">RETURNS</span> <span class="n">void</span> <span class="k">AS</span> <span class="err">$$</span>
+<span class="k">DECLARE</span>
+  <span class="n">dj_album</span> <span class="n">RECORD</span><span class="p">;</span>
+  <span class="n">sample_album_id</span> <span class="nb">int</span><span class="p">;</span>
+<span class="k">BEGIN</span>
+  <span class="k">FOR</span> <span class="n">i</span> <span class="k">in</span> <span class="mi">1</span><span class="p">..</span><span class="k">size</span> <span class="n">loop</span>
+	<span class="k">SELECT</span> <span class="n">album_id</span> 
+	<span class="k">into</span> <span class="n">sample_album_id</span>
+	<span class="k">FROM</span> <span class="n">albums</span> <span class="n">tablesample</span> <span class="k">system</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="k">ORDER</span> <span class="k">BY</span> <span class="n">random</span><span class="p">()</span> <span class="k">LIMIT</span> <span class="mi">1</span><span class="p">;</span>
+
+	<span class="n">if</span> <span class="n">sample_album_id</span> <span class="k">is</span> <span class="k">null</span> <span class="k">then</span> 
+		<span class="k">continue</span><span class="p">;</span> <span class="c1">-- skip when sample id is null</span>
+	<span class="k">end</span> <span class="n">if</span><span class="p">;</span>
+
+    <span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">album_genres</span> <span class="p">(</span><span class="n">album_id</span><span class="p">,</span> <span class="n">genre_id</span><span class="p">)</span>
+    <span class="k">VALUES</span> <span class="p">(</span>
+      <span class="n">sample_album_id</span><span class="p">,</span>
+      <span class="p">(</span><span class="k">SELECT</span> <span class="n">genre_id</span> <span class="k">FROM</span> <span class="n">genres</span> <span class="k">ORDER</span> <span class="k">BY</span> <span class="n">random</span><span class="p">()</span> <span class="k">LIMIT</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="c1">-- If we insert a row that already exists, do nothing (don't raise an error)</span>
+    <span class="k">ON</span> <span class="n">CONFLICT</span> <span class="k">DO</span> <span class="k">NOTHING</span><span class="p">;</span>
+  <span class="k">END</span> <span class="n">LOOP</span><span class="p">;</span>
+ 
+  <span class="c1">-- Ensure all albums by a 'DJ' artist belong to the Electronic genre.</span>
+  <span class="k">FOR</span> <span class="n">dj_album</span> <span class="k">IN</span>
+    <span class="k">SELECT</span> <span class="n">albums</span><span class="p">.</span><span class="o">*</span> <span class="k">FROM</span> <span class="n">albums</span>
+    <span class="k">INNER</span> <span class="k">JOIN</span> <span class="n">artists</span> <span class="k">USING</span> <span class="p">(</span><span class="n">artist_id</span><span class="p">)</span>
+    <span class="k">WHERE</span> <span class="n">artists</span><span class="p">.</span><span class="n">name</span> <span class="k">LIKE</span> <span class="s1">'DJ %'</span>
+  <span class="n">LOOP</span>
+    <span class="n">RAISE</span> <span class="n">NOTICE</span> <span class="s1">'Ensuring DJ album % belongs to Electronic genre!'</span><span class="p">,</span> <span class="n">quote_literal</span><span class="p">(</span><span class="n">dj_album</span><span class="p">.</span><span class="n">title</span><span class="p">);</span>
+    <span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">album_genres</span> <span class="p">(</span><span class="n">album_id</span><span class="p">,</span> <span class="n">genre_id</span><span class="p">)</span>
+    <span class="k">SELECT</span> <span class="n">dj_album</span><span class="p">.</span><span class="n">album_id</span><span class="p">,</span> <span class="p">(</span><span class="k">SELECT</span> <span class="n">genre_id</span> <span class="k">FROM</span> <span class="n">genres</span> <span class="k">WHERE</span> <span class="n">name</span> <span class="o">=</span> <span class="s1">'Electronic'</span><span class="p">)</span>
+    <span class="c1">-- If we insert a row that already exists, do nothing (don't raise an error)</span>
+    <span class="k">ON</span> <span class="n">CONFLICT</span> <span class="k">DO</span> <span class="k">NOTHING</span><span class="p">;</span>
+  <span class="k">END</span> <span class="n">LOOP</span><span class="p">;</span>
+<span class="k">END</span><span class="p">;</span>
+<span class="err">$$</span> <span class="k">LANGUAGE</span> <span class="n">plpgsql</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>Đoạn code để đo tốc độ query</p>
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">DO</span> <span class="err">$$</span>
+<span class="k">DECLARE</span>
+    <span class="n">start_time</span> <span class="nb">TIMESTAMP</span><span class="p">;</span>
+    <span class="n">end_time</span> <span class="nb">TIMESTAMP</span><span class="p">;</span>
+    <span class="n">elapsed</span> <span class="n">INTERVAL</span><span class="p">;</span>
+<span class="k">BEGIN</span>
+    <span class="c1">-- Capture start time</span>
+    <span class="n">start_time</span> <span class="p">:</span><span class="o">=</span> <span class="n">clock_timestamp</span><span class="p">();</span>
+
+    <span class="c1">-- Your SQL/PLpgSQL logic here </span>
+   <span class="c1">-- 10k: 1535 ms</span>
+   <span class="c1">-- 10k: 1500 ms</span>
+   <span class="c1">-- 50k: 5065</span>
+   <span class="c1">-- PERFORM generate_albums_genres_using_tablesample(10000);</span>
+   
+   <span class="c1">-- 10k: 59138 ms</span>
+   <span class="c1">-- 10k: 59546 ms</span>
+   	<span class="n">PERFORM</span> <span class="n">generate_albums_genres</span><span class="p">(</span><span class="mi">10000</span><span class="p">);</span>
+
+    <span class="c1">-- Capture end time</span>
+    <span class="n">end_time</span> <span class="p">:</span><span class="o">=</span> <span class="n">clock_timestamp</span><span class="p">();</span>
+
+    <span class="c1">-- Calculate elapsed time</span>
+    <span class="n">elapsed</span> <span class="p">:</span><span class="o">=</span> <span class="n">end_time</span> <span class="o">-</span> <span class="n">start_time</span><span class="p">;</span>
+
+    <span class="c1">-- Display the result</span>
+    <span class="n">RAISE</span> <span class="n">NOTICE</span> <span class="s1">'Execution Time : % ms'</span><span class="p">,</span> <span class="k">EXTRACT</span><span class="p">(</span><span class="n">MILLISECONDS</span> <span class="k">FROM</span> <span class="n">elapsed</span><span class="p">);</span>
+<span class="k">END</span> <span class="err">$$</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>So sánh khi generate 10k records</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>No</th>
+      <th>generate_albums_genres</th>
+      <th>generate_albums_genres_using_tablesample</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1</td>
+      <td>59138 ms</td>
+      <td>1535 ms</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>59546 ms</td>
+      <td>1500 ms</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3 id="6-references">6. References</h3>
+<ol>
+  <li><a href="https://www.tangramvision.com/blog/creating-postgresql-test-data-with-sql-pl-pgsql-and-python">Creating PostgreSQL Test Data with SQL, PL/pgSQL, and Python</a></li>
+  <li><a href="https://www.enterprisedb.com/blog/tablesample-postgresql-95">Tablesample In PostgreSQL 9.5</a></li>
+</ol>
+
+  </div><a class="u-url" href="/technical/83-moc-data-generator-for-postgresql" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Contact</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Minh Nhật&#39;s blog</li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p></p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

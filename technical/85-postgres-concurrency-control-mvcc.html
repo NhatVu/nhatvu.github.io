@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>PostgreSQL Concurrency control: MVCC | Minh Nhật’s blog</title>
+<meta name="generator" content="Jekyll v3.10.0" />
+<meta property="og:title" content="PostgreSQL Concurrency control: MVCC" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="1. Giới thiệu: MVCC 1.1. Các nguyên tắc chính: 1.2. Ưu Điểm Của MVCC 1.3. Hạn Chế Của MVCC 1.4. Demo 2. References" />
+<meta property="og:description" content="1. Giới thiệu: MVCC 1.1. Các nguyên tắc chính: 1.2. Ưu Điểm Của MVCC 1.3. Hạn Chế Của MVCC 1.4. Demo 2. References" />
+<link rel="canonical" href="/technical/85-postgres-concurrency-control-mvcc" />
+<meta property="og:url" content="/technical/85-postgres-concurrency-control-mvcc" />
+<meta property="og:site_name" content="Minh Nhật’s blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2025-01-12T00:02:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="PostgreSQL Concurrency control: MVCC" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2025-01-12T00:02:00+00:00","datePublished":"2025-01-12T00:02:00+00:00","description":"1. Giới thiệu: MVCC 1.1. Các nguyên tắc chính: 1.2. Ưu Điểm Của MVCC 1.3. Hạn Chế Của MVCC 1.4. Demo 2. References","headline":"PostgreSQL Concurrency control: MVCC","mainEntityOfPage":{"@type":"WebPage","@id":"/technical/85-postgres-concurrency-control-mvcc"},"url":"/technical/85-postgres-concurrency-control-mvcc"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="Minh Nhật&apos;s blog" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Minh Nhật&#39;s blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <!-- <div class="trigger"><a class="page-link" href="/404.html"></a><a class="page-link" href="/about/">Về tôi</a><a class="page-link" href="/art">art</a><a class="page-link" href="/finance">Finance</a><a class="page-link" href="/"></a><a class="page-link" href="/assets/main.css"></a><a class="page-link" href="/opinion">opinion</a><a class="page-link" href="/philosophy">Philosophy</a><a class="page-link" href="/technical">technical</a><a class="page-link" href="/art">art</a><a class="page-link" href="/art/">art</a><a class="page-link" href="/finance">Finance</a><a class="page-link" href="/finance/">Finance</a><a class="page-link" href="/"></a><a class="page-link" href="/"></a><a class="page-link" href="/page1/"></a><a class="page-link" href="/page2/"></a><a class="page-link" href="/page3/"></a><a class="page-link" href="/page4/"></a><a class="page-link" href="/opinion">opinion</a><a class="page-link" href="/opinion/">opinion</a><a class="page-link" href="/philosophy">Philosophy</a><a class="page-link" href="/philosophy/">Philosophy</a><a class="page-link" href="/technical">technical</a><a class="page-link" href="/technical/">technical</a><a class="page-link" href="/feed.xml"></a></div> -->
+        <div class="trigger">
+          <a class="page-link" href="/philosophy">Triết học</a>
+          <a class="page-link" href="/art">Văn, thơ, nhạc</a>
+          <a class="page-link" href="/opinion">Góc nhìn cá nhân</a>
+          <a class="page-link" href="/technical">IT</a>
+          <a class="page-link" href="/finance">Finance</a>
+          <a class="page-link" href="/about">Về tôi</a>
+        </div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">85.  PostgreSQL Concurrency control: MVCC</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2025-01-12T00:02:00+00:00" itemprop="datePublished">Jan 12, 2025
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <ul>
+  <li><a href="#1-giới-thiệu-mvcc">1. Giới thiệu: MVCC</a>
+    <ul>
+      <li><a href="#11-các-nguyên-tắc-chính">1.1. Các nguyên tắc chính:</a></li>
+      <li><a href="#12-ưu-điểm-của-mvcc">1.2. Ưu Điểm Của MVCC</a></li>
+      <li><a href="#13-hạn-chế-của-mvcc">1.3. Hạn Chế Của MVCC</a></li>
+      <li><a href="#14-demo">1.4. Demo</a></li>
+    </ul>
+  </li>
+  <li><a href="#2-references">2. References</a></li>
+</ul>
+
+<p>Series bài này tổng hợp các kiến thức liên quan tới concurrency control cho Postgres. Mục đích để hiểu rõ hơn cách thức PostgreSQL quản lý 2 hoặc nhiều session truy cập 1 dữ liệu tại cùng 1 thời điểm.</p>
+
+<p>Bài viết có sử dụng ChatGPT để tổng hợp và tạo ví dụ</p>
+
+<h3 id="1-giới-thiệu-mvcc">1. Giới thiệu: MVCC</h3>
+<p>PostgreSQL đảm bảo data consistency bằng multiversion model (Multiversion Concurrency Control, viết tắt là MVCC). Lưu ý, mỗi database sẽ có cơ chế quản lý concurrency khác nhau.</p>
+
+<p>MVCC dựa trên ý tưởng lưu trữ nhiều phiên bản (data version hoặc data snapshot) của dữ liệu trong cơ sở dữ liệu. Khi một transaction thực hiện thao tác, như Insert, Update hoặc Delete dữ liệu, <strong>một phiên bản mới của dữ liệu sẽ được tạo ra thay vì ghi đè lên dữ liệu cũ ngay lập tức</strong>.</p>
+
+<p>Điều này có nghĩa, mỗi SQL statement sẽ thấy một snapshot of data dựa vào thời gian thực thi câu lệnh, không quan tâm tới trạng thái hiện tại của data. Cơ chế này giúp ngăn cản việc sử dụng inconsistent data đang được thay đổi bởi các transaction khác. Sẽ nói rõ hơn ở mục Transaction Isolation</p>
+
+<p>PostgreSQL cung cấp table-level and row-level locking cho những ứng dụng không cần phải lock toàn bộ bảng.</p>
+
+<h4 id="11-các-nguyên-tắc-chính">1.1. Các nguyên tắc chính:</h4>
+<p>a. Không ghi đè ngay lập tức: Khi một giao dịch sửa đổi dữ liệu, phiên bản gốc vẫn được giữ nguyên cho các giao dịch khác đang hoạt động.
+Một bản sao mới của dữ liệu được tạo cho các thay đổi của giao dịch hiện tại.</p>
+
+<p>b. Tách biệt giữa các giao dịch: Giao dịch chỉ “thấy” phiên bản dữ liệu phù hợp với thời điểm nó bắt đầu, tránh ảnh hưởng bởi các giao dịch khác.</p>
+
+<p>c. Xóa phiên bản cũ: Các phiên bản cũ của dữ liệu sẽ được giữ lại cho đến khi không còn giao dịch nào cần chúng, sau đó PostgreSQL dọn dẹp bằng VACUUM. Việc thực thi VACUUM sẽ không làm giảm size của table.</p>
+
+<h4 id="12-ưu-điểm-của-mvcc">1.2. Ưu Điểm Của MVCC</h4>
+<p>a. Tránh khóa cứng (Hard Lock): MVCC hạn chế việc sử dụng khóa bằng cách cho phép các giao dịch đọc dữ liệu cũ mà không chờ giao dịch khác hoàn thành.</p>
+
+<p>b. Cải thiện hiệu năng: Các giao dịch đọc không bị chặn bởi các giao dịch ghi, và các giao dịch ghi sẽ không bị chặn với các giao dịch đọc. Điều này giúp tăng khả năng xử lý đồng thời.</p>
+
+<p>c. Hỗ trợ nhiều mức độ cô lập (Isolation Levels): MVCC dễ dàng hỗ trợ các mức cô lập như Read Committed, Repeatable Read, và Serializable.</p>
+
+<h4 id="13-hạn-chế-của-mvcc">1.3. Hạn Chế Của MVCC</h4>
+<p>a. Tốn không gian lưu trữ: Các phiên bản cũ của dữ liệu sẽ chiếm thêm không gian cho đến khi được dọn dẹp bởi VACUUM. Điều này có thể PostgreSQL không tối ưu cho những ứng dụng cần ghi nhiều, update liên tục. (Ví dụ như Notion) Đây cũng là một trong những lý do khiến Uber chuyển từ Postgres qua Mysql [2].</p>
+
+<p>b. Quản lý phức tạp: Việc dọn dẹp phiên bản cũ đòi hỏi thêm tài nguyên và có thể làm tăng thời gian thực hiện.</p>
+
+<h4 id="14-demo">1.4. Demo</h4>
+
+<p>Tạo table</p>
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">set</span> <span class="n">search_path</span> <span class="o">=</span> <span class="n">mastering_postgres</span> <span class="p">;</span>
+
+<span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">test_table</span> <span class="p">(</span>
+    <span class="n">id</span> <span class="nb">SERIAL</span> <span class="k">PRIMARY</span> <span class="k">KEY</span><span class="p">,</span>
+    <span class="n">value</span> <span class="nb">TEXT</span>
+<span class="p">);</span>
+
+<span class="c1">-- Insert some initial data</span>
+<span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">test_table</span> <span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">VALUES</span> <span class="p">(</span><span class="s1">'Initial Value'</span><span class="p">);</span>
+
+<span class="c1">-- Select ctid của bảng hiện tại</span>
+<span class="k">SELECT</span> <span class="n">ctid</span><span class="p">,</span> <span class="n">xmin</span><span class="p">,</span> <span class="n">xmax</span><span class="p">,</span> <span class="o">*</span> <span class="k">from</span> <span class="n">test_table</span><span class="p">;</span> 
+
+<span class="cm">/*
+ ctid  |  xmin   | xmax | id |     value
+-------+---------+------+----+---------------
+ (0,1) | 2357896 |    0 |  1 | Initial Value
+*/</span>
+</code></pre></div></div>
+
+<table>
+  <thead>
+    <tr>
+      <th><strong>Line Number</strong></th>
+      <th><strong>Transaction 1</strong></th>
+      <th><strong>Transaction 2</strong></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1</td>
+      <td>BEGIN;</td>
+      <td>BEGIN;</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td><code class="language-plaintext highlighter-rouge">UPDATE test_table SET value = 'Updated Value' WHERE id = 1;</code> <br /><br />– At this point, the update is not yet committed. <br /> – Other transactions won’t see this change.</td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td><code class="language-plaintext highlighter-rouge">SELECT ctid, * FROM test_table;</code> <br /><br /> Note that the ctid change to (0, 2) even the transaction has not been commit.</td>
+      <td><code class="language-plaintext highlighter-rouge">SELECT ctid, * FROM test_table;</code> <br /><br /> Value of (id, value) will be (1, Initial Value) <br /> – The “Updated Value” from Transaction 1 is NOT visible because it’s not committed.   <br /> (ctid) = (0, 1), still refer to old row</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td><code class="language-plaintext highlighter-rouge">COMMIT;</code> <br /> – The change is now committed and visible to other transactions.</td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td> </td>
+      <td><code class="language-plaintext highlighter-rouge">SELECT citd, * FROM test_table;</code> <br /> – Read again, and see value ‘Updated Value’</td>
+    </tr>
+    <tr>
+      <td>6</td>
+      <td> </td>
+      <td><code class="language-plaintext highlighter-rouge">COMMIT;</code></td>
+    </tr>
+  </tbody>
+</table>
+
+<h3 id="2-references">2. References</h3>
+<ol>
+  <li><a href="https://vladmihalcea.com/how-does-mvcc-multi-version-concurrency-control-work/">How does MCVV work?</a></li>
+  <li><a href="https://www.uber.com/en-IE/blog/postgres-to-mysql-migration/">Why Uber Engineering Switched from Postgres to MySQL</a></li>
+</ol>
+
+  </div><a class="u-url" href="/technical/85-postgres-concurrency-control-mvcc" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Contact</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Minh Nhật&#39;s blog</li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p></p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
