@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>PostgreSQL: Permission overview | Minh Nhật’s blog</title>
+<meta name="generator" content="Jekyll v3.10.0" />
+<meta property="og:title" content="PostgreSQL: Permission overview" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="1. Database roles 1.1. Role attribute 1.2. Role membership 1.3. Drop role 1.4. Change role inside session 2. Privileges 3. Use case 4. References" />
+<meta property="og:description" content="1. Database roles 1.1. Role attribute 1.2. Role membership 1.3. Drop role 1.4. Change role inside session 2. Privileges 3. Use case 4. References" />
+<link rel="canonical" href="/technical/86-postgres-permission" />
+<meta property="og:url" content="/technical/86-postgres-permission" />
+<meta property="og:site_name" content="Minh Nhật’s blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2025-01-19T00:02:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="PostgreSQL: Permission overview" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2025-01-19T00:02:00+00:00","datePublished":"2025-01-19T00:02:00+00:00","description":"1. Database roles 1.1. Role attribute 1.2. Role membership 1.3. Drop role 1.4. Change role inside session 2. Privileges 3. Use case 4. References","headline":"PostgreSQL: Permission overview","mainEntityOfPage":{"@type":"WebPage","@id":"/technical/86-postgres-permission"},"url":"/technical/86-postgres-permission"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="Minh Nhật&apos;s blog" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Minh Nhật&#39;s blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <!-- <div class="trigger"><a class="page-link" href="/404.html"></a><a class="page-link" href="/about/">Về tôi</a><a class="page-link" href="/art">art</a><a class="page-link" href="/finance">Finance</a><a class="page-link" href="/"></a><a class="page-link" href="/assets/main.css"></a><a class="page-link" href="/opinion">opinion</a><a class="page-link" href="/philosophy">Philosophy</a><a class="page-link" href="/technical">technical</a><a class="page-link" href="/art">art</a><a class="page-link" href="/art/">art</a><a class="page-link" href="/finance">Finance</a><a class="page-link" href="/finance/">Finance</a><a class="page-link" href="/"></a><a class="page-link" href="/"></a><a class="page-link" href="/page1/"></a><a class="page-link" href="/page2/"></a><a class="page-link" href="/page3/"></a><a class="page-link" href="/page4/"></a><a class="page-link" href="/opinion">opinion</a><a class="page-link" href="/opinion/">opinion</a><a class="page-link" href="/philosophy">Philosophy</a><a class="page-link" href="/philosophy/">Philosophy</a><a class="page-link" href="/technical">technical</a><a class="page-link" href="/technical/">technical</a><a class="page-link" href="/feed.xml"></a></div> -->
+        <div class="trigger">
+          <a class="page-link" href="/philosophy">Triết học</a>
+          <a class="page-link" href="/art">Văn, thơ, nhạc</a>
+          <a class="page-link" href="/opinion">Góc nhìn cá nhân</a>
+          <a class="page-link" href="/technical">IT</a>
+          <a class="page-link" href="/finance">Finance</a>
+          <a class="page-link" href="/about">Về tôi</a>
+        </div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">86.  PostgreSQL: Permission overview</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2025-01-19T00:02:00+00:00" itemprop="datePublished">Jan 19, 2025
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <ul>
+  <li><a href="#1-database-roles">1. Database roles</a>
+    <ul>
+      <li><a href="#11-role-attribute">1.1. Role attribute</a></li>
+      <li><a href="#12-role-membership">1.2. Role membership</a></li>
+      <li><a href="#13-drop-role">1.3. Drop role</a></li>
+      <li><a href="#14-change-role-inside-session">1.4. Change role inside session</a></li>
+    </ul>
+  </li>
+  <li><a href="#2-privileges">2. Privileges</a></li>
+  <li><a href="#3-use-case">3. Use case</a></li>
+  <li><a href="#4-references">4. References</a></li>
+</ul>
+
+<p>Tuần rồi tôi gặp 1 số vấn đề liên quan đến Postgres permission. Tuy đã giải quyết xong nhưng thực sự, tôi vẫn chưa hiểu rõ lắm. Bài này viết ra với mục đích tổng hợp kiến thức liên quan tới Postgres permission ở dạng cơ bản, với hy vọng, trong quá trình đọc thêm tài liệu để viết bài, tôi có thể lý giải rõ hơn khó khăn đã gặp.</p>
+
+<h3 id="1-database-roles">1. Database roles</h3>
+<p>Thông thường, khi tiếp cận với database, ta thường không quá mức để ý đến vấn đề phân quyền (permission). Khi develop ứng dụng, ta thường sử dụng quyền cao nhất để thực hiện tác thao tác xoá, sửa cho thuận tiện. Tuy nhiên, khi deploy lên Production, ta cần phân quyền để bảo mật và giới hạn rủi ro.</p>
+
+<p>PostgreSQL quản lý quyền bằng khái niệm <em>role</em>.[3]. Một role có thể là database user, group of database user, role, … tuỳ vào cách mà ta thiết lập. Điều khác biệt duy nhất giữa role và user là role không có attribute LOGIN.</p>
+
+<p>Role có thể own database object 
+(ví dụ table, function) và cấp đặc quyền 
+(privileges) trên những object này cho các role khác.</p>
+
+<p>Permission trong Postgres chia làm nhiều tầng khác nhau: database instance, schema, table, function,… Đôi khi, có quyền ở table, nhưng thiếu quyền ở schema có thể phát sinh lỗi khi thực hiện câu lệnh.</p>
+
+<p>PostgreSQL role tồn tại ở instance level. Tức là tất cả database đều thấy được role đó. [4]</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">-- Tạo role </span>
+<span class="c1">-- name = tên role cần tạo</span>
+<span class="k">CREATE</span> <span class="k">ROLE</span> <span class="o">&lt;</span><span class="n">name</span><span class="o">&gt;</span><span class="p">;</span>
+
+<span class="c1">-- Xoá role </span>
+<span class="k">DROP</span> <span class="k">ROLE</span> <span class="o">&lt;</span><span class="n">name</span><span class="o">&gt;</span><span class="p">;</span>
+
+<span class="c1">-- Để xác định những role đang tồn tại</span>
+<span class="c1">-- có thể bỏ pg_catalog schema. </span>
+<span class="c1">-- Câu sql này tương đương với psql: \du </span>
+<span class="k">SELECT</span> <span class="n">rolname</span> <span class="k">FROM</span> <span class="n">pg_catalog</span><span class="p">.</span><span class="n">pg_roles</span><span class="p">;</span>
+
+</code></pre></div></div>
+
+<p>Thông thường, khi khởi tạo postgres, ta sẽ có role postgres với quyền superuser. Đây là quyền cao nhất trong Postgres, tương đương với root trong Linux.</p>
+
+<h4 id="11-role-attribute">1.1. Role attribute</h4>
+<p>Khi tạo role, ta có thể kèm theo các attribute với các ý nghĩa khác nhau. Ví dụ</p>
+<ul>
+  <li>LOGIN: cho phép role này login hay không</li>
+  <li>SUPPERUSER: role này có phải là super user hay không. Không nên lạm dụng super user role</li>
+  <li>CREATEDB: role này có được phép tạo database hay không</li>
+  <li>CREATEROLE: role này có được phép tạo role mới hay không</li>
+  <li>PASSWORD: set password cho role</li>
+</ul>
+
+<p>Dựa vào attribute LOGIN, ta có thể linh hoạt trong việc tạm thời deactive 1 user bất kỳ. Giả sử, ta có user flyway_db_user, chuyên dùng để tạo bảng, thay đổi bảng thông qua việc sử dụng Flyway. User này chỉ nên được mở, cho phép LOGIN khi có yêu cầu. Việc này giúp quản lý các schema, table trong database. Tránh việc tạo quá nhiều bảng, bảng không đồng nhất giữa các môi trường DEV, STAGE, PROD.</p>
+
+<h4 id="12-role-membership">1.2. Role membership</h4>
+<p>Để thuận lợi cho việc quản lý, role thường được gom nhóm thành 1 group. Các privilege sẽ được grant, revoke dựa theo group permission. Trong PostgreSQL, điều này thực hiện bằng cách tạo 1 role đại điện cho group, sau đó grant membership của group đó cho individual user</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">-- syntax </span>
+<span class="k">GRANT</span> <span class="n">group_role</span> <span class="k">TO</span> <span class="n">role1</span><span class="p">,</span> <span class="p">...</span> <span class="p">;</span>
+<span class="k">REVOKE</span> <span class="n">group_role</span> <span class="k">FROM</span> <span class="n">role1</span><span class="p">,</span> <span class="p">...</span> <span class="p">;</span>
+</code></pre></div></div>
+
+<p>Ta sẽ lấy ví dụ trong PostgreSQL document, để minh hoạ về roles, và inherit</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">-- role joe được xem như user, và có thể login  </span>
+<span class="k">CREATE</span> <span class="k">ROLE</span> <span class="n">joe</span> <span class="n">LOGIN</span><span class="p">;</span>
+
+<span class="c1">-- tạo role </span>
+<span class="k">CREATE</span> <span class="k">ROLE</span> <span class="k">admin</span><span class="p">;</span>
+<span class="k">CREATE</span> <span class="k">ROLE</span> <span class="n">wheel</span><span class="p">;</span>
+<span class="k">CREATE</span> <span class="k">ROLE</span> <span class="n">island</span><span class="p">;</span>
+
+<span class="c1">-- grant members</span>
+<span class="k">GRANT</span> <span class="k">admin</span> <span class="k">TO</span> <span class="n">joe</span> <span class="k">WITH</span> <span class="n">INHERIT</span> <span class="k">TRUE</span><span class="p">;</span>
+<span class="k">GRANT</span> <span class="n">wheel</span> <span class="k">TO</span> <span class="k">admin</span> <span class="k">WITH</span> <span class="n">INHERIT</span> <span class="k">FALSE</span><span class="p">;</span>
+<span class="k">GRANT</span> <span class="n">island</span> <span class="k">TO</span> <span class="n">joe</span> <span class="k">WITH</span> <span class="n">INHERIT</span> <span class="k">TRUE</span><span class="p">,</span> <span class="k">SET</span> <span class="k">FALSE</span><span class="p">;</span>
+
+<span class="cm">/*
+Relationship 
+wheel -&gt; admin -&gt; joe 
+island -&gt; joe 
+*/</span>
+</code></pre></div></div>
+<p>Minh hoạ membership hierarchy 
+<img src="/assets/images/2025/86_membership_hierarchy.png" alt="alt text" /></p>
+
+<p>Để kiểm tra xem user có thuộc vào 1 group nào không, ta có thể dùng DBEaver để kiểm tra, đây cũng là cách dễ nhất nếu ta không thường xuyên tiếp xúc với command line. Tuy nhiên, PostgreSQL có hỗ trợ hàm để kiểm tra membership. Điểm lợi của hàm này là ta có thể kiểm tra direct và indirect membership</p>
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">-- pg_has_role ( [ user name or oid, ] role text or oid, privilege text ) → boolean</span>
+<span class="c1">-- Does user have privilege for role? </span>
+
+<span class="c1">-- nhắc lại, relationship là wheel -&gt; admin -&gt; joe </span>
+<span class="k">select</span> <span class="n">pg_has_role</span><span class="p">(</span><span class="s1">'joe'</span><span class="p">,</span> <span class="s1">'admin'</span><span class="p">,</span> <span class="s1">'MEMBER'</span><span class="p">);</span> <span class="c1">-- true, direct relationship </span>
+<span class="k">select</span> <span class="n">pg_has_role</span><span class="p">(</span><span class="s1">'joe'</span><span class="p">,</span> <span class="s1">'wheel'</span><span class="p">,</span> <span class="s1">'MEMBER'</span><span class="p">);</span> <span class="c1">-- true, indirect relationship </span>
+<span class="k">select</span> <span class="n">pg_has_role</span><span class="p">(</span><span class="s1">'admin'</span><span class="p">,</span> <span class="s1">'wheel'</span><span class="p">,</span> <span class="s1">'MEMBER'</span><span class="p">);</span> <span class="c1">-- true </span>
+
+
+<span class="k">select</span> <span class="n">pg_has_role</span><span class="p">(</span><span class="s1">'wheel'</span><span class="p">,</span> <span class="s1">'admin'</span><span class="p">,</span> <span class="s1">'MEMBER'</span><span class="p">);</span> <span class="c1">-- false </span>
+</code></pre></div></div>
+
+<h4 id="13-drop-role">1.3. Drop role</h4>
+<p>Mỗi role có thể own nhiều database object hoặc được grant 1 số privilege. Trước khi sử dụng lệnh <code class="language-plaintext highlighter-rouge">DROP ROLE</code>, ta cần chuyển owner của database object tới cho user khác.</p>
+
+<p>Có thể sử dụng lệnh <code class="language-plaintext highlighter-rouge">ALTER</code> để chuyển đổi owner</p>
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">ALTER</span> <span class="k">TABLE</span> <span class="n">bobs_table</span> <span class="k">OWNER</span> <span class="k">TO</span> <span class="n">alice</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>Tuy nhiên, trong thực tế, việc này rất khó. Tôi vẫn chưa tìm ra cách nào để xác định các database object mà 1 role/user sở hữu. Một cách khác là sử dụng tổ hợp lệnh sau</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">REASSIGN</span> <span class="n">OWNED</span> <span class="k">BY</span> <span class="n">doomed_role</span> <span class="k">TO</span> <span class="n">successor_role</span><span class="p">;</span>
+<span class="k">DROP</span> <span class="n">OWNED</span> <span class="k">BY</span> <span class="n">doomed_role</span><span class="p">;</span>
+<span class="c1">-- repeat the above commands in each database of the cluster</span>
+<span class="k">DROP</span> <span class="k">ROLE</span> <span class="n">doomed_role</span><span class="p">;</span>
+</code></pre></div></div>
+
+<h4 id="14-change-role-inside-session">1.4. Change role inside session</h4>
+<p>Ta có thể chuyển đổi qua lại giữa các role trong session đang làm việc mà không cần phải login bằng 1 user khác. Việc này khá thuận tiện. Việc chuyển đổi này có được thực hiện hay không tuỳ vào thuộc vào config khi tạo role hoặc khi GRANT.</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">-- xem hiện tại đang ở role này </span>
+<span class="k">SELECT</span> <span class="k">current_role</span><span class="p">;</span>
+
+<span class="c1">-- thay đổi role </span>
+<span class="k">SET</span> <span class="k">ROLE</span> <span class="n">db_rw_user</span><span class="p">;</span>
+
+<span class="c1">-- trả về role cũ </span>
+<span class="k">RESET</span> <span class="k">ROLE</span><span class="p">;</span>
+</code></pre></div></div>
+
+<h3 id="2-privileges">2. Privileges</h3>
+<p>Khi 1 database object được khởi tạo, nó sẽ được gán 1 owner. Thông thường, owner sẽ là role chạy lệnh tạo. Owner hoặc superuser có thể thực hiện tất cả operation với database object. Để user/role khác thực hiện các operation trên db object, cần phải cấp privileges.</p>
+
+<p>Có nhiều privileges khác nhau: SELECT, INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER, CREATE, CONNECT, TEMPORARY, EXECUTE, USAGE, SET and ALTER SYSTEM.</p>
+
+<p>Quyền thay đổi (vd như thêm cột) hay xoá 1 object thuộc về owner hoặc superuser. Tuy nhiên, ta có thể assign owner cho 1 role khác bằng câu lệnh <code class="language-plaintext highlighter-rouge">ALTER</code></p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">-- chỉ owner hoặc superuser được phép thực hiện câu lệnh này.</span>
+
+<span class="k">ALTER</span> <span class="k">TABLE</span> <span class="k">table_name</span> <span class="k">OWNER</span> <span class="k">TO</span> <span class="n">new_owner</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>Một số privileges cần chú ý:</p>
+<ul>
+  <li>SELECT, INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER: những privilege này khá dễ hiểu</li>
+  <li>CREATE:
+    <ul>
+      <li>Với database, cho phép tạo mới schema, cho phép cài đặt extension</li>
+      <li>Với schema, co phép tạo mới table</li>
+      <li>Không rõ về khái niệm tablespaces</li>
+    </ul>
+  </li>
+  <li>CONNECT: Cho phép kết nối với database, quyền này được kiểm tra lúc login. Do đó, nếu muốn lock user nào đó, chỉ cần REVOKE quyền này là đủ.</li>
+  <li>EXECUTE: cho phép gọi function hoặc procedure. Quyền này chỉ áp dụng cho function và procedure</li>
+  <li>USAGE
+    <ul>
+      <li>Không rõ về procedural language</li>
+      <li>Với schema, cho phép truy câp các object trong schema đó, giả sử rằng điều kiện về owner đã thoả mãn. Nó cho phép grantee “tìm kiếm” object trong schema. Thiếu quyền này, không thể insert bảng có foreign key.</li>
+      <li>Với sequence, cho phép sử dụng currval và nextval function</li>
+    </ul>
+  </li>
+</ul>
+
+<h3 id="3-use-case">3. Use case</h3>
+<p>Đây là 1 use case tôi gặp, khi dùng postgres user khởi tạo 2 bảng, có foreign key reference. Sau đó, chuyển owner của 2 bảng này sang 1 user khác. Từ đây, ta không thể insert vào bảng có foreign key, dù sử dụng superuser. Đây chính là nguyên nhân khiến tôi tìm hiểu sâu hơn về Postgres permission</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="c1">-- create user db_rw_user </span>
+<span class="k">create</span> <span class="k">user</span> <span class="n">db_rw_user</span> <span class="n">password</span> <span class="s1">'db_rw_user'</span><span class="p">;</span>
+
+<span class="c1">-- create database and grant connect permission to db_rw_user</span>
+<span class="k">create</span> <span class="k">database</span> <span class="n">test</span><span class="p">;</span> 
+<span class="k">grant</span> <span class="k">connect</span> <span class="k">on</span> <span class="k">database</span> <span class="n">test</span> <span class="k">to</span> <span class="n">db_rw_user</span><span class="p">;</span>
+
+<span class="c1">-- create schema using postgres </span>
+<span class="k">create</span> <span class="k">schema</span> <span class="n">test_permission</span><span class="p">;</span>
+
+<span class="c1">-- set search_path</span>
+<span class="k">set</span> <span class="n">search_path</span><span class="o">=</span><span class="n">test_permission</span><span class="p">;</span>
+
+<span class="c1">-- create table </span>
+<span class="k">create</span> <span class="k">table</span> <span class="n">student</span><span class="p">(</span><span class="n">id</span> <span class="nb">int</span><span class="p">,</span> <span class="n">name</span> <span class="nb">text</span><span class="p">,</span> <span class="k">primary</span> <span class="k">key</span><span class="p">(</span><span class="n">id</span><span class="p">));</span>
+
+<span class="k">create</span> <span class="k">table</span> <span class="n">course</span><span class="p">(</span><span class="n">studentId</span> <span class="nb">int</span><span class="p">,</span> <span class="n">course</span> <span class="nb">text</span><span class="p">);</span>
+
+<span class="k">ALTER</span> <span class="k">TABLE</span> <span class="n">course</span>
+      <span class="k">ADD</span> <span class="k">CONSTRAINT</span> <span class="n">fk_course</span> <span class="k">FOREIGN</span> <span class="k">KEY</span> <span class="p">(</span><span class="n">studentId</span><span class="p">)</span> 
+          <span class="k">REFERENCES</span> <span class="n">student</span> <span class="p">(</span><span class="n">id</span><span class="p">);</span>
+         
+<span class="c1">-- change owner of table to db_rw user</span>
+<span class="k">alter</span> <span class="k">table</span> <span class="n">student</span> <span class="k">owner</span> <span class="k">to</span> <span class="n">db_rw_user</span><span class="p">;</span>
+<span class="k">alter</span> <span class="k">table</span> <span class="n">course</span> <span class="k">owner</span> <span class="k">to</span> <span class="n">db_rw_user</span><span class="p">;</span>
+
+<span class="c1">-- student is a standalone table, don't have nay foreign key reference, so we can insert it </span>
+<span class="k">insert</span> <span class="k">into</span> <span class="n">student</span> <span class="p">(</span><span class="n">id</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span> <span class="k">values</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s1">'name 1'</span><span class="p">);</span>      
+<span class="k">insert</span> <span class="k">into</span> <span class="n">student</span> <span class="p">(</span><span class="n">id</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span> <span class="k">values</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="s1">'name 2'</span><span class="p">);</span>   
+
+<span class="c1">-- fail to insert course table, because we have foreign key reference </span>
+<span class="c1">--  ERROR: permission denied for schema test_permission</span>
+<span class="k">insert</span> <span class="k">into</span> <span class="n">course</span> <span class="p">(</span><span class="n">studentid</span><span class="p">,</span> <span class="n">course</span><span class="p">)</span> <span class="k">values</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s1">'course 1'</span><span class="p">);</span>
+
+
+<span class="c1">-- first, we need to check the privilege of table and user db_rw_user </span>
+<span class="c1">-- user db_rw_user has all permission on table </span>
+<span class="k">SELECT</span> 
+     <span class="n">tablename</span>
+     <span class="p">,</span><span class="n">usename</span>
+     <span class="p">,</span><span class="n">HAS_TABLE_PRIVILEGE</span><span class="p">(</span><span class="n">users</span><span class="p">.</span><span class="n">usename</span><span class="p">,</span> <span class="n">tablename</span><span class="p">,</span> <span class="s1">'select'</span><span class="p">)</span> <span class="k">AS</span> <span class="n">sel</span>
+     <span class="p">,</span><span class="n">HAS_TABLE_PRIVILEGE</span><span class="p">(</span><span class="n">users</span><span class="p">.</span><span class="n">usename</span><span class="p">,</span> <span class="n">tablename</span><span class="p">,</span> <span class="s1">'insert'</span><span class="p">)</span> <span class="k">AS</span> <span class="n">ins</span>
+     <span class="p">,</span><span class="n">HAS_TABLE_PRIVILEGE</span><span class="p">(</span><span class="n">users</span><span class="p">.</span><span class="n">usename</span><span class="p">,</span> <span class="n">tablename</span><span class="p">,</span> <span class="s1">'update'</span><span class="p">)</span> <span class="k">AS</span> <span class="n">upd</span>
+     <span class="p">,</span><span class="n">HAS_TABLE_PRIVILEGE</span><span class="p">(</span><span class="n">users</span><span class="p">.</span><span class="n">usename</span><span class="p">,</span> <span class="n">tablename</span><span class="p">,</span> <span class="s1">'delete'</span><span class="p">)</span> <span class="k">AS</span> <span class="n">del</span>
+     <span class="p">,</span><span class="n">HAS_TABLE_PRIVILEGE</span><span class="p">(</span><span class="n">users</span><span class="p">.</span><span class="n">usename</span><span class="p">,</span> <span class="n">tablename</span><span class="p">,</span> <span class="s1">'references'</span><span class="p">)</span> <span class="k">AS</span> <span class="n">refs</span>
+<span class="k">FROM</span>
+<span class="p">(</span><span class="k">SELECT</span> <span class="o">*</span> <span class="k">from</span> <span class="n">pg_tables</span>
+<span class="k">WHERE</span> <span class="n">schemaname</span> <span class="o">=</span> <span class="s1">'test_permission'</span> <span class="k">and</span> <span class="n">tablename</span> <span class="k">in</span> <span class="p">(</span><span class="s1">'student'</span><span class="p">,</span><span class="s1">'course'</span><span class="p">))</span> <span class="k">as</span> <span class="n">tables</span>
+<span class="p">,(</span><span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="n">pg_user</span> <span class="k">where</span> <span class="n">usename</span> <span class="o">=</span> <span class="s1">'db_rw_user'</span><span class="p">)</span> <span class="k">AS</span> <span class="n">users</span><span class="p">;</span>
+
+
+<span class="c1">-- next, checking schema permission.</span>
+<span class="c1">-- user db_rw_user don't have USAGE permission on test_permission schema ==&gt; prevent "look up" for foreign key </span>
+<span class="k">SELECT</span> <span class="n">has_schema_privilege</span><span class="p">(</span><span class="s1">'db_rw_user'</span><span class="p">,</span> <span class="s1">'test_permission'</span><span class="p">,</span> <span class="s1">'USAGE'</span><span class="p">)</span> <span class="k">AS</span> <span class="n">has_usage_permission</span><span class="p">;</span>
+
+
+<span class="c1">-- Try to grant USAGE privilege </span>
+<span class="k">GRANT</span> <span class="k">USAGE</span> <span class="k">ON</span> <span class="k">SCHEMA</span> <span class="n">test_permission</span> <span class="k">TO</span> <span class="n">db_rw_user</span><span class="p">;</span>
+
+<span class="k">SELECT</span> <span class="n">has_schema_privilege</span><span class="p">(</span><span class="s1">'db_rw_user'</span><span class="p">,</span> <span class="s1">'test_permission'</span><span class="p">,</span> <span class="s1">'USAGE'</span><span class="p">)</span> <span class="k">AS</span> <span class="n">has_usage_permission</span><span class="p">;</span>
+
+<span class="c1">-- Then, try to insert student record again </span>
+<span class="c1">-- it works</span>
+<span class="k">insert</span> <span class="k">into</span> <span class="n">course</span> <span class="p">(</span><span class="n">studentid</span><span class="p">,</span> <span class="n">course</span><span class="p">)</span> <span class="k">values</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s1">'course 1'</span><span class="p">);</span> 
+</code></pre></div></div>
+
+<h3 id="4-references">4. References</h3>
+<ol>
+  <li><a href="https://www.postgresql.org/docs/16/ddl-priv.html">PostgreSQL documentation - 5.7. Privileges</a></li>
+  <li><a href="https://www.postgresql.org/docs/current/sql-grant.html">PostgreSQL documentation - Part VI. Reference - GRANT command</a></li>
+  <li><a href="https://www.postgresql.org/docs/16/user-manag.html">PostgreSQL documentation - Chapter 22. Database Roles</a></li>
+  <li><a href="https://www.postgresql.org/docs/current/sql-set-role.html">PostgreSQL documentation - Part VI. Reference - SET ROLE command</a></li>
+  <li>Mastering Postgres 13</li>
+</ol>
+
+  </div><a class="u-url" href="/technical/86-postgres-permission" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Contact</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Minh Nhật&#39;s blog</li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p></p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

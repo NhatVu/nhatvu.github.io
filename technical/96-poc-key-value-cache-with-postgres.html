@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>[POC] - Key-value cache using Postgres | Minh Nhật’s blog</title>
+<meta name="generator" content="Jekyll v3.10.0" />
+<meta property="og:title" content="[POC] - Key-value cache using Postgres" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Sometines, we can’t use Redis or Memcached for caching pupose. One reason is license problem and that technology hasn’t approved to be used inside your company. Instead, we need to design a solution that use existing infrastructure like PostgreSQL database." />
+<meta property="og:description" content="Sometines, we can’t use Redis or Memcached for caching pupose. One reason is license problem and that technology hasn’t approved to be used inside your company. Instead, we need to design a solution that use existing infrastructure like PostgreSQL database." />
+<link rel="canonical" href="/technical/96-poc-key-value-cache-with-postgres" />
+<meta property="og:url" content="/technical/96-poc-key-value-cache-with-postgres" />
+<meta property="og:site_name" content="Minh Nhật’s blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2025-08-09T08:02:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="[POC] - Key-value cache using Postgres" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2025-08-09T08:02:00+00:00","datePublished":"2025-08-09T08:02:00+00:00","description":"Sometines, we can’t use Redis or Memcached for caching pupose. One reason is license problem and that technology hasn’t approved to be used inside your company. Instead, we need to design a solution that use existing infrastructure like PostgreSQL database.","headline":"[POC] - Key-value cache using Postgres","mainEntityOfPage":{"@type":"WebPage","@id":"/technical/96-poc-key-value-cache-with-postgres"},"url":"/technical/96-poc-key-value-cache-with-postgres"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="Minh Nhật&apos;s blog" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Minh Nhật&#39;s blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <!-- <div class="trigger"><a class="page-link" href="/404.html"></a><a class="page-link" href="/about/">Về tôi</a><a class="page-link" href="/art">art</a><a class="page-link" href="/finance">Finance</a><a class="page-link" href="/"></a><a class="page-link" href="/assets/main.css"></a><a class="page-link" href="/opinion">opinion</a><a class="page-link" href="/philosophy">Philosophy</a><a class="page-link" href="/technical">technical</a><a class="page-link" href="/art">art</a><a class="page-link" href="/art/">art</a><a class="page-link" href="/finance">Finance</a><a class="page-link" href="/finance/">Finance</a><a class="page-link" href="/"></a><a class="page-link" href="/"></a><a class="page-link" href="/page1/"></a><a class="page-link" href="/page2/"></a><a class="page-link" href="/page3/"></a><a class="page-link" href="/page4/"></a><a class="page-link" href="/opinion">opinion</a><a class="page-link" href="/opinion/">opinion</a><a class="page-link" href="/philosophy">Philosophy</a><a class="page-link" href="/philosophy/">Philosophy</a><a class="page-link" href="/technical">technical</a><a class="page-link" href="/technical/">technical</a><a class="page-link" href="/feed.xml"></a></div> -->
+        <div class="trigger">
+          <a class="page-link" href="/philosophy">Triết học</a>
+          <a class="page-link" href="/art">Văn, thơ, nhạc</a>
+          <a class="page-link" href="/opinion">Góc nhìn cá nhân</a>
+          <a class="page-link" href="/technical">IT</a>
+          <a class="page-link" href="/finance">Finance</a>
+          <a class="page-link" href="/about">Về tôi</a>
+        </div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">96. [POC] - Key-value cache using Postgres</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2025-08-09T08:02:00+00:00" itemprop="datePublished">Aug 9, 2025
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>Sometines, we can’t use Redis or Memcached for caching pupose. One reason is license problem and that technology hasn’t approved to be used inside your company. Instead, we need to design a solution that use existing infrastructure like PostgreSQL database.</p>
+
+<p>Note: Using ChatGPT to plan the idea</p>
+
+<h2 id="core-features">Core features</h2>
+
+<p>We need to design a caching solution that satisfy these constrains:</p>
+
+<ul>
+  <li>Using Postgres</li>
+  <li>Support TimeToLive or Expired time</li>
+  <li>Support Least Recent Used (LRU) behaviour. We can active refresh cache that frequently used and/optional delete old cached</li>
+  <li>Support unique refresh for key if the application running on multiple instances.</li>
+  <li>Using background refresh job to simplify the app logic</li>
+</ul>
+
+<h2 id="design-and-important-sql-queries">Design and important SQL queries</h2>
+
+<h3 id="table">Table</h3>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">cache_entries</span> <span class="p">(</span>
+    <span class="k">key</span> <span class="nb">TEXT</span> <span class="k">PRIMARY</span> <span class="k">KEY</span><span class="p">,</span>
+    <span class="n">value</span> <span class="n">JSONB</span><span class="p">,</span>
+    <span class="n">expires_at</span> <span class="nb">TIMESTAMP</span><span class="p">,</span>       <span class="c1">-- When value is considered expired</span>
+    <span class="n">last_accessed_at</span> <span class="nb">TIMESTAMP</span><span class="p">,</span> <span class="c1">-- timestamp every time the key is read from cache. Support LRU</span>
+    <span class="n">refresh_started_at</span> <span class="nb">TIMESTAMP</span><span class="p">,</span>     <span class="c1">-- When value was last recomputed</span>
+    <span class="n">is_refreshing</span> <span class="nb">BOOLEAN</span><span class="p">,</span>       <span class="c1">-- Used to prevent duplicate refresh</span>
+    <span class="n">updated_at</span> <span class="nb">TIMESTAMP</span>
+<span class="p">);</span>
+
+</code></pre></div></div>
+
+<h3 id="logics">Logics</h3>
+
+<p><strong>User Request (can have multiple applicaitons) →</strong></p>
+<ul>
+  <li>Check cache_entries →
+    <ul>
+      <li>if fresh → use</li>
+      <li>if expired → use (optional), refresh (optional)</li>
+      <li>if missing → compute, insert to cache</li>
+      <li>when a key is used, always record the last_accessed_at. Using batch update, remove duplicated key to reduce database stress.</li>
+    </ul>
+  </li>
+</ul>
+
+<p><strong>Batch Worker (can have multiple workers) →</strong></p>
+<ul>
+  <li>every X min →
+    <ul>
+      <li>find near-expired keys →</li>
+      <li>acquire lock (UPDATE with conditions) →</li>
+      <li>compute →</li>
+      <li>update value, release lock</li>
+    </ul>
+  </li>
+</ul>
+
+<p><strong>Cleanup Job →</strong></p>
+<ul>
+  <li>delete old unused keys</li>
+</ul>
+
+<h3 id="sql-queries-for-batch-refresh-key">SQL queries for batch refresh key</h3>
+
+<p>a. Select key to refresh</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">SELECT</span> <span class="k">key</span> <span class="k">FROM</span> <span class="n">cache_entries</span>
+<span class="k">WHERE</span> <span class="n">expires_at</span> <span class="o">&lt;=</span> <span class="n">now</span><span class="p">()</span>
+  <span class="k">AND</span> <span class="n">last_accessed_at</span> <span class="o">&gt;=</span> <span class="n">now</span><span class="p">()</span> <span class="o">-</span> <span class="n">interval</span> <span class="s1">'7 days'</span> <span class="c1">-- used in last 7 days</span>
+  <span class="k">AND</span> <span class="p">(</span><span class="n">is_refreshing</span> <span class="o">=</span> <span class="k">false</span> <span class="k">OR</span> <span class="n">refresh_started_at</span> <span class="o">&lt;</span> <span class="n">now</span><span class="p">()</span> <span class="o">-</span> <span class="n">interval</span> <span class="s1">'5 minutes'</span><span class="p">)</span> <span class="c1">-- is not refreshing by other service or stuck at least 5 mintues (in case app refresh during refresh or network failure)</span>
+<span class="k">ORDER</span> <span class="k">BY</span> <span class="n">expires_at</span> <span class="k">ASC</span>
+<span class="k">LIMIT</span> <span class="mi">50</span><span class="p">;</span>
+</code></pre></div></div>
+
+<ul>
+  <li>This ensures you don’t waste resources refreshing stale/inactive data.</li>
+  <li>If refresh a key fail, make sure that key can be refresh again. For safety reason.</li>
+</ul>
+
+<p>b. Acquiring refresh lock</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">UPDATE</span> <span class="n">cache_entries</span>
+<span class="k">SET</span> <span class="n">is_refreshing</span> <span class="o">=</span> <span class="k">true</span><span class="p">,</span>
+    <span class="n">refresh_started_at</span> <span class="o">=</span> <span class="n">now</span><span class="p">()</span>
+<span class="k">WHERE</span> <span class="k">key</span> <span class="o">=</span> <span class="o">?</span> <span class="k">AND</span> <span class="p">(</span><span class="n">is_refreshing</span> <span class="o">=</span> <span class="k">false</span> <span class="k">OR</span> <span class="n">refresh_started_at</span> <span class="o">&lt;</span> <span class="n">now</span><span class="p">()</span> <span class="o">-</span> <span class="n">interval</span> <span class="s1">'5 minutes'</span><span class="p">)</span>
+</code></pre></div></div>
+
+<ul>
+  <li>Only one app instance should refresh the key. Use an atomic update query to acquire the lock</li>
+  <li>The condition ensures you can reclaim the lock if it’s stuck older than 5 minutes (tunable)</li>
+  <li>This returns 1 row affected only if the lock was acquired.</li>
+</ul>
+
+<p>c. Release lock after refresh</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">UPDATE</span> <span class="n">cache_entries</span>
+<span class="k">SET</span> <span class="n">is_refreshing</span> <span class="o">=</span> <span class="k">false</span><span class="p">,</span>
+    <span class="n">refresh_started_at</span> <span class="o">=</span> <span class="k">NULL</span><span class="p">,</span> <span class="c1">-- must be null</span>
+    <span class="n">value</span> <span class="o">=</span> <span class="o">?</span><span class="p">,</span>                <span class="c1">-- optional: update with new value</span>
+    <span class="n">expires_at</span> <span class="o">=</span> <span class="o">?</span>           <span class="c1">-- optional: update expiration time</span>
+
+<span class="k">WHERE</span> <span class="k">key</span> <span class="o">=</span> <span class="o">?</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>d. LRU-style cleanup</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">DELETE</span> <span class="k">FROM</span> <span class="n">cache_entries</span>
+<span class="k">WHERE</span> <span class="n">last_accessed_at</span> <span class="o">&lt;</span> <span class="n">now</span><span class="p">()</span> <span class="o">-</span> <span class="n">interval</span> <span class="s1">'7 days'</span>
+</code></pre></div></div>
+
+<p>e. Update last access</p>
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">UPDATE</span> <span class="n">cache_entries</span>
+<span class="k">SET</span> <span class="n">last_accessed_at</span> <span class="o">=</span> <span class="n">now</span><span class="p">()</span>
+<span class="k">WHERE</span> <span class="k">key</span> <span class="o">=</span> <span class="o">?</span><span class="p">;</span>
+</code></pre></div></div>
+
+<h3 id="sample-code">Sample code</h3>
+<p>https://github.com/NhatVu/proof-of-concept/tree/main/postgres-key-value-cache</p>
+
+
+  </div><a class="u-url" href="/technical/96-poc-key-value-cache-with-postgres" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Contact</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Minh Nhật&#39;s blog</li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p></p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

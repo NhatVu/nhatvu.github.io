@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Access token và Refresh token | Minh Nhật’s blog</title>
+<meta name="generator" content="Jekyll v3.10.0" />
+<meta property="og:title" content="Access token và Refresh token" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Outline Sơ lược về Access token Tại sao cần có Refresh token? Refresh Token rotation Refresh Token Automatic Reuse Detection" />
+<meta property="og:description" content="Outline Sơ lược về Access token Tại sao cần có Refresh token? Refresh Token rotation Refresh Token Automatic Reuse Detection" />
+<link rel="canonical" href="/technical/59-refresh-token" />
+<meta property="og:url" content="/technical/59-refresh-token" />
+<meta property="og:site_name" content="Minh Nhật’s blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2023-10-07T00:01:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Access token và Refresh token" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2023-10-07T00:01:00+00:00","datePublished":"2023-10-07T00:01:00+00:00","description":"Outline Sơ lược về Access token Tại sao cần có Refresh token? Refresh Token rotation Refresh Token Automatic Reuse Detection","headline":"Access token và Refresh token","mainEntityOfPage":{"@type":"WebPage","@id":"/technical/59-refresh-token"},"url":"/technical/59-refresh-token"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="Minh Nhật&apos;s blog" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Minh Nhật&#39;s blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <!-- <div class="trigger"><a class="page-link" href="/404.html"></a><a class="page-link" href="/about/">Về tôi</a><a class="page-link" href="/art">art</a><a class="page-link" href="/finance">Finance</a><a class="page-link" href="/"></a><a class="page-link" href="/assets/main.css"></a><a class="page-link" href="/opinion">opinion</a><a class="page-link" href="/philosophy">Philosophy</a><a class="page-link" href="/technical">technical</a><a class="page-link" href="/art">art</a><a class="page-link" href="/art/">art</a><a class="page-link" href="/finance">Finance</a><a class="page-link" href="/finance/">Finance</a><a class="page-link" href="/"></a><a class="page-link" href="/"></a><a class="page-link" href="/page1/"></a><a class="page-link" href="/page2/"></a><a class="page-link" href="/page3/"></a><a class="page-link" href="/page4/"></a><a class="page-link" href="/opinion">opinion</a><a class="page-link" href="/opinion/">opinion</a><a class="page-link" href="/philosophy">Philosophy</a><a class="page-link" href="/philosophy/">Philosophy</a><a class="page-link" href="/technical">technical</a><a class="page-link" href="/technical/">technical</a><a class="page-link" href="/feed.xml"></a></div> -->
+        <div class="trigger">
+          <a class="page-link" href="/philosophy">Triết học</a>
+          <a class="page-link" href="/art">Văn, thơ, nhạc</a>
+          <a class="page-link" href="/opinion">Góc nhìn cá nhân</a>
+          <a class="page-link" href="/technical">IT</a>
+          <a class="page-link" href="/finance">Finance</a>
+          <a class="page-link" href="/about">Về tôi</a>
+        </div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">59. Access token và Refresh token</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2023-10-07T00:01:00+00:00" itemprop="datePublished">Oct 7, 2023
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>Outline</p>
+<ol>
+  <li>Sơ lược về Access token</li>
+  <li>Tại sao cần có Refresh token?</li>
+  <li>Refresh Token rotation</li>
+  <li>Refresh Token Automatic Reuse Detection</li>
+</ol>
+
+<p>Tôi vẫn luôn tự hỏi nên xử lý Refresh Token thế nào nếu lỡ nó bị leak, dù đã sử dụng cơ chế one-time token. Đến nay, mới thấy thiếu sót, ngoài cơ chế one-time token, nên tiến thêm 1 bước xa hơn nữa là invalid toàn bộ refresh token đã cấp. Bởi theo lý thuyết, 1 refresh token chỉ được sử dụng 1 lần. Nếu nó được sử dụng lần 2, rất có khả năng nó đã bị leak ra ngoài bởi hacker.</p>
+
+<p>Bài này sẽ tổng hợp những kiến thức gom nhặt được về access token và refresh token.</p>
+
+<h2 id="1-sơ-lược-về-access-token">1. Sơ lược về Access token</h2>
+<p>Thông thường, khi đăng nhập hoặc dùng OAuth, phía backend, cụ thể là Auth service, sẽ trả về cho ta 1 cặp access token và refresh token.</p>
+
+<p>Access token này được dùng để truy cập vào các protected service thay mặt cho user. Lúc này, ta có thể lấy được thông tin cần thiết. Nếu truyền sai access token, protected service sẽ reject request này.</p>
+
+<p>Theo lý thuyết, access token có thể bị đánh cắp bởi hacker. Lúc này, khi có access token hợp lệ, hacker có thể truy cập được protected service như là người dùng thực sự. Hệ thống không có cách nào để phân biệt đâu là valid user, đâu là hacker. Để giảm thiểu thiệt hại bởi việc bị leak token, access token thường có life span ngắn, thường là theo giờ hoặc theo ngày.</p>
+
+<p>Một số hệ thống thiết kế theo dạng white list, tức là sẽ lưu loại toàn bộ token đã được tạo. [1, 2] Mỗi lần verify token, Auth service sẽ kiểm tra database xem token này có hợp lệ hay không. Điều này sẽ gây nghẽn cổ chai tại Auth service khi hệ thống lớn tới 1 mức nhất định. Tuy nhiên, với cách làm white list này, ta có thể thực hiện chức năng thu hồi token. Nhưng nếu life span của token thấp, tôi nghĩ có thể chịu rủi ro mà bỏ qua phần check token trong database này.</p>
+
+<p>Với việc sử dụng thuật toán bất dồng bộ để sign và verify token, ta có thể verify ngay tại protected service mà không cần gọi tới Auth service nữa.[5]</p>
+
+<h2 id="2-tại-sao-cần-có-refresh-token">2. Tại sao cần có Refresh token?</h2>
+<p>Tuy nhiên, nếu life span của access token ngắn, sẽ dẫn tới việc user bị log out và đăng nhập lại liên tục. Với các OAuth flow, có thể bypass việc này bằng implicit flow nhưng vẫn tốn 2 request: 1 để tạo Oauth code, 2 để tạo access token. Điều này dẫn tới việc generate 1 lượng lớn oauth code không cần thiết. Để tránh làm ảnh hương tới trải nghiệm người dùng, khi đăng nhập thành công, hệ thống còn trả thêm 1 refresh token và access token sẽ được tạo lại từ refresh token này.</p>
+
+<p>Khác với access token, refresh token có life span dài hơn, nhưng khuyến nghị không quá 1 năm. Hơn nữa, refresh token chỉ tương tác duy nhất với Auth service, không tương tác với protected service.</p>
+
+<h2 id="3-refresh-token-rotation">3. Refresh Token rotation</h2>
+<p>Cơ chế này đảm bảo rằng, mỗi lần tạo mới access token bằng refresh token, thì 1 cặp access token - refresh token mới được tạo ra. Và refresh token vùa dùng để tạo bị vô hiệu hoá (invalied)</p>
+
+<p>Ví dụ: Ta có sẵn cặp AT 1 - RT 1 <br />
+Dùng RT 1 -» tạo AT 2 - RT 2 <br />
+Lúc này, RT 1 bị vô hiệu hoá.</p>
+
+<h2 id="4-refresh-token-automatic-reuse-detection">4. Refresh Token Automatic Reuse Detection</h2>
+<p>Giả sử refresh token bị leak, hacker dùng refresh token để tạo ra 1 cặp token mới. Hệ thống nên ứng xử như thế nào? Làm sao để phát hiện?</p>
+
+<p>Theo khuyến nghị, hệ thống nên invalid toàn bộ refresh token đã cấp. Lúc này, khi access token hết hạn, user buộc phải đăng nhập lại. Với các này, ta buộc phải lưu danh sách những token đã cấp</p>
+
+<p>Để phát hiện refresh token bị leak, ta sẽ có 1 danh sách hoặc 1 attribute đánh dấu những refresh token đã được sử dụng. Nếu nó được sử dụng lần thứ 2, có khả năng đã bị bên thứ 3 đánh cắp, cho nên toàn bộ refresh token cần phải bị invalid. Rất có khả năng đây ra thao tác sai từ chính user, tuy nhiên, Auth service không phân biệt được đâu là request từ user, đâu là request từ hacker, vậy nên sẽ thực hiện chiến thuật “thà giết nhầm còn hơn bỏ xót”.</p>
+
+<p>Việc invalid toàn bộ refresh token là có lợi cho hệ thống. Tuy nhiên, nếu code phía client hoặc 1 service nào đó không sửa lỗi security, thì vòng lặp user đăng nhập -&gt; cấp token -&gt; invalid token sẽ diễn ra liên tục, gây khó chịu cho user. Có thể detect vụ này bằng 1 thông báo ở api tạo token bằng refresh token nếu nó bị gọi liên tục bởi 1 user hoặc app, có khả năng đã xảy ra vấn đề. Đây là cơ chế Rate Limiter.</p>
+
+<p>So với access token, việc sử dụng refresh token diễn ra không thường xuyên, chỉ khi access token hết hạn. Bởi vậy, lượng tải cũng nhỏ hơn nhiều so với access token.  Do đó, có thể tự tin dùng white list method để lưu lại toàn bộ refresh token (có thể trong 3 hoặc 6 tháng)</p>
+
+<p><strong>Referene:</strong></p>
+<ol>
+  <li><a href="https://www.youtube.com/watch?v=1HHvCfAu008">Token (JWT) Triển khai hệ thống tự động phát hiện Token đã được sử dụng bởi Hacker và cách xử lý!</a></li>
+  <li><a href="https://www.youtube.com/watch?v=93fTk16-st0">Token (JWT) Làm sao thu hồi một token bị HACK và một vài câu hỏi về mức độ an toàn khi sử dụng token</a></li>
+  <li><a href="https://auth0.com/docs/secure/tokens/refresh-tokens/refresh-token-rotation">Refresh Token Rotation</a></li>
+  <li><a href="https://auth0.com/blog/refresh-tokens-what-are-they-and-when-to-use-them/">What Are Refresh Tokens and How to Use Them Securely</a></li>
+  <li><a href="/technical/58-ma-hoa-dong-bo-va-bat-dong-bo">58. Mã hoá đồng bộ và bất đồng bộ</a></li>
+</ol>
+
+
+  </div><a class="u-url" href="/technical/59-refresh-token" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Contact</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Minh Nhật&#39;s blog</li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p></p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
