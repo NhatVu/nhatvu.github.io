@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>[Draft][Design] - Error code | Minh Nhật’s blog</title>
+<meta name="generator" content="Jekyll v3.10.0" />
+<meta property="og:title" content="[Draft][Design] - Error code" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="In any systems, clear and informative error code is important on understanding the system behaviour, especially on operation and tracing issues." />
+<meta property="og:description" content="In any systems, clear and informative error code is important on understanding the system behaviour, especially on operation and tracing issues." />
+<link rel="canonical" href="/technical/97-design-error-code" />
+<meta property="og:url" content="/technical/97-design-error-code" />
+<meta property="og:site_name" content="Minh Nhật’s blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2025-10-20T08:02:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="[Draft][Design] - Error code" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2025-10-20T08:02:00+00:00","datePublished":"2025-10-20T08:02:00+00:00","description":"In any systems, clear and informative error code is important on understanding the system behaviour, especially on operation and tracing issues.","headline":"[Draft][Design] - Error code","mainEntityOfPage":{"@type":"WebPage","@id":"/technical/97-design-error-code"},"url":"/technical/97-design-error-code"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="Minh Nhật&apos;s blog" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Minh Nhật&#39;s blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <!-- <div class="trigger"><a class="page-link" href="/404.html"></a><a class="page-link" href="/about/">Về tôi</a><a class="page-link" href="/art">art</a><a class="page-link" href="/finance">Finance</a><a class="page-link" href="/"></a><a class="page-link" href="/assets/main.css"></a><a class="page-link" href="/opinion">opinion</a><a class="page-link" href="/philosophy">Philosophy</a><a class="page-link" href="/technical">technical</a><a class="page-link" href="/art">art</a><a class="page-link" href="/art/">art</a><a class="page-link" href="/finance">Finance</a><a class="page-link" href="/finance/">Finance</a><a class="page-link" href="/"></a><a class="page-link" href="/"></a><a class="page-link" href="/page1/"></a><a class="page-link" href="/page2/"></a><a class="page-link" href="/page3/"></a><a class="page-link" href="/page4/"></a><a class="page-link" href="/page5/"></a><a class="page-link" href="/opinion">opinion</a><a class="page-link" href="/opinion/">opinion</a><a class="page-link" href="/philosophy">Philosophy</a><a class="page-link" href="/philosophy/">Philosophy</a><a class="page-link" href="/technical">technical</a><a class="page-link" href="/technical/">technical</a><a class="page-link" href="/feed.xml"></a></div> -->
+        <div class="trigger">
+          <a class="page-link" href="/philosophy">Triết học</a>
+          <a class="page-link" href="/art">Văn, thơ, nhạc</a>
+          <a class="page-link" href="/opinion">Góc nhìn cá nhân</a>
+          <a class="page-link" href="/technical">IT</a>
+          <a class="page-link" href="/finance">Finance</a>
+          <a class="page-link" href="/about">Về tôi</a>
+        </div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">97. [Draft][Design] - Error code</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2025-10-20T08:02:00+00:00" itemprop="datePublished">Oct 20, 2025
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>In any systems, clear and informative error code is important on understanding the system behaviour, especially on operation and tracing issues.</p>
+
+<p>In this article, with the help of <strong>Claude.ai</strong>, I’m trying to propose an Error Code design for mutile modules applicaiton. Though, it can be used in Web API application too.</p>
+
+<h1 id="context">Context</h1>
+<p>On Spring Applicaiton, we have different modules, which can be called Database or Rest API. And these modules can be shared the same tables in database  or the same Rest API.</p>
+
+<p>Error code have to</p>
+<ul>
+  <li>Descriptive: Include what went wrong and ideally what to do about it</li>
+  <li>Consistency/Extensibility: Same format across the entire system and leave room for extension. Ex: Http 4xx is client error, 5xx is server error.</li>
+  <li>Categorized: support application with different moudles, and can be shared the same DB/API resource.</li>
+  <li><strong>Start minimal, add more when needed</strong>: Don’t over-design or use too detail error code.</li>
+</ul>
+
+<h1 id="proposal">Proposal</h1>
+
+<p>Error code format:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>MODULE-CATEGORY-SEQUENCE
+</code></pre></div></div>
+
+<ul>
+  <li><strong>MODULE</strong>: Application module (AUTH, USER, ORDER, PAYMENT, etc.)</li>
+  <li><strong>CATEGORY</strong>: Error type (VAL, BIZ, DB, API, SYS, etc.)</li>
+  <li><strong>SEQUENCE</strong>: Specific error number (001, 002, etc.)</li>
+</ul>
+
+<p>Example: ORDER-BIZ-001 → Order module, Business logic, Error #001</p>
+
+<h2 id="architecture-decision-shared-vs-module-specific-errors">Architecture Decision: Shared vs Module-Specific Errors</h2>
+
+<p><strong>Shared Infrastructure Errors (DB, SYS, NET, API).</strong></p>
+
+<p>These are NOT module-specific because:</p>
+<ul>
+  <li>Same infrastructure used across all modules</li>
+  <li>Same handling regardless of module</li>
+  <li>Avoids code duplication</li>
+  <li>No manual translation needed</li>
+</ul>
+
+<p>Use these across ALL modules:</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ASSET-DB-001: Database operation failed
+ASSET-DB-002: Resource not found
+
+ORD-API-001: Order service failed
+ORD-API-002: Order service, submit transaction api failed. (Specific when needed)
+
+PAY-API-001: Payment service failed
+
+APP-SYS-001: Internal server error (This is critical and unexpected error.)
+</code></pre></div></div>
+
+<p><strong>Module-Specific Errors (VAL, BIZ)</strong>
+These ARE module-specific because:</p>
+
+<ul>
+  <li>Different validation rules per module</li>
+  <li>Different business logic per module</li>
+  <li>Need to know which module’s business rule failed</li>
+</ul>
+
+<p>Use module prefix:</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>AUTH-VAL-001, AUTH-BIZ-001
+SHIP-VAL-001, SHIP-BIZ-001
+</code></pre></div></div>
+
+<h2 id="validation-errors-val">Validation Errors (VAL)</h2>
+
+<h3 id="core-philosophy">Core Philosophy</h3>
+<p>Validation = checking <strong>input format/structure</strong> before business logic</p>
+<ul>
+  <li>Technical checks (format, type, length)</li>
+  <li>No business context needed (often, no need external connection like API or DB)</li>
+  <li>Happens at the API/input layer</li>
+</ul>
+
+<table>
+  <thead>
+    <tr>
+      <th>Code</th>
+      <th>Description</th>
+      <th>Example</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>VAL-001</td>
+      <td>Required field missing</td>
+      <td>Missing email field</td>
+    </tr>
+    <tr>
+      <td>VAL-002</td>
+      <td>Invalid format</td>
+      <td>Email doesn’t contain @</td>
+    </tr>
+    <tr>
+      <td>VAL-003</td>
+      <td>Value out of range</td>
+      <td>Age = -5 or 999</td>
+    </tr>
+    <tr>
+      <td>VAL-004</td>
+      <td>Type mismatch</td>
+      <td>Expected number, got string</td>
+    </tr>
+    <tr>
+      <td>VAL-005</td>
+      <td>Too long</td>
+      <td>String exceeds max length</td>
+    </tr>
+    <tr>
+      <td>VAL-006</td>
+      <td>Too short</td>
+      <td>Password &lt; 8 characters</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><strong>When NOT to use VAL:</strong></p>
+<ul>
+  <li>❌ “Email already exists” → Use <strong>BIZ-001</strong> (business rule)</li>
+  <li>❌ “Insufficient funds” → Use <strong>BIZ-002</strong> (business rule)</li>
+  <li>❌ “Cannot delete order” → Use <strong>BIZ-003</strong> (business rule)</li>
+</ul>
+
+<hr />
+
+<h2 id="business-logic-errors-biz">Business Logic Errors (BIZ)</h2>
+
+<h3 id="core-philosophy-1">Core Philosophy</h3>
+<p>Business = <strong>domain rules and state</strong> checking</p>
+<ul>
+  <li>Requires database/context check</li>
+  <li>Business domain knowledge needed</li>
+  <li>Happens after validation passes</li>
+</ul>
+
+<table>
+  <thead>
+    <tr>
+      <th>Code</th>
+      <th>Description</th>
+      <th>Example</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>BIZ-001</td>
+      <td>Resource already exists</td>
+      <td>Email already registered</td>
+    </tr>
+    <tr>
+      <td>BIZ-002</td>
+      <td>Insufficient resources</td>
+      <td>Not enough balance/stock</td>
+    </tr>
+    <tr>
+      <td>BIZ-003</td>
+      <td>Invalid state transition</td>
+      <td>Cannot cancel completed order</td>
+    </tr>
+    <tr>
+      <td>BIZ-004</td>
+      <td>Constraint violation</td>
+      <td>Cannot delete user with active orders</td>
+    </tr>
+    <tr>
+      <td>BIZ-005</td>
+      <td>Business rule violation</td>
+      <td>Generic business rule failed</td>
+    </tr>
+    <tr>
+      <td>BIZ-006</td>
+      <td>Limit exceeded</td>
+      <td>Exceeded daily withdrawal limit</td>
+    </tr>
+    <tr>
+      <td>BIZ-007</td>
+      <td>Resource expired</td>
+      <td>Coupon/offer expired</td>
+    </tr>
+    <tr>
+      <td>BIZ-008</td>
+      <td>Operation not allowed</td>
+      <td>Action not permitted in current state</td>
+    </tr>
+  </tbody>
+</table>
+
+<hr />
+
+<h2 id="database-db-and-api-errors">Database (DB) and API Errors</h2>
+
+<h3 id="core-philosophy-2">Core Philosophy</h3>
+<p>Database/API = <strong>infrastructure failures</strong> you can’t control</p>
+<ul>
+  <li>Not validation errors</li>
+  <li>Not business errors</li>
+  <li>Technical failures only</li>
+</ul>
+
+<table>
+  <thead>
+    <tr>
+      <th>Code</th>
+      <th>Description</th>
+      <th>When It Happens</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>DB-001</td>
+      <td>Database operation failed</td>
+      <td>Generic DB error, connection lost</td>
+    </tr>
+    <tr>
+      <td>DB-002</td>
+      <td>Resource not found</td>
+      <td>Query returned no results</td>
+    </tr>
+    <tr>
+      <td>API-001</td>
+      <td>API operation failed</td>
+      <td>Generic API error, connection lost</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><strong>That’s it! Just 2 codes.</strong></p>
+
+<p><strong>Why so few?</strong></p>
+<ul>
+  <li>As a consumer, you can’t handle most DB/API errors differently</li>
+  <li>Specific DB errors (timeout, deadlock) are infrastructure concerns</li>
+  <li>Most DB errors = log and return 500</li>
+  <li>“Not found” is the only one users care about</li>
+  <li>If there is a frequently fail on a specific operation, we can add additional error code there, and start monitoring it.</li>
+</ul>
+
+<h1 id="sample-code-on-java">Sample code on Java</h1>
+
+<p>Define the ErrorCode class</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// ========== Enums ==========</span>
+
+<span class="kd">public</span> <span class="kd">enum</span> <span class="nc">Module</span> <span class="o">{</span>
+    <span class="no">AUTH</span><span class="o">,</span>
+    <span class="no">USER</span><span class="o">,</span>
+    <span class="no">ORDER</span><span class="o">,</span>
+    <span class="no">PAYMENT</span><span class="o">,</span>
+    <span class="no">PRODUCT</span><span class="o">,</span>
+    <span class="no">NOTIF</span><span class="o">,</span>
+    <span class="no">SYSTEM</span>  <span class="c1">// For non-module specific errors</span>
+<span class="o">}</span>
+
+<span class="kd">public</span> <span class="kd">enum</span> <span class="nc">ErrorCategory</span> <span class="o">{</span>
+    <span class="no">VAL</span><span class="o">,</span>    <span class="c1">// Validation</span>
+    <span class="no">BIZ</span><span class="o">,</span>    <span class="c1">// Business Logic</span>
+    <span class="no">DB</span><span class="o">,</span>     <span class="c1">// Database (shared)</span>
+    <span class="no">API</span><span class="o">,</span>    <span class="c1">// External API (shared)</span>
+    <span class="no">SYS</span>     <span class="c1">// System (shared)</span>
+<span class="o">}</span>
+
+<span class="c1">// ========== ErrorCode Class ==========</span>
+
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">ErrorCode</span> <span class="o">{</span>
+    <span class="kd">private</span> <span class="kd">final</span> <span class="nc">String</span> <span class="n">code</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="kd">final</span> <span class="nc">String</span> <span class="n">description</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="kd">final</span> <span class="nc">Module</span> <span class="n">module</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="kd">final</span> <span class="nc">ErrorCategory</span> <span class="n">category</span><span class="o">;</span>
+
+    <span class="kd">public</span> <span class="nf">ErrorCode</span><span class="o">(</span><span class="nc">Module</span> <span class="n">module</span><span class="o">,</span> <span class="nc">ErrorCategory</span> <span class="n">category</span><span class="o">,</span> <span class="kt">int</span> <span class="n">sequence</span><span class="o">,</span> 
+                     <span class="nc">String</span> <span class="n">description</span><span class="o">)</span> <span class="o">{</span>
+        <span class="c1">// For shared infrastructure errors (DB, API, INFRA, SYS), use SYSTEM module</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">isSharedCategory</span><span class="o">(</span><span class="n">category</span><span class="o">))</span> <span class="o">{</span>
+            <span class="k">this</span><span class="o">.</span><span class="na">code</span> <span class="o">=</span> <span class="nc">String</span><span class="o">.</span><span class="na">format</span><span class="o">(</span><span class="s">"%s-%03d"</span><span class="o">,</span> <span class="n">category</span><span class="o">.</span><span class="na">name</span><span class="o">(),</span> <span class="n">sequence</span><span class="o">);</span>
+            <span class="k">this</span><span class="o">.</span><span class="na">module</span> <span class="o">=</span> <span class="nc">Module</span><span class="o">.</span><span class="na">SYSTEM</span><span class="o">;</span>
+        <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+            <span class="c1">// For module-specific errors (VAL, BIZ)</span>
+            <span class="k">this</span><span class="o">.</span><span class="na">code</span> <span class="o">=</span> <span class="nc">String</span><span class="o">.</span><span class="na">format</span><span class="o">(</span><span class="s">"%s-%s-%03d"</span><span class="o">,</span> <span class="n">module</span><span class="o">.</span><span class="na">name</span><span class="o">(),</span> <span class="n">category</span><span class="o">.</span><span class="na">name</span><span class="o">(),</span> <span class="n">sequence</span><span class="o">);</span>
+            <span class="k">this</span><span class="o">.</span><span class="na">module</span> <span class="o">=</span> <span class="n">module</span><span class="o">;</span>
+        <span class="o">}</span>
+        
+        <span class="k">this</span><span class="o">.</span><span class="na">category</span> <span class="o">=</span> <span class="n">category</span><span class="o">;</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">description</span> <span class="o">=</span> <span class="n">description</span><span class="o">;</span>
+    <span class="o">}</span>
+    
+    <span class="kd">private</span> <span class="kt">boolean</span> <span class="nf">isSharedCategory</span><span class="o">(</span><span class="nc">ErrorCategory</span> <span class="n">category</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">category</span> <span class="o">==</span> <span class="nc">ErrorCategory</span><span class="o">.</span><span class="na">DB</span> <span class="o">||</span> 
+               <span class="n">category</span> <span class="o">==</span> <span class="nc">ErrorCategory</span><span class="o">.</span><span class="na">API</span> <span class="o">||</span> 
+               <span class="n">category</span> <span class="o">==</span> <span class="nc">ErrorCategory</span><span class="o">.</span><span class="na">SYS</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="c1">// Getters</span>
+    <span class="kd">public</span> <span class="nc">String</span> <span class="nf">getCode</span><span class="o">()</span> <span class="o">{</span> <span class="k">return</span> <span class="n">code</span><span class="o">;</span> <span class="o">}</span>
+    <span class="kd">public</span> <span class="nc">String</span> <span class="nf">getDescription</span><span class="o">()</span> <span class="o">{</span> <span class="k">return</span> <span class="n">description</span><span class="o">;</span> <span class="o">}</span>
+    <span class="kd">public</span> <span class="nc">Module</span> <span class="nf">getModule</span><span class="o">()</span> <span class="o">{</span> <span class="k">return</span> <span class="n">module</span><span class="o">;</span> <span class="o">}</span>
+    <span class="kd">public</span> <span class="nc">ErrorCategory</span> <span class="nf">getCategory</span><span class="o">()</span> <span class="o">{</span> <span class="k">return</span> <span class="n">category</span><span class="o">;</span> <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="nc">String</span> <span class="nf">toString</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">code</span> <span class="o">+</span> <span class="s">": "</span> <span class="o">+</span> <span class="n">description</span><span class="o">;</span>
+    <span class="o">}</span>
+<span class="o">}</span> 
+</code></pre></div></div>
+
+<p>Assumse that each module has a fews ErrorCode, then, we can use 1 single class. if the business logic increase, we can separate error code of each module into separate class</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">ErrorCodeConstants</span> <span class="o">{</span>
+    
+    <span class="c1">// ==================== SHARED INFRASTRUCTURE ERRORS ====================</span>
+    <span class="c1">// These are used across ALL modules</span>
+    
+    <span class="c1">// Database Errors (DB-xxx)</span>
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kd">final</span> <span class="nc">ErrorCode</span> <span class="no">DB_OPERATION_FAILED</span> <span class="o">=</span> 
+        <span class="k">new</span> <span class="nf">ErrorCode</span><span class="o">(</span><span class="nc">Module</span><span class="o">.</span><span class="na">SYSTEM</span><span class="o">,</span> <span class="nc">ErrorCategory</span><span class="o">.</span><span class="na">DB</span><span class="o">,</span> <span class="mi">1</span><span class="o">,</span> 
+            <span class="s">"Database operation failed"</span><span class="o">);</span>
+    
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kd">final</span> <span class="nc">ErrorCode</span> <span class="no">DB_RESOURCE_NOT_FOUND</span> <span class="o">=</span> 
+        <span class="k">new</span> <span class="nf">ErrorCode</span><span class="o">(</span><span class="nc">Module</span><span class="o">.</span><span class="na">SYSTEM</span><span class="o">,</span> <span class="nc">ErrorCategory</span><span class="o">.</span><span class="na">DB</span><span class="o">,</span> <span class="mi">2</span><span class="o">,</span> 
+            <span class="s">"Resource not found"</span><span class="o">);</span>
+    
+    <span class="c1">// API Errors (API-xxx)</span>
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kd">final</span> <span class="nc">ErrorCode</span> <span class="no">API_EXTERNAL_SERVICE_FAILED</span> <span class="o">=</span> 
+        <span class="k">new</span> <span class="nf">ErrorCode</span><span class="o">(</span><span class="nc">Module</span><span class="o">.</span><span class="na">SYSTEM</span><span class="o">,</span> <span class="nc">ErrorCategory</span><span class="o">.</span><span class="na">API</span><span class="o">,</span> <span class="mi">1</span><span class="o">,</span> 
+            <span class="s">"External service failed"</span><span class="o">);</span>
+    
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kd">final</span> <span class="nc">ErrorCode</span> <span class="no">API_EXTERNAL_SERVICE_TIMEOUT</span> <span class="o">=</span> 
+        <span class="k">new</span> <span class="nf">ErrorCode</span><span class="o">(</span><span class="nc">Module</span><span class="o">.</span><span class="na">SYSTEM</span><span class="o">,</span> <span class="nc">ErrorCategory</span><span class="o">.</span><span class="na">API</span><span class="o">,</span> <span class="mi">2</span><span class="o">,</span> 
+            <span class="s">"External service timeout"</span><span class="o">);</span>
+    
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kd">final</span> <span class="nc">ErrorCode</span> <span class="no">API_STRIPE_FAILED</span> <span class="o">=</span> 
+        <span class="k">new</span> <span class="nf">ErrorCode</span><span class="o">(</span><span class="nc">Module</span><span class="o">.</span><span class="na">SYSTEM</span><span class="o">,</span> <span class="nc">ErrorCategory</span><span class="o">.</span><span class="na">API</span><span class="o">,</span> <span class="mi">10</span><span class="o">,</span> 
+            <span class="s">"Stripe payment service failed"</span><span class="o">);</span>
+    
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kd">final</span> <span class="nc">ErrorCode</span> <span class="no">API_EMAIL_SERVICE_FAILED</span> <span class="o">=</span> 
+        <span class="k">new</span> <span class="nf">ErrorCode</span><span class="o">(</span><span class="nc">Module</span><span class="o">.</span><span class="na">SYSTEM</span><span class="o">,</span> <span class="nc">ErrorCategory</span><span class="o">.</span><span class="na">API</span><span class="o">,</span> <span class="mi">20</span><span class="o">,</span> 
+            <span class="s">"Email service failed"</span><span class="o">);</span>
+    
+    
+    <span class="c1">// System Errors (SYS-xxx)</span>
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kd">final</span> <span class="nc">ErrorCode</span> <span class="no">SYS_INTERNAL_ERROR</span> <span class="o">=</span> 
+        <span class="k">new</span> <span class="nf">ErrorCode</span><span class="o">(</span><span class="nc">Module</span><span class="o">.</span><span class="na">SYSTEM</span><span class="o">,</span> <span class="nc">ErrorCategory</span><span class="o">.</span><span class="na">SYS</span><span class="o">,</span> <span class="mi">1</span><span class="o">,</span> 
+            <span class="s">"Internal server error"</span><span class="o">);</span>
+    
+    <span class="c1">// ==================== AUTH MODULE ====================</span>
+    
+    <span class="c1">// Validation Errors</span>
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kd">final</span> <span class="nc">ErrorCode</span> <span class="no">AUTH_MISSING_CREDENTIALS</span> <span class="o">=</span> 
+        <span class="k">new</span> <span class="nf">ErrorCode</span><span class="o">(</span><span class="nc">Module</span><span class="o">.</span><span class="na">AUTH</span><span class="o">,</span> <span class="nc">ErrorCategory</span><span class="o">.</span><span class="na">VAL</span><span class="o">,</span> <span class="mi">1</span><span class="o">,</span> 
+            <span class="s">"Missing credentials"</span><span class="o">);</span>
+    
+    <span class="c1">// Business Logic Errors</span>
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kd">final</span> <span class="nc">ErrorCode</span> <span class="no">AUTH_INVALID_CREDENTIALS</span> <span class="o">=</span> 
+        <span class="k">new</span> <span class="nf">ErrorCode</span><span class="o">(</span><span class="nc">Module</span><span class="o">.</span><span class="na">AUTH</span><span class="o">,</span> <span class="nc">ErrorCategory</span><span class="o">.</span><span class="na">BIZ</span><span class="o">,</span> <span class="mi">1</span><span class="o">,</span> 
+            <span class="s">"Invalid credentials"</span><span class="o">);</span>
+    
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kd">final</span> <span class="nc">ErrorCode</span> <span class="no">AUTH_ACCOUNT_LOCKED</span> <span class="o">=</span> 
+        <span class="k">new</span> <span class="nf">ErrorCode</span><span class="o">(</span><span class="nc">Module</span><span class="o">.</span><span class="na">AUTH</span><span class="o">,</span> <span class="nc">ErrorCategory</span><span class="o">.</span><span class="na">BIZ</span><span class="o">,</span> <span class="mi">2</span><span class="o">,</span> 
+            <span class="s">"Account locked"</span><span class="o">);</span>
+<span class="o">}</span>
+
+</code></pre></div></div>
+
+<p>ApplicationException class. Beside errorCode, we need to add the context object to provide additional information on how the exception is trigger.</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">ApplicationException</span> <span class="kd">extends</span> <span class="nc">RuntimeException</span> <span class="o">{</span>
+    <span class="kd">private</span> <span class="kd">final</span> <span class="nc">ErrorCode</span> <span class="n">errorCode</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="kd">final</span> <span class="nc">Map</span><span class="o">&lt;</span><span class="nc">String</span><span class="o">,</span> <span class="nc">Object</span><span class="o">&gt;</span> <span class="n">context</span><span class="o">;</span>
+    
+    <span class="kd">public</span> <span class="nf">ApplicationException</span><span class="o">(</span><span class="nc">ErrorCode</span> <span class="n">errorCode</span><span class="o">,</span> <span class="nc">String</span> <span class="n">message</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">this</span><span class="o">(</span><span class="n">errorCode</span><span class="o">,</span> <span class="n">message</span><span class="o">,</span> <span class="kc">null</span><span class="o">,</span> <span class="k">new</span> <span class="nc">HashMap</span><span class="o">&lt;&gt;());</span>
+    <span class="o">}</span>
+    
+    <span class="kd">public</span> <span class="nf">ApplicationException</span><span class="o">(</span><span class="nc">ErrorCode</span> <span class="n">errorCode</span><span class="o">,</span> <span class="nc">String</span> <span class="n">message</span><span class="o">,</span> <span class="nc">Throwable</span> <span class="n">cause</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">this</span><span class="o">(</span><span class="n">errorCode</span><span class="o">,</span> <span class="n">message</span><span class="o">,</span> <span class="n">cause</span><span class="o">,</span> <span class="k">new</span> <span class="nc">HashMap</span><span class="o">&lt;&gt;());</span>
+    <span class="o">}</span>
+    
+    <span class="kd">public</span> <span class="nf">ApplicationException</span><span class="o">(</span><span class="nc">ErrorCode</span> <span class="n">errorCode</span><span class="o">,</span> <span class="nc">String</span> <span class="n">message</span><span class="o">,</span> 
+                               <span class="nc">Throwable</span> <span class="n">cause</span><span class="o">,</span> <span class="nc">Map</span><span class="o">&lt;</span><span class="nc">String</span><span class="o">,</span> <span class="nc">Object</span><span class="o">&gt;</span> <span class="n">context</span><span class="o">)</span> <span class="o">{</span>
+        <span class="kd">super</span><span class="o">(</span><span class="nc">String</span><span class="o">.</span><span class="na">format</span><span class="o">(</span><span class="s">"[%s] %s - %s"</span><span class="o">,</span> 
+              <span class="n">errorCode</span><span class="o">.</span><span class="na">getCode</span><span class="o">(),</span> <span class="n">errorCode</span><span class="o">.</span><span class="na">getDescription</span><span class="o">(),</span> <span class="n">message</span><span class="o">),</span> <span class="n">cause</span><span class="o">);</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">errorCode</span> <span class="o">=</span> <span class="n">errorCode</span><span class="o">;</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">context</span> <span class="o">=</span> <span class="n">context</span><span class="o">;</span>
+    <span class="o">}</span>
+    
+    <span class="kd">public</span> <span class="nc">ErrorCode</span> <span class="nf">getErrorCode</span><span class="o">()</span> <span class="o">{</span> <span class="k">return</span> <span class="n">errorCode</span><span class="o">;</span> <span class="o">}</span>
+    <span class="kd">public</span> <span class="nc">Map</span><span class="o">&lt;</span><span class="nc">String</span><span class="o">,</span> <span class="nc">Object</span><span class="o">&gt;</span> <span class="nf">getContext</span><span class="o">()</span> <span class="o">{</span> <span class="k">return</span> <span class="n">context</span><span class="o">;</span> <span class="o">}</span>
+    
+    <span class="kd">public</span> <span class="nc">ApplicationException</span> <span class="nf">addContext</span><span class="o">(</span><span class="nc">String</span> <span class="n">key</span><span class="o">,</span> <span class="nc">Object</span> <span class="n">value</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">context</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="n">key</span><span class="o">,</span> <span class="n">value</span><span class="o">);</span>
+        <span class="k">return</span> <span class="k">this</span><span class="o">;</span>
+    <span class="o">}</span>
+
+
+<span class="o">}</span>
+</code></pre></div></div>
+
+
+  </div><a class="u-url" href="/technical/97-design-error-code" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Contact</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Minh Nhật&#39;s blog</li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p></p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
