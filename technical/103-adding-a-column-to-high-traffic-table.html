@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Adding a Column to a High-Traffic PostgreSQL Table: The Hidden Cost of ALTER TABLE | Minh Nhật’s blog</title>
+<meta name="generator" content="Jekyll v3.10.0" />
+<meta property="og:title" content="Adding a Column to a High-Traffic PostgreSQL Table: The Hidden Cost of ALTER TABLE" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="AI Assisted" />
+<meta property="og:description" content="AI Assisted" />
+<link rel="canonical" href="/technical/103-adding-a-column-to-high-traffic-table" />
+<meta property="og:url" content="/technical/103-adding-a-column-to-high-traffic-table" />
+<meta property="og:site_name" content="Minh Nhật’s blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2026-08-02T08:02:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Adding a Column to a High-Traffic PostgreSQL Table: The Hidden Cost of ALTER TABLE" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2026-08-02T08:02:00+00:00","datePublished":"2026-08-02T08:02:00+00:00","description":"AI Assisted","headline":"Adding a Column to a High-Traffic PostgreSQL Table: The Hidden Cost of ALTER TABLE","mainEntityOfPage":{"@type":"WebPage","@id":"/technical/103-adding-a-column-to-high-traffic-table"},"url":"/technical/103-adding-a-column-to-high-traffic-table"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="Minh Nhật&apos;s blog" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Minh Nhật&#39;s blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <!-- <div class="trigger"><a class="page-link" href="/404.html"></a><a class="page-link" href="/about/">Về tôi</a><a class="page-link" href="/art">art</a><a class="page-link" href="/finance">Finance</a><a class="page-link" href="/"></a><a class="page-link" href="/assets/main.css"></a><a class="page-link" href="/opinion">opinion</a><a class="page-link" href="/philosophy">Philosophy</a><a class="page-link" href="/technical">technical</a><a class="page-link" href="/art">art</a><a class="page-link" href="/art/">art</a><a class="page-link" href="/finance">Finance</a><a class="page-link" href="/finance/">Finance</a><a class="page-link" href="/"></a><a class="page-link" href="/"></a><a class="page-link" href="/page1/"></a><a class="page-link" href="/page2/"></a><a class="page-link" href="/page3/"></a><a class="page-link" href="/page4/"></a><a class="page-link" href="/page5/"></a><a class="page-link" href="/opinion">opinion</a><a class="page-link" href="/opinion/">opinion</a><a class="page-link" href="/philosophy">Philosophy</a><a class="page-link" href="/philosophy/">Philosophy</a><a class="page-link" href="/technical">technical</a><a class="page-link" href="/technical/">technical</a><a class="page-link" href="/feed.xml"></a></div> -->
+        <div class="trigger">
+          <a class="page-link" href="/philosophy">Triết học</a>
+          <a class="page-link" href="/art">Văn, thơ, nhạc</a>
+          <a class="page-link" href="/opinion">Góc nhìn cá nhân</a>
+          <a class="page-link" href="/technical">IT</a>
+          <a class="page-link" href="/finance">Finance</a>
+          <a class="page-link" href="/about">Về tôi</a>
+        </div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">103. Adding a Column to a High-Traffic PostgreSQL Table: The Hidden Cost of ALTER TABLE</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2026-08-02T08:02:00+00:00" itemprop="datePublished">Aug 2, 2026
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p><strong>AI Assisted</strong></p>
+
+<h2 id="introduction">Introduction</h2>
+
+<p>Adding a new column is often considered a routine schema change. In PostgreSQL, the SQL statement itself is straightforward, and modern versions can perform many column additions as metadata-only operations. Because of this, developers frequently assume that adding a nullable column is essentially free.</p>
+
+<p>The hidden cost, however, is not always the data modification. It is the lock required before PostgreSQL can modify the table definition. On a heavily trafficked table containing hundreds of millions of rows, acquiring that lock can become the most dangerous part of the migration.</p>
+
+<h2 id="the-first-thing-postgresql-does-is-acquire-an-exclusive-lock">The First Thing PostgreSQL Does Is Acquire an Exclusive Lock</h2>
+
+<p>Before PostgreSQL changes a table’s schema, it acquires an <strong>ACCESS EXCLUSIVE</strong> lock on the table. This is the strongest table-level lock in PostgreSQL and conflicts with every other lock mode.</p>
+
+<p>As a result, while the lock is held:</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">SELECT</code> queries are blocked.</li>
+  <li><code class="language-plaintext highlighter-rouge">INSERT</code>, <code class="language-plaintext highlighter-rouge">UPDATE</code>, and <code class="language-plaintext highlighter-rouge">DELETE</code> statements are blocked.</li>
+  <li>Other schema changes are blocked.</li>
+  <li>Any transaction attempting to access the table must wait.</li>
+</ul>
+
+<p>Even if the actual schema modification takes only a few milliseconds, PostgreSQL cannot begin the operation until it successfully acquires this lock.</p>
+
+<h2 id="the-real-problem-is-waiting-for-the-lock">The Real Problem Is Waiting for the Lock</h2>
+
+<p>In production systems, there is almost always at least one transaction already using the table. It may be a business transaction, a reporting query, a batch job, or an application request that unexpectedly runs for several seconds.</p>
+
+<p>Suppose a transaction has been reading from the <code class="language-plaintext highlighter-rouge">orders</code> table for thirty seconds. When an <code class="language-plaintext highlighter-rouge">ALTER TABLE</code> statement is issued, PostgreSQL cannot immediately acquire the required <code class="language-plaintext highlighter-rouge">ACCESS EXCLUSIVE</code> lock and must wait for the existing transaction to finish.</p>
+
+<p>This is where the migration becomes dangerous. While the <code class="language-plaintext highlighter-rouge">ALTER TABLE</code> statement is waiting, every new query that requires the table begins to queue behind it. PostgreSQL’s lock manager preserves lock ordering, meaning subsequent requests cannot bypass the pending exclusive lock request. What began as a single long-running transaction can quickly develop into a lock queue affecting hundreds or even thousands of application requests.</p>
+
+<h2 id="how-a-single-long-transaction-can-cascade-into-an-outage">How a Single Long Transaction Can Cascade into an Outage</h2>
+
+<p>The database itself is usually not frozen, but one busy table effectively becomes unavailable. Application requests continue arriving, yet each request that needs the locked table waits for the exclusive lock to be resolved.</p>
+
+<p>As waiting requests accumulate, database connections remain occupied for longer periods. Eventually, the application’s connection pool becomes exhausted because every connection is blocked waiting for the same table. Once no connections remain available, new requests begin to time out, error rates increase, and the application may appear to be completely unavailable despite PostgreSQL continuing to run normally.</p>
+
+<p>This cascading failure is often far more damaging than the schema change itself.</p>
+
+<h2 id="why-large-tables-increase-the-risk">Why Large Tables Increase the Risk</h2>
+
+<p>A table containing 300 million rows is not necessarily slower to add a nullable column in modern PostgreSQL. However, it is typically one of the busiest tables in the system. High request volume increases the probability that long-running transactions already exist when the migration begins, making it more difficult to obtain the required exclusive lock without disrupting production traffic.</p>
+
+<p>For this reason, migration risk is often driven more by concurrency than by table size alone.</p>
+
+<h2 id="a-safer-migration-strategy">A Safer Migration Strategy</h2>
+
+<p>Before executing any schema change on a high-traffic table, first identify long-running transactions using PostgreSQL monitoring views such as <code class="language-plaintext highlighter-rouge">pg_stat_activity</code>. Schedule migrations during periods of lower traffic whenever possible, and configure an appropriate <code class="language-plaintext highlighter-rouge">lock_timeout</code> so that the migration fails quickly rather than waiting indefinitely for an exclusive lock.</p>
+
+<p>Second, <code class="language-plaintext highlighter-rouge">add the new column as nullable</code> without a default value whenever possible. This minimizes the amount of work required by the database engine and reduces the likelihood of long-running locks.</p>
+
+<p>Next, <code class="language-plaintext highlighter-rouge">deploy an application version that understands both the old and new schema</code>. New records should populate the new column, while existing records continue to function correctly even if the column is still NULL. This approach maintains backward compatibility and allows deployment to be rolled back independently of the database migration.</p>
+
+<p>After the application has been writing the new column successfully, perform a gradual backfill. <code class="language-plaintext highlighter-rouge">Rather than updating all 300 million records in a single transaction, process the data in small batches</code>. Between batches, monitor database CPU utilization, disk I/O, replication lag, lock contention, and application latency. The objective is to spread the workload over time without degrading production performance.</p>
+
+<p>Finally, once every existing row has been populated and the application no longer depends on NULL values, enforce additional constraints such as NOT NULL if required. By separating structural changes from data migration, each deployment step remains smaller, safer, and easier to recover from.</p>
+
+<h2 id="lessons-learned">Lessons Learned</h2>
+
+<p>When engineers think about adding a column, they often focus on how long PostgreSQL needs to modify the table. In practice, the greater risk is usually how long PostgreSQL waits to acquire the required <code class="language-plaintext highlighter-rouge">ACCESS EXCLUSIVE</code> lock. A migration that executes in milliseconds can still trigger application-wide failures if it becomes blocked behind a long-running transaction on a heavily used table.</p>
+
+<p>Understanding PostgreSQL’s locking behavior is therefore essential for designing safe, zero-downtime schema migrations. In production systems, managing concurrency is frequently more important than the SQL statement itself.</p>
+
+  </div><a class="u-url" href="/technical/103-adding-a-column-to-high-traffic-table" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Contact</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Minh Nhật&#39;s blog</li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p></p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
